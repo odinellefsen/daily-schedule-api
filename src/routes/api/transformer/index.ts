@@ -21,7 +21,12 @@ transformer.get("/", async (c) => {
 
   pathwaysRouter.processEvent(event, secret);
 
-  return c.text("Flowcore Transformer endpoint");
+  return c.json(
+    {
+      message: "Event processed ✅",
+    },
+    200,
+  );
 });
 
 export default transformer;

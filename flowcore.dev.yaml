@@ -1,0 +1,12 @@
+development:
+  proxyEndpoints:
+    recipe:
+      description: "Recipe proxy endpoint"
+      dataCore: daily-schedule
+      flowType: recipe.v0
+      events:
+        - recipe.created.v0
+        - recipe.updated.v0
+        - recipe.archived.v0
+      endpoints:
+       - ""
