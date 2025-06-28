@@ -11,9 +11,9 @@ const FlowcorePathways = new PathwaysBuilder({
     apiKey: webhookApiKey
 })
 .withPathwayState(
-    createPostgresPathwayState({
-      connectionString: postgresUrl,
-    })
-  )
+  createPostgresPathwayState({
+    connectionString: postgresUrl,
+  })
+)
 
 export const pathwaysRouter = new PathwayRouter(FlowcorePathways, webhookApiKey);

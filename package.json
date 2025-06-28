@@ -1,7 +1,10 @@
 {
   "name": "daily-scheduler-api",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "flowcore:apply:data-core": "flowcore data-core apply -f flowcore.yaml",
+    "flowcore:apply:proxy": "flowcore scenario apply -f flowcore.yaml",
+    "flowcore:local:proxy": "env-cmd -f .env -- sh -c 'flowcore scenario local -f flowcore.yaml -f flowcore.local.development.yaml -s now -e http://localhost:3000/api/transformer -H \"X-Secret: $FLOWCORE_WEBHOOK_API_KEY\"'"
   },
   "dependencies": {
     "@flowcore/pathways": "^0.16.3",
