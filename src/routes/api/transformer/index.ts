@@ -6,27 +6,44 @@ import { pathwaysRouter } from "../../../utils/flowcore";
 export const transformer = new Hono();
 
 transformer.post("/", async (c) => {
-  const event = (await c.req.json()) as FlowcoreLegacyEvent;
-  const secret = c.req.header("X-Secret");
+  try {
+    const event = (await c.req.json()) as FlowcoreLegacyEvent;
+    const secret = c.req.header("X-Secret");
 
-  if (secret !== zodEnv.FLOWCORE_WEBHOOK_API_KEY) {
+    console.log("Received event", {
+      flowType: event.flowType,
+      eventType: event.eventType,
+      eventId: event.eventId,
+    });
+
+    if (secret !== zodEnv.FLOWCORE_WEBHOOK_API_KEY) {
+      return c.json(
+        {
+          error: "Unauthorized",
+          message: "The secret key is incorrect",
+        },
+        401,
+      );
+    }
+
+    await pathwaysRouter.processEvent(event, secret);
+
     return c.json(
       {
-        error: "Unauthorized",
-        message: "The secret key is incorrect",
+        message: "Event processed ✅",
       },
-      401,
+      200,
+    );
+  } catch (error) {
+    console.error("Error processing event", { error });
+    return c.json(
+      {
+        error: "Failed to process event",
+        message: (error as Error).message,
+      },
+      500,
     );
   }
-
-  pathwaysRouter.processEvent(event, secret);
-
-  return c.json(
-    {
-      message: "Event processed ✅",
-    },
-    200,
-  );
 });
 
 export default transformer;
