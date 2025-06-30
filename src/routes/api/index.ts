@@ -7,6 +7,6 @@ api.get("/", (c) => {
   return c.text("Daily Scheduler API");
 });
 
-api.route("/transformer", transformer);
+api.route("/transformer/", transformer);
 
 export default api;
