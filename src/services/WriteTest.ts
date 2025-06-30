@@ -2,9 +2,9 @@ import type { z } from "zod";
 import type { recipeSchema } from "../contracts/recipe";
 import { FlowcorePathways } from "../utils/flowcore";
 
-export const writeTest = async (data: z.infer<typeof recipeSchema>) => {
+export const writeTest = async (recipe: z.infer<typeof recipeSchema>) => {
   await FlowcorePathways.write("recipe.v0/recipe.created.v0", {
-    data,
+    data: recipe,
   });
 
   console.log("sent an event ✅");

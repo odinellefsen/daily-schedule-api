@@ -5,7 +5,7 @@ import { pathwaysRouter } from "../../../utils/flowcore";
 
 export const transformer = new Hono();
 
-transformer.get("/", async (c) => {
+transformer.post("/", async (c) => {
   const event = (await c.req.json()) as FlowcoreLegacyEvent;
   const secret = c.req.header("X-Secret");
 
