@@ -5,7 +5,7 @@ import {
 } from "@flowcore/pathways";
 import { zodEnv } from "../../env";
 import { recipeSchema } from "../contracts/recipe";
-import "../services/HandleTest";
+import { handlerRecipeCreated } from "../services/HandleTest";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
 const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
@@ -25,7 +25,10 @@ export const FlowcorePathways = new PathwaysBuilder({
     flowType: "recipe.v0",
     eventType: "recipe.created.v0",
     schema: recipeSchema,
+    writable: true,
   });
+
+FlowcorePathways.handle("recipe.v0/recipe.created.v0", handlerRecipeCreated);
 
 export const pathwaysRouter = new PathwayRouter(
   FlowcorePathways,
