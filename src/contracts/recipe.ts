@@ -71,6 +71,7 @@ export const foodRecipeEventContract = z
     .refine(
         (data) => {
             if (!data.stepForStepInstructionsToMakeTheFoodRecipe) {
+                // If there are no steps by step instructions, we don't need to check if ingredients are used in steps
                 return true;
             }
 
@@ -80,7 +81,7 @@ export const foodRecipeEventContract = z
                     (ing) => ing.ingredientName
                 ) ?? [];
 
-            // Check if all ingredients used in steps exist in ingredients array
+            // Check if all ingredient's names used in steps exist in ingredients array
             return (
                 data.stepForStepInstructionsToMakeTheFoodRecipe?.every(
                     (step) =>
