@@ -67,9 +67,7 @@ export const foodRecipeEventContract = z
                         ),
                     quantityOfTheIngredient: z
                         .number()
-                        .positive(
-                            "Quantity must be greater than 0 or undefined"
-                        ),
+                        .positive("Quantity must be greater than 0"),
                     unitOfMeasurementOfTheIngredientQuantity:
                         z.nativeEnum(UnitOfMeasurement),
                 })
