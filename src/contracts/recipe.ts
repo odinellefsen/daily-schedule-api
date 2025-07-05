@@ -48,6 +48,7 @@ enum MealTimingEnum {
 export const foodRecipeEventContract = z
     .object({
         id: z.string().uuid("The ID must be a valid UUID"),
+        whenIsMealEaten: z.nativeEnum(MealTimingEnum),
         nameOfTheFoodRecipe: z
             .string()
             .min(1, "The name of the food recipe is required")
@@ -66,7 +67,6 @@ export const foodRecipeEventContract = z
                 "The general description of the food recipe must be less than 250 characters"
             )
             .optional(),
-
         ingredientsOfTheFoodRecipe: z
             .array(
                 z.object({
@@ -135,7 +135,6 @@ export const foodRecipeEventContract = z
                 "If stepForStepInstructionsToMakeTheFoodRecipe is NOT undefined, you must have at least one step"
             )
             .optional(),
-        whenIsMealEaten: z.nativeEnum(MealTimingEnum),
     })
     .refine(
         (data) => {
