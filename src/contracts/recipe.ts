@@ -70,17 +70,15 @@ export const foodRecipeEventContract = z
     })
     .refine(
         (data) => {
-            if (
-                !data.ingredientsOfTheFoodRecipe ||
-                !data.stepForStepInstructionsToMakeTheFoodRecipe
-            ) {
+            if (!data.stepForStepInstructionsToMakeTheFoodRecipe) {
                 return true;
             }
 
             // Get all ingredient names
-            const ingredientNames = data.ingredientsOfTheFoodRecipe.map(
-                (ing) => ing.ingredientName
-            );
+            const ingredientNames =
+                data.ingredientsOfTheFoodRecipe?.map(
+                    (ing) => ing.ingredientName
+                ) ?? [];
 
             // Check if all ingredients used in steps exist in ingredients array
             return (
