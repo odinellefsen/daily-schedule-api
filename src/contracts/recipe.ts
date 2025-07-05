@@ -13,18 +13,43 @@ enum UnitOfMeasurement {
 }
 
 export const foodRecipeEventContract = z.object({
-    id: z.string(),
-    nameOfFoodRecipe: z.string(),
+    id: z.string().uuid("The ID must be a valid UUID"),
+    nameOfFoodRecipe: z
+        .string()
+        .min(1, "The name of the food recipe is required")
+        .max(75, "The name of the food recipe must be less than 75 characters"),
+    generalDescriptionOfFoodRecipe: z
+        .string()
+        .max(
+            250,
+            "The general description of the food recipe must be less than 250 characters"
+        ),
     ingredients: z
         .array(
             z.object({
-                ingredientName: z.string(),
+                ingredientName: z
+                    .string()
+                    .min(1, "The ingredient name is required")
+                    .max(
+                        50,
+                        "The ingredient name must be less than 50 characters"
+                    ),
                 ingredientQuantity: z.union([
-                    z.number(),
+                    z
+                        .number()
+                        .positive("Quantity must be greater than 0")
+                        .int("Quantity must be an integer"),
                     z.literal(UnitOfMeasurement.UNKNOWN),
                 ]),
-                unitOfMeasurement: z.nativeEnum(UnitOfMeasurement),
+                ingredientUnitOfMeasurement: z.nativeEnum(UnitOfMeasurement),
             })
         )
         .min(1, "At least one ingredient is required"),
+    instructions: z
+        .array(
+            z.object({
+                instruction: z.string().min(1, "The instruction is required"),
+            })
+        )
+        .min(1, "At least one instruction is required"),
 });
