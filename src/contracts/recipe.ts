@@ -1,16 +1,12 @@
 import { z } from "zod";
 
 enum UnitOfMeasurement {
-    GRAMS = "Grams",
-    MILLILITERS = "Milliliters",
-    TABLESPOONS = "Tablespoons",
-    TEASPOONS = "Teaspoons",
+    GRAMS = "Gram",
+    MILLILITERS = "Milliliter",
+    TABLESPOONS = "Tablespoon",
+    TEASPOONS = "Teaspoon",
     PINCH = "Pinch",
     HANDFUL = "Handful",
-
-    UNKNOWN = "Unknown",
-    NOT_RELEVANT = "Not Relevant",
-    OTHER = "Other",
 }
 
 export const foodRecipeEventContract = z
@@ -51,8 +47,9 @@ export const foodRecipeEventContract = z
                             "Quantity must be greater than 0 or undefined"
                         )
                         .optional(),
-                    unitOfMeasurementOfTheIngredient:
-                        z.nativeEnum(UnitOfMeasurement),
+                    unitOfMeasurementOfTheIngredient: z
+                        .nativeEnum(UnitOfMeasurement)
+                        .optional(),
                 })
             )
             .min(
@@ -133,7 +130,7 @@ export const foodRecipeEventContract = z
         },
         {
             message:
-                "All ingredients used in steps must be defined in the ingredients array",
+                "The field values of nameOfTheIngredientUsedInThisStep must also be defined in the ingredientsOfTheFoodRecipe array",
             path: ["stepForStepInstructionsToMakeTheFoodRecipe"],
         }
     );
