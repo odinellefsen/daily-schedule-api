@@ -1,15 +1,16 @@
 import { z } from "zod";
 
 enum UnitOfMeasurement {
-    GRAMS = "grams",
-    MILLILITERS = "milliliters",
-    TABLESPOONS = "tablespoons",
-    TEASPOONS = "teaspoons",
-    PINCH = "pinch",
-    HANDFUL = "handful",
+    GRAMS = "Grams",
+    MILLILITERS = "Milliliters",
+    TABLESPOONS = "Tablespoons",
+    TEASPOONS = "Teaspoons",
+    PINCH = "Pinch",
+    HANDFUL = "Handful",
 
-    UNKNOWN = "unknown",
-    OTHER = "other",
+    UNKNOWN = "Unknown",
+    NOT_RELEVANT = "Not Relevant",
+    OTHER = "Other",
 }
 
 export const foodRecipeEventContract = z
@@ -24,47 +25,81 @@ export const foodRecipeEventContract = z
             ),
         generalDescriptionOfTheFoodRecipe: z
             .string()
+            .min(
+                1,
+                "If generalDescriptionOfTheFoodRecipe is NOT undefined, you must have at least one character"
+            )
             .max(
                 250,
                 "The general description of the food recipe must be less than 250 characters"
-            ),
+            )
+            .optional(),
+
         ingredientsOfTheFoodRecipe: z
             .array(
                 z.object({
-                    ingredientName: z
+                    nameOfTheIngredient: z
                         .string()
                         .min(1, "The ingredient name is required")
                         .max(
                             50,
                             "The ingredient name must be less than 50 characters"
                         ),
-                    ingredientQuantity: z.union([
-                        z
-                            .number()
-                            .positive("Quantity must be greater than 0")
-                            .int("Quantity must be an integer"),
-                        z.literal(UnitOfMeasurement.UNKNOWN),
-                    ]),
-                    ingredientUnitOfMeasurement:
+                    quantityOfTheIngredient: z
+                        .number()
+                        .positive("Quantity must be greater than 0")
+                        .optional(),
+                    unitOfMeasurementOfTheIngredient:
                         z.nativeEnum(UnitOfMeasurement),
                 })
             )
             .min(
                 1,
-                "If you have ingredients array, you must have at least one ingredient"
+                "If ingredientsOfTheFoodRecipe is NOT undefined, you must have at least one ingredient"
             )
             .optional(),
         stepForStepInstructionsToMakeTheFoodRecipe: z
             .array(
                 z.object({
-                    stepNumber: z.number().positive().int(),
-                    instruction: z.string().min(1),
-                    ingredientsUsedInThisStep: z.array(z.string()).optional(),
+                    stepNumber: z
+                        .number()
+                        .positive("Step number must be greater than 0")
+                        .int("Step number must be an integer"),
+                    instruction: z
+                        .string()
+                        .min(1, "The instruction is required")
+                        .max(
+                            150,
+                            "The instruction must be less than 150 characters"
+                        ),
+                    ingredientsUsedInThisStep: z
+                        .array(
+                            z.object({
+                                nameOfTheIngredientUsedInThisStep: z
+                                    .string()
+                                    .min(1, "The ingredient name is required")
+                                    .max(
+                                        50,
+                                        "The ingredient name must be less than 50 characters"
+                                    ),
+                                quantityOfTheIngredientUsedInThisStep: z
+                                    .number()
+                                    .positive(
+                                        "Quantity used in this step must be greater than 0"
+                                    )
+                                    .optional(),
+                            })
+                        )
+                        .min(
+                            1,
+                            "If ingredientsUsedInThisStep is NOT undefined, you must have at least one ingredient"
+                        )
+                        .optional(),
                 })
             )
             .min(
                 1,
-                "If you have step for step instructions array, you must have at least one step"
+                "If stepForStepInstructionsToMakeTheFoodRecipe is NOT undefined, you must have at least one step"
             )
             .optional(),
     })
@@ -78,7 +113,7 @@ export const foodRecipeEventContract = z
             // Get all ingredient names
             const ingredientNames =
                 data.ingredientsOfTheFoodRecipe?.map(
-                    (ing) => ing.ingredientName
+                    (ing) => ing.nameOfTheIngredient
                 ) ?? [];
 
             // Check if all ingredient's names used in steps exist in ingredients array
@@ -87,7 +122,9 @@ export const foodRecipeEventContract = z
                     (step) =>
                         step.ingredientsUsedInThisStep?.every(
                             (usedIngredient) =>
-                                ingredientNames.includes(usedIngredient)
+                                ingredientNames.includes(
+                                    usedIngredient.nameOfTheIngredientUsedInThisStep
+                                )
                         ) ?? true
                 ) ?? true
             );
