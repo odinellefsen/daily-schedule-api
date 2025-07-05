@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-enum UnitOfMeasurement {
+enum UnitOfMeasurementEnum {
     // Weight units
     GRAMS = "Gram",
     KILOGRAMS = "Kilogram",
@@ -31,6 +31,18 @@ enum UnitOfMeasurement {
     // Flexible
     TO_TASTE = "To Taste",
     AS_NEEDED = "As Needed",
+}
+
+enum MealTimingEnum {
+    BREAKFAST = "Breakfast",
+    BRUNCH = "Brunch",
+    LUNCH = "Lunch",
+    DINNER = "Dinner",
+    ON_THE_GO = "On The Go",
+    SNACK = "Snack",
+    LATE_NIGHT = "Late Night",
+    AFTERNOON_TEA = "Afternoon Tea",
+    SUPPER = "Supper",
 }
 
 export const foodRecipeEventContract = z
@@ -68,8 +80,9 @@ export const foodRecipeEventContract = z
                     quantityOfTheIngredient: z
                         .number()
                         .positive("Quantity must be greater than 0"),
-                    unitOfMeasurementOfTheIngredientQuantity:
-                        z.nativeEnum(UnitOfMeasurement),
+                    unitOfMeasurementOfTheIngredientQuantity: z.nativeEnum(
+                        UnitOfMeasurementEnum
+                    ),
                 })
             )
             .min(
@@ -107,7 +120,7 @@ export const foodRecipeEventContract = z
                                         "Quantity used in this step must be greater than 0"
                                     ),
                                 unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
-                                    z.nativeEnum(UnitOfMeasurement),
+                                    z.nativeEnum(UnitOfMeasurementEnum),
                             })
                         )
                         .min(
@@ -122,6 +135,7 @@ export const foodRecipeEventContract = z
                 "If stepForStepInstructionsToMakeTheFoodRecipe is NOT undefined, you must have at least one step"
             )
             .optional(),
+        whenIsMealEaten: z.nativeEnum(MealTimingEnum),
     })
     .refine(
         (data) => {
