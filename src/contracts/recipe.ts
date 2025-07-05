@@ -1,12 +1,34 @@
 import { z } from "zod";
 
 enum UnitOfMeasurement {
+    // Weight units
     GRAMS = "Gram",
+
+    // Volume units
     MILLILITERS = "Milliliter",
     TABLESPOONS = "Tablespoon",
     TEASPOONS = "Teaspoon",
+
+    // Count units (NEW!)
+    PIECES = "Piece",
+    WHOLE = "Whole",
+    EACH = "Each",
+    ITEMS = "Item",
+
+    // Approximate units
     PINCH = "Pinch",
     HANDFUL = "Handful",
+
+    // Contextual units (NEW!)
+    CLOVES = "Clove", // for garlic
+    SLICES = "Slice", // for bread, tomatoes
+    STRIPS = "Strip", // for bacon
+    HEADS = "Head", // for lettuce, cabbage
+    BUNCHES = "Bunch", // for herbs
+
+    // Flexible
+    TO_TASTE = "To Taste",
+    AS_NEEDED = "As Needed",
 }
 
 export const foodRecipeEventContract = z

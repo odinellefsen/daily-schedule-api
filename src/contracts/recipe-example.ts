@@ -52,7 +52,7 @@ const simplePastaRecipe = {
                 "Add cream to pan and simmer for 2 minutes, then toss with drained pasta",
             ingredientsUsedInThisStep: [
                 {
-                    nameOfTheIngredientUsedInThisStep: "creaml",
+                    nameOfTheIngredientUsedInThisStep: "cream",
                     quantityOfTheIngredientUsedInThisStep: 150,
                 },
             ],
