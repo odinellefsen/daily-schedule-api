@@ -3,9 +3,11 @@ import { z } from "zod";
 enum UnitOfMeasurement {
     // Weight units
     GRAMS = "Gram",
+    KILOGRAMS = "Kilogram",
 
     // Volume units
     MILLILITERS = "Milliliter",
+    LITERS = "Liter",
     TABLESPOONS = "Tablespoon",
     TEASPOONS = "Teaspoon",
 
@@ -67,11 +69,9 @@ export const foodRecipeEventContract = z
                         .number()
                         .positive(
                             "Quantity must be greater than 0 or undefined"
-                        )
-                        .optional(),
-                    unitOfMeasurementOfTheIngredient: z
-                        .nativeEnum(UnitOfMeasurement)
-                        .optional(),
+                        ),
+                    unitOfMeasurementOfTheIngredientQuantity:
+                        z.nativeEnum(UnitOfMeasurement),
                 })
             )
             .min(
@@ -90,7 +90,7 @@ export const foodRecipeEventContract = z
                         .string()
                         .min(1, "The instruction is required")
                         .max(
-                            150,
+                            250,
                             "The instruction must be less than 150 characters"
                         ),
                     ingredientsUsedInThisStep: z
@@ -107,8 +107,9 @@ export const foodRecipeEventContract = z
                                     .number()
                                     .positive(
                                         "Quantity used in this step must be greater than 0"
-                                    )
-                                    .optional(),
+                                    ),
+                                unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
+                                    z.nativeEnum(UnitOfMeasurement),
                             })
                         )
                         .min(
