@@ -8,7 +8,7 @@ services:
         environment:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: pathway_db
+            POSTGRES_DB: daily-schedule-db
             POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
         ports:
             - "5433:5432"
@@ -16,7 +16,7 @@ services:
             - postgres_data:/var/lib/postgresql/data
             - ./init-db:/docker-entrypoint-initdb.d
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U postgres -d pathway_db"]
+            test: ["CMD-SHELL", "pg_isready -U postgres -d daily-schedule-db"]
             interval: 10s
             timeout: 5s
             retries: 5
