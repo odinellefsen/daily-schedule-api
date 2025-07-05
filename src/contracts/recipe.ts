@@ -45,11 +45,19 @@ export const foodRecipeEventContract = z.object({
             })
         )
         .min(1, "At least one ingredient is required"),
-    instructions: z
+    stepForStepInstructionsToMakeFoodRecipe: z
         .array(
             z.object({
+                stepNumber: z
+                    .number()
+                    .positive("Step number must be greater than 0")
+                    .int("Step number must be an integer"),
                 instruction: z.string().min(1, "The instruction is required"),
             })
         )
-        .min(1, "At least one instruction is required"),
+        .min(
+            1,
+            "If you have step for step instructions field, you must have at least one step"
+        )
+        .optional(),
 });
