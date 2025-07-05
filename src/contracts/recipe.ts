@@ -8,7 +8,6 @@ enum UnitOfMeasurement {
     PINCH = "pinch",
     HANDFUL = "handful",
 
-    // Not in list or not known
     UNKNOWN = "unknown",
     OTHER = "other",
 }
@@ -19,12 +18,11 @@ export const foodRecipeEventContract = z.object({
     ingredients: z
         .array(
             z.object({
-                ingredientName: z
-                    .string()
-                    .min(1, "Ingredient name is required"),
-                ingredientQuantity: z
-                    .string()
-                    .min(1, "Ingredient quantity is required"),
+                ingredientName: z.string(),
+                ingredientQuantity: z.union([
+                    z.number(),
+                    z.literal(UnitOfMeasurement.UNKNOWN),
+                ]),
                 unitOfMeasurement: z.nativeEnum(UnitOfMeasurement),
             })
         )
