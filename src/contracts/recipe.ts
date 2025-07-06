@@ -98,6 +98,7 @@ const baseFoodRecipeEventSchema = z.object({
     stepForStepInstructionsToMakeTheFoodRecipe: z
         .array(
             z.object({
+                id: z.string().uuid("The ID of the step must be a valid UUID"),
                 stepNumber: z
                     .number()
                     .positive("Step number must be greater than 0")

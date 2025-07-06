@@ -58,6 +58,7 @@ writeTest({
     ],
     stepForStepInstructionsToMakeTheFoodRecipe: [
         {
+            id: "550e8400-e29b-41d4-a716-446655440006",
             stepNumber: 1,
             instruction:
                 "Bring a large pot of salted water to boil and cook spaghetti according to package directions until al dente.",
@@ -72,6 +73,7 @@ writeTest({
             ],
         },
         {
+            id: "550e8400-e29b-41d4-a716-446655440007",
             stepNumber: 2,
             instruction:
                 "While pasta cooks, dice pancetta and cook in a large skillet over medium heat until crispy.",
@@ -86,6 +88,7 @@ writeTest({
             ],
         },
         {
+            id: "550e8400-e29b-41d4-a716-446655440008",
             stepNumber: 3,
             instruction:
                 "In a bowl, whisk together eggs, grated Parmesan cheese, and freshly ground black pepper.",
@@ -114,6 +117,7 @@ writeTest({
             ],
         },
         {
+            id: "550e8400-e29b-41d4-a716-446655440009",
             stepNumber: 4,
             instruction:
                 "Drain pasta, reserving 1 cup pasta water. Add hot pasta to skillet with pancetta and toss quickly with egg mixture off heat.",

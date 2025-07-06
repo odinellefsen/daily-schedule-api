@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { foodRecipeEventContract } from "../../../contracts/recipe";
 import { db } from "../../../db";
@@ -12,27 +12,32 @@ recipe.post("/", async (c) => {
         const body = await c.req.json();
         const parsedBody = foodRecipeEventContract.parse(body);
 
+        // Check for existing recipe
         const existingRecipe = await db.query.recipes.findFirst({
-            where: eq(recipes.id, parsedBody.id),
+            where: or(
+                eq(recipes.id, parsedBody.id),
+                eq(recipes.name, parsedBody.nameOfTheFoodRecipe)
+            ),
         });
 
         if (existingRecipe) {
-            return c.json(
-                {
-                    message: "Recipe already exists ❌",
-                },
-                400
-            );
+            return c.json({ message: "Recipe already exists ❌" }, 400);
         }
 
-        FlowcorePathways.write("recipe.v0/recipe.created.v0", {
+        await FlowcorePathways.write("recipe.v0/recipe.created.v0", {
             data: parsedBody,
         });
 
-        return c.json({
-            message: "Recipe created ✅",
-        });
-    } catch (_error) {}
+        return c.json({ message: "Recipe created ✅" });
+    } catch (error) {
+        if (error instanceof Error) {
+            return c.json(
+                { message: "Validation failed", errors: error.message },
+                400
+            );
+        }
+        return c.json({ message: "Unknown error" }, 500);
+    }
 });
 
 export default recipe;
