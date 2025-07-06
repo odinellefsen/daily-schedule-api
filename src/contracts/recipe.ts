@@ -2,35 +2,41 @@ import { z } from "zod";
 
 enum UnitOfMeasurementEnum {
     // Weight units
-    GRAMS = "Gram",
-    KILOGRAMS = "Kilogram",
+    GRAM = "Grams",
+    KILOGRAM = "Kilograms",
 
     // Volume units
-    MILLILITERS = "Milliliter",
-    LITERS = "Liter",
-    TABLESPOONS = "Tablespoon",
-    TEASPOONS = "Teaspoon",
+    MILLILITER = "Milliliters",
+    LITER = "Liters",
+    TABLESPOON = "Tablespoons",
+    TEASPOON = "Teaspoons",
 
-    // Count units (NEW!)
-    PIECES = "Piece",
+    // Count units
+    PIECE = "Pieces",
     WHOLE = "Whole",
-    EACH = "Each",
-    ITEMS = "Item",
 
     // Approximate units
-    PINCH = "Pinch",
-    HANDFUL = "Handful",
+    PINCH = "Pinches",
+    HANDFUL = "Handfuls",
 
-    // Contextual units (NEW!)
-    CLOVES = "Clove", // for garlic
-    SLICES = "Slice", // for bread, tomatoes
-    STRIPS = "Strip", // for bacon
-    HEADS = "Head", // for lettuce, cabbage
-    BUNCHES = "Bunch", // for herbs
+    // Contextual units
+    CLOVE = "Cloves", // for garlic
+    SLICE = "Slices", // for bread, tomatoes
+    STRIP = "Strips", // for bacon
+    HEAD = "Heads", // for lettuce, cabbage
+    BUNCH = "Bunches", // for herbs
 
     // Flexible
     TO_TASTE = "To Taste",
     AS_NEEDED = "As Needed",
+
+    // Beverage based
+    SHOT = "Shots",
+    DASH = "Dashes",
+    DROP = "Drops",
+    SPLASH = "Splashes",
+    SCOOP = "Scoops",
+    DRIZZLE = "Drizzles",
 }
 
 enum MealTimingEnum {
@@ -70,6 +76,9 @@ export const foodRecipeEventContract = z
         ingredientsOfTheFoodRecipe: z
             .array(
                 z.object({
+                    id: z
+                        .string()
+                        .uuid("The ID of the ingredient must be a valid UUID"),
                     nameOfTheIngredient: z
                         .string()
                         .min(1, "The ingredient name is required")
