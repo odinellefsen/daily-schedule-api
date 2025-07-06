@@ -9,7 +9,7 @@ bun install
 
 This project uses PostgreSQL with Drizzle ORM. Make sure you have a `.env` file with:
 ```
-POSTGRES_CONNECTION_STRING=postgresql://postgres:postgres@localhost:5433/daily-schedule-db
+POSTGRES_CONNECTION_STRING=postgresql://postgres:postgres@localhost:5432/daily-schedule-db
 ```
 
 Start the database with Docker:

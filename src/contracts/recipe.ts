@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-enum UnitOfMeasurementEnum {
+export enum UnitOfMeasurementEnum {
     // Weight units
     GRAM = "Grams",
     KILOGRAM = "Kilograms",
@@ -39,7 +39,7 @@ enum UnitOfMeasurementEnum {
     DRIZZLE = "Drizzles",
 }
 
-enum MealTimingEnum {
+export enum MealTimingEnum {
     BREAKFAST = "Breakfast",
     BRUNCH = "Brunch",
     LUNCH = "Lunch",
