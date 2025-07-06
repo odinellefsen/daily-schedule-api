@@ -116,6 +116,11 @@ export const foodRecipeEventContract = z
                     ingredientsUsedInThisStep: z
                         .array(
                             z.object({
+                                id: z
+                                    .string()
+                                    .uuid(
+                                        "The ID of the ingredient used in a step must be a valid UUID"
+                                    ),
                                 nameOfTheIngredientUsedInThisStep: z
                                     .string()
                                     .min(1, "The ingredient name is required")

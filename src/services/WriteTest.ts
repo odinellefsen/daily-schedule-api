@@ -63,6 +63,7 @@ writeTest({
                 "Bring a large pot of salted water to boil and cook spaghetti according to package directions until al dente.",
             ingredientsUsedInThisStep: [
                 {
+                    id: "550e8400-e29b-41d4-a716-446655440001",
                     nameOfTheIngredientUsedInThisStep: "Spaghetti",
                     quantityOfTheIngredientUsedInThisStep: 400,
                     unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
@@ -76,6 +77,7 @@ writeTest({
                 "While pasta cooks, dice pancetta and cook in a large skillet over medium heat until crispy.",
             ingredientsUsedInThisStep: [
                 {
+                    id: "550e8400-e29b-41d4-a716-446655440002",
                     nameOfTheIngredientUsedInThisStep: "Pancetta",
                     quantityOfTheIngredientUsedInThisStep: 150,
                     unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
@@ -89,18 +91,21 @@ writeTest({
                 "In a bowl, whisk together eggs, grated Parmesan cheese, and freshly ground black pepper.",
             ingredientsUsedInThisStep: [
                 {
+                    id: "550e8400-e29b-41d4-a716-446655440003",
                     nameOfTheIngredientUsedInThisStep: "Eggs",
                     quantityOfTheIngredientUsedInThisStep: 3,
                     unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
                         UnitOfMeasurementEnum.WHOLE,
                 },
                 {
+                    id: "550e8400-e29b-41d4-a716-446655440004",
                     nameOfTheIngredientUsedInThisStep: "Parmesan Cheese",
                     quantityOfTheIngredientUsedInThisStep: 50,
                     unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
                         UnitOfMeasurementEnum.GRAM,
                 },
                 {
+                    id: "550e8400-e29b-41d4-a716-446655440005",
                     nameOfTheIngredientUsedInThisStep: "Black Pepper",
                     quantityOfTheIngredientUsedInThisStep: 1,
                     unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
