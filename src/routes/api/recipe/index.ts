@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { foodRecipeEventContract } from "../../../contracts/recipe";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schema";
+import { ApiResponse } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
 export const recipe = new Hono();
@@ -21,22 +22,24 @@ recipe.post("/", async (c) => {
         });
 
         if (existingRecipe) {
-            return c.json({ message: "Recipe already exists ❌" }, 400);
+            return c.json(ApiResponse.error("Recipe already exists"), 400);
         }
 
         await FlowcorePathways.write("recipe.v0/recipe.created.v0", {
             data: parsedBody,
         });
 
-        return c.json({ message: "Recipe created ✅" });
+        return c.json(
+            ApiResponse.success("Recipe created", { recipeId: parsedBody.id })
+        );
     } catch (error) {
         if (error instanceof Error) {
             return c.json(
-                { message: "Validation failed", errors: error.message },
+                ApiResponse.error("Validation failed", error.message),
                 400
             );
         }
-        return c.json({ message: "Unknown error" }, 500);
+        return c.json(ApiResponse.error("Unknown error"), 500);
     }
 });
 
