@@ -8,6 +8,10 @@
 		"format:fix": "biome format --write src/",
 		"check": "biome check src/",
 		"check:fix": "biome check --write src/",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio",
 		"flowcore:apply:data-core": "flowcore data-core apply -f flowcore.yaml",
 		"flowcore:apply:scenario": "flowcore scenario apply -f flowcore.yaml",
 		"flowcore:apply:proxy": "flowcore scenario apply -f flowcore.yaml",
@@ -16,13 +20,17 @@
 	"dependencies": {
 		"@flowcore/pathways": "^0.16.3",
 		"dotenv": "^17.0.0",
+		"drizzle-kit": "^0.31.4",
+		"drizzle-orm": "^0.44.2",
 		"hono": "^4.8.2",
+		"pg": "^8.16.3",
 		"postgres": "^3.4.7",
 		"zod": "^3.25.67"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.6",
 		"@types/bun": "latest",
+		"@types/pg": "^8.15.4",
 		"env-cmd": "^10.1.0"
 	}
 }
