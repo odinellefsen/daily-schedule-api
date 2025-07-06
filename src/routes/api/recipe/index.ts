@@ -6,7 +6,6 @@ export const recipe = new Hono();
 recipe.post("/", async (c) => {
     try {
         const body = await c.req.json();
-
         const parsedBody = foodRecipeEventContract.parse(body);
 
         console.log("Parsed body", parsedBody);
