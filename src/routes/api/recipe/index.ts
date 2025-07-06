@@ -1,5 +1,6 @@
 import { eq, or } from "drizzle-orm";
 import { Hono } from "hono";
+import { ZodError } from "zod";
 import { foodRecipeEventContract } from "../../../contracts/recipe";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schema";
@@ -37,12 +38,27 @@ recipe.post("/", async (c) => {
             StatusCodes.CREATED
         );
     } catch (error) {
+        if (error instanceof ZodError) {
+            // Format Zod validation errors for better client experience
+            const formattedErrors = error.errors.map((err) => ({
+                field: err.path.join("."),
+                message: err.message,
+                code: err.code,
+            }));
+
+            return c.json(
+                ApiResponse.error("Request validation failed", formattedErrors),
+                StatusCodes.BAD_REQUEST
+            );
+        }
+
         if (error instanceof Error) {
             return c.json(
                 ApiResponse.error("Validation failed", error.message),
                 StatusCodes.BAD_REQUEST
             );
         }
+
         return c.json(
             ApiResponse.error("Unknown error"),
             StatusCodes.SERVER_ERROR
