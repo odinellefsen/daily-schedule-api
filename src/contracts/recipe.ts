@@ -94,6 +94,7 @@ const baseFoodRecipeEventSchema = z.object({
             1,
             "If ingredientsOfTheFoodRecipe is NOT undefined, you must have at least one ingredient"
         )
+        .max(50, "The number of ingredients in the recipe must be less than 50")
         .optional(),
     stepForStepInstructionsToMakeTheFoodRecipe: z
         .array(
@@ -138,6 +139,10 @@ const baseFoodRecipeEventSchema = z.object({
                         1,
                         "If ingredientsUsedInThisStep is NOT undefined, you must have at least one ingredient"
                     )
+                    .max(
+                        50,
+                        "The number of ingredients used in this step must be less than 50"
+                    )
                     .optional(),
             })
         )
@@ -145,6 +150,7 @@ const baseFoodRecipeEventSchema = z.object({
             1,
             "If stepForStepInstructionsToMakeTheFoodRecipe is NOT undefined, you must have at least one step"
         )
+        .max(30, "The number of steps in the recipe must be less than 30")
         .optional(),
 });
 

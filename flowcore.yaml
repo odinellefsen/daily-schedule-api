@@ -11,26 +11,11 @@ dataCore:
       eventTypes:
         recipe.created.v0:
           description: "Recipe created event"
-        recipe.updated.v0:
-          description: "Recipe updated event"
+        recipe.metadata.updated.v0:
+          description: "Recipe basic info updated (name, description, timing)"
+        recipe.ingredients.updated.v0:
+          description: "Recipe ingredients list updated"
+        recipe.instructions.updated.v0:
+          description: "Recipe cooking instructions updated"
         recipe.archived.v0:
           description: "Recipe archived event"
-
-# if you want to deploy proxyEndpoints/transformers to production you can use this snippet.
-# you can call "flowcore scenario apply -f flowcore.yaml" or "flowcore apply -f flowcore.yaml" if you want to apply the entire manifest file
-scenario:
-  name: example-scenario
-  description: "An example scenario"
-  transformers:
-    example-transformer:
-      description: "An example transformer"
-      dataCore: example-data-core
-      flowType: example
-      events:
-        - example.event.0
-      parameters:
-        - name: PROXY_ENDPOINT
-          type: manual
-          value: "https://example.com"
-      blueprint:
-        artifactUrl: "https://flowcore-public-runtimes.s3.eu-west-1.amazonaws.com/transformer-proxy-1.1.0.zip"
