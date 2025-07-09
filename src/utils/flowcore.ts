@@ -33,20 +33,43 @@ export const FlowcorePathways = new PathwaysBuilder({
     })
     .register({
         flowType: "recipe.v0",
-        eventType: "recipe.updated.v0",
+        eventType: "recipe.deleted.v0",
         schema: baseFoodRecipeEventSchema,
         writable: true,
     })
     .register({
         flowType: "recipe.v0",
-        eventType: "recipe.deleted.v0",
+        eventType: "recipe.metadata.updated.v0",
+        schema: baseFoodRecipeEventSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe.ingredients.updated.v0",
+        schema: baseFoodRecipeEventSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe.instructions.updated.v0",
         schema: baseFoodRecipeEventSchema,
         writable: true,
     });
 
 FlowcorePathways.handle("recipe.v0/recipe.created.v0", handlerRecipeCreated);
-FlowcorePathways.handle("recipe.v0/recipe.updated.v0", handlerRecipeUpdated);
 FlowcorePathways.handle("recipe.v0/recipe.deleted.v0", handlerRecipeDeleted);
+FlowcorePathways.handle(
+    "recipe.v0/recipe.metadata.updated.v0",
+    handlerRecipeUpdated
+);
+FlowcorePathways.handle(
+    "recipe.v0/recipe.ingredients.updated.v0",
+    handlerRecipeUpdated
+);
+FlowcorePathways.handle(
+    "recipe.v0/recipe.instructions.updated.v0",
+    handlerRecipeUpdated
+);
 
 export const pathwaysRouter = new PathwayRouter(
     FlowcorePathways,
