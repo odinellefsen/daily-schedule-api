@@ -5,7 +5,11 @@ import {
 } from "@flowcore/pathways";
 import { zodEnv } from "../../env";
 import { baseFoodRecipeEventSchema } from "../contracts/recipe";
-import { handlerRecipeCreated } from "../services/HandleTest";
+import {
+    handlerRecipeCreated,
+    handlerRecipeDeleted,
+    handlerRecipeUpdated,
+} from "../services/HandleTest";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
 const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
@@ -26,9 +30,23 @@ export const FlowcorePathways = new PathwaysBuilder({
         eventType: "recipe.created.v0",
         schema: baseFoodRecipeEventSchema,
         writable: true,
+    })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe.updated.v0",
+        schema: baseFoodRecipeEventSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe.deleted.v0",
+        schema: baseFoodRecipeEventSchema,
+        writable: true,
     });
 
 FlowcorePathways.handle("recipe.v0/recipe.created.v0", handlerRecipeCreated);
+FlowcorePathways.handle("recipe.v0/recipe.updated.v0", handlerRecipeUpdated);
+FlowcorePathways.handle("recipe.v0/recipe.deleted.v0", handlerRecipeDeleted);
 
 export const pathwaysRouter = new PathwayRouter(
     FlowcorePathways,
