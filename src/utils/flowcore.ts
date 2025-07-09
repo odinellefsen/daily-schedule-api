@@ -5,7 +5,6 @@ import {
 } from "@flowcore/pathways";
 import { zodEnv } from "../../env";
 import {
-    baseFoodRecipeEventSchema,
     recipeIngredientsSchema,
     recipeInstructionsSchema,
     recipeMetadataSchema,
@@ -18,7 +17,7 @@ import {
     handlerRecipeInstructionsCreated,
     handlerRecipeInstructionsUpdated,
     handlerRecipeMetadataUpdated,
-} from "../services/HandleTest";
+} from "../services/RecipeHandlers";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
 const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
