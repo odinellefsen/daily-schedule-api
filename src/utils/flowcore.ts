@@ -4,11 +4,20 @@ import {
     PathwaysBuilder,
 } from "@flowcore/pathways";
 import { zodEnv } from "../../env";
-import { baseFoodRecipeEventSchema } from "../contracts/recipe";
+import {
+    baseFoodRecipeEventSchema,
+    recipeIngredientsSchema,
+    recipeInstructionsSchema,
+    recipeMetadataSchema,
+} from "../contracts/recipe";
 import {
     handlerRecipeCreated,
     handlerRecipeDeleted,
-    handlerRecipeUpdated,
+    handlerRecipeIngredientsCreated,
+    handlerRecipeIngredientsUpdated,
+    handlerRecipeInstructionsCreated,
+    handlerRecipeInstructionsUpdated,
+    handlerRecipeMetadataUpdated,
 } from "../services/HandleTest";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
@@ -28,48 +37,68 @@ export const FlowcorePathways = new PathwaysBuilder({
     .register({
         flowType: "recipe.v0",
         eventType: "recipe.created.v0",
-        schema: baseFoodRecipeEventSchema,
-        writable: true,
-    })
-    .register({
-        flowType: "recipe.v0",
-        eventType: "recipe.deleted.v0",
-        schema: baseFoodRecipeEventSchema,
+        schema: recipeMetadataSchema,
         writable: true,
     })
     .register({
         flowType: "recipe.v0",
         eventType: "recipe.metadata.updated.v0",
-        schema: baseFoodRecipeEventSchema,
+        schema: recipeMetadataSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe.ingredients.created.v0",
+        schema: recipeIngredientsSchema,
         writable: true,
     })
     .register({
         flowType: "recipe.v0",
         eventType: "recipe.ingredients.updated.v0",
-        schema: baseFoodRecipeEventSchema,
+        schema: recipeIngredientsSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe.instructions.created.v0",
+        schema: recipeInstructionsSchema,
         writable: true,
     })
     .register({
         flowType: "recipe.v0",
         eventType: "recipe.instructions.updated.v0",
-        schema: baseFoodRecipeEventSchema,
+        schema: recipeInstructionsSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe.deleted.v0",
+        schema: recipeMetadataSchema,
         writable: true,
     });
 
 FlowcorePathways.handle("recipe.v0/recipe.created.v0", handlerRecipeCreated);
-FlowcorePathways.handle("recipe.v0/recipe.deleted.v0", handlerRecipeDeleted);
 FlowcorePathways.handle(
     "recipe.v0/recipe.metadata.updated.v0",
-    handlerRecipeUpdated
+    handlerRecipeMetadataUpdated
+);
+FlowcorePathways.handle(
+    "recipe.v0/recipe.ingredients.created.v0",
+    handlerRecipeIngredientsCreated
 );
 FlowcorePathways.handle(
     "recipe.v0/recipe.ingredients.updated.v0",
-    handlerRecipeUpdated
+    handlerRecipeIngredientsUpdated
+);
+FlowcorePathways.handle(
+    "recipe.v0/recipe.instructions.created.v0",
+    handlerRecipeInstructionsCreated
 );
 FlowcorePathways.handle(
     "recipe.v0/recipe.instructions.updated.v0",
-    handlerRecipeUpdated
+    handlerRecipeInstructionsUpdated
 );
+FlowcorePathways.handle("recipe.v0/recipe.deleted.v0", handlerRecipeDeleted);
 
 export const pathwaysRouter = new PathwayRouter(
     FlowcorePathways,

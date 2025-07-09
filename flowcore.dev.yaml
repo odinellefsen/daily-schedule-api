@@ -6,7 +6,12 @@ development:
       flowType: recipe.v0
       events:
         - recipe.created.v0
-        - recipe.updated.v0
+        - recipe.metadata.updated.v0
+        - recipe.ingredients.created.v0
+        - recipe.ingredients.updated.v0
+        - recipe.instructions.created.v0
+        - recipe.instructions.updated.v0
         - recipe.archived.v0
+        - recipe.deleted.v0
       endpoints:
        - ""

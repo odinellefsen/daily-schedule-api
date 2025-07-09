@@ -10,12 +10,18 @@ dataCore:
       description: "Recipe data collection for daily scheduler"
       eventTypes:
         recipe.created.v0:
-          description: "Recipe created event"
+          description: "Recipe metadata created event"
         recipe.metadata.updated.v0:
           description: "Recipe basic info updated (name, description, timing)"
+        recipe.ingredients.created.v0:
+          description: "Recipe ingredients initially added"
         recipe.ingredients.updated.v0:
           description: "Recipe ingredients list updated"
+        recipe.instructions.created.v0:
+          description: "Recipe instructions initially added"
         recipe.instructions.updated.v0:
           description: "Recipe cooking instructions updated"
         recipe.archived.v0:
           description: "Recipe archived event"
+        recipe.deleted.v0:
+          description: "Recipe permanently deleted event"

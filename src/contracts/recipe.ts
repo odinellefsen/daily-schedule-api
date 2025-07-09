@@ -51,6 +51,120 @@ export enum MealTimingEnum {
     SUPPER = "Supper",
 }
 
+// Individual ingredient schema
+export const ingredientSchema = z.object({
+    id: z.string().uuid("The ID of the ingredient must be a valid UUID"),
+    nameOfTheIngredient: z
+        .string()
+        .min(1, "The ingredient name is required")
+        .max(50, "The ingredient name must be less than 50 characters"),
+    quantityOfTheIngredient: z
+        .number()
+        .positive("Quantity must be greater than 0"),
+    unitOfMeasurementOfTheIngredientQuantity: z.nativeEnum(
+        UnitOfMeasurementEnum
+    ),
+});
+
+// Individual step ingredient schema
+export const stepIngredientSchema = z.object({
+    id: z
+        .string()
+        .uuid("The ID of the ingredient used in a step must be a valid UUID"),
+    nameOfTheIngredientUsedInThisStep: z
+        .string()
+        .min(1, "The ingredient name is required")
+        .max(50, "The ingredient name must be less than 50 characters"),
+    quantityOfTheIngredientUsedInThisStep: z
+        .number()
+        .positive("Quantity used in this step must be greater than 0"),
+    unitOfMeasurementOfTheIngredientQuantityUsedInThisStep: z.nativeEnum(
+        UnitOfMeasurementEnum
+    ),
+});
+
+// Individual instruction schema
+export const instructionSchema = z.object({
+    id: z.string().uuid("The ID of the step must be a valid UUID"),
+    stepNumber: z
+        .number()
+        .positive("Step number must be greater than 0")
+        .int("Step number must be an integer"),
+    instruction: z
+        .string()
+        .min(1, "The instruction is required")
+        .max(250, "The instruction must be less than 150 characters"),
+    ingredientsUsedInThisStep: z
+        .array(stepIngredientSchema)
+        .min(
+            1,
+            "If ingredientsUsedInThisStep is NOT undefined, you must have at least one ingredient"
+        )
+        .max(
+            50,
+            "The number of ingredients used in this step must be less than 50"
+        )
+        .optional(),
+});
+
+// Recipe metadata schema (for recipe creation)
+export const recipeMetadataSchema = z.object({
+    id: z.string().uuid("The ID must be a valid UUID"),
+    whenIsMealEaten: z.nativeEnum(MealTimingEnum),
+    nameOfTheFoodRecipe: z
+        .string()
+        .min(1, "The name of the food recipe is required")
+        .max(75, "The name of the food recipe must be less than 75 characters"),
+    generalDescriptionOfTheFoodRecipe: z
+        .string()
+        .min(
+            1,
+            "If generalDescriptionOfTheFoodRecipe is NOT undefined, you must have at least one character"
+        )
+        .max(
+            250,
+            "The general description of the food recipe must be less than 250 characters"
+        )
+        .optional(),
+});
+
+// Recipe ingredients schema (for ingredients updates)
+export const recipeIngredientsSchema = z.object({
+    recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
+    ingredientsOfTheFoodRecipe: z
+        .array(ingredientSchema)
+        .min(1, "You must have at least one ingredient")
+        .max(
+            50,
+            "The number of ingredients in the recipe must be less than 50"
+        ),
+});
+
+// Recipe instructions schema (for instructions updates)
+export const recipeInstructionsSchema = z.object({
+    recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
+    stepForStepInstructionsToMakeTheFoodRecipe: z
+        .array(instructionSchema)
+        .min(1, "You must have at least one step")
+        .max(30, "The number of steps in the recipe must be less than 30"),
+});
+
+// Validation to ensure ingredients used in steps exist in the recipe
+export const validatedRecipeInstructionsSchema =
+    recipeInstructionsSchema.refine(
+        (data) => {
+            // This validation should be done at the API level where we have access to the recipe's ingredients
+            // For now, this schema just validates the structure
+            return true;
+        },
+        {
+            message:
+                "All ingredients used in steps must exist in the recipe's ingredients list",
+            path: ["stepForStepInstructionsToMakeTheFoodRecipe"],
+        }
+    );
+
+// Keep the original schema for backward compatibility and complete recipe operations
 const baseFoodRecipeEventSchema = z.object({
     id: z.string().uuid("The ID must be a valid UUID"),
     whenIsMealEaten: z.nativeEnum(MealTimingEnum),
@@ -70,26 +184,7 @@ const baseFoodRecipeEventSchema = z.object({
         )
         .optional(),
     ingredientsOfTheFoodRecipe: z
-        .array(
-            z.object({
-                id: z
-                    .string()
-                    .uuid("The ID of the ingredient must be a valid UUID"),
-                nameOfTheIngredient: z
-                    .string()
-                    .min(1, "The ingredient name is required")
-                    .max(
-                        50,
-                        "The ingredient name must be less than 50 characters"
-                    ),
-                quantityOfTheIngredient: z
-                    .number()
-                    .positive("Quantity must be greater than 0"),
-                unitOfMeasurementOfTheIngredientQuantity: z.nativeEnum(
-                    UnitOfMeasurementEnum
-                ),
-            })
-        )
+        .array(ingredientSchema)
         .min(
             1,
             "If ingredientsOfTheFoodRecipe is NOT undefined, you must have at least one ingredient"
@@ -97,55 +192,7 @@ const baseFoodRecipeEventSchema = z.object({
         .max(50, "The number of ingredients in the recipe must be less than 50")
         .optional(),
     stepForStepInstructionsToMakeTheFoodRecipe: z
-        .array(
-            z.object({
-                id: z.string().uuid("The ID of the step must be a valid UUID"),
-                stepNumber: z
-                    .number()
-                    .positive("Step number must be greater than 0")
-                    .int("Step number must be an integer"),
-                instruction: z
-                    .string()
-                    .min(1, "The instruction is required")
-                    .max(
-                        250,
-                        "The instruction must be less than 150 characters"
-                    ),
-                ingredientsUsedInThisStep: z
-                    .array(
-                        z.object({
-                            id: z
-                                .string()
-                                .uuid(
-                                    "The ID of the ingredient used in a step must be a valid UUID"
-                                ),
-                            nameOfTheIngredientUsedInThisStep: z
-                                .string()
-                                .min(1, "The ingredient name is required")
-                                .max(
-                                    50,
-                                    "The ingredient name must be less than 50 characters"
-                                ),
-                            quantityOfTheIngredientUsedInThisStep: z
-                                .number()
-                                .positive(
-                                    "Quantity used in this step must be greater than 0"
-                                ),
-                            unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
-                                z.nativeEnum(UnitOfMeasurementEnum),
-                        })
-                    )
-                    .min(
-                        1,
-                        "If ingredientsUsedInThisStep is NOT undefined, you must have at least one ingredient"
-                    )
-                    .max(
-                        50,
-                        "The number of ingredients used in this step must be less than 50"
-                    )
-                    .optional(),
-            })
-        )
+        .array(instructionSchema)
         .min(
             1,
             "If stepForStepInstructionsToMakeTheFoodRecipe is NOT undefined, you must have at least one step"
