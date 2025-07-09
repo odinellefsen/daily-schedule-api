@@ -51,23 +51,6 @@ export enum MealTimingEnum {
     SUPPER = "Supper",
 }
 
-// Individual step ingredient schema
-export const stepIngredientSchema = z.object({
-    id: z
-        .string()
-        .uuid("The ID of the ingredient used in a step must be a valid UUID"),
-    nameOfTheIngredientUsedInThisStep: z
-        .string()
-        .min(1, "The ingredient name is required")
-        .max(50, "The ingredient name must be less than 50 characters"),
-    quantityOfTheIngredientUsedInThisStep: z
-        .number()
-        .positive("Quantity used in this step must be greater than 0"),
-    unitOfMeasurementOfTheIngredientQuantityUsedInThisStep: z.nativeEnum(
-        UnitOfMeasurementEnum
-    ),
-});
-
 // Recipe metadata schema (for recipe creation)
 export const recipeMetadataSchema = z.object({
     id: z.string().uuid("The ID must be a valid UUID"),
@@ -139,7 +122,29 @@ export const recipeInstructionsSchema = z.object({
                         "The instruction must be less than 150 characters"
                     ),
                 ingredientsUsedInThisStep: z
-                    .array(stepIngredientSchema)
+                    .array(
+                        z.object({
+                            id: z
+                                .string()
+                                .uuid(
+                                    "The ID of the ingredient used in a step must be a valid UUID"
+                                ),
+                            nameOfTheIngredientUsedInThisStep: z
+                                .string()
+                                .min(1, "The ingredient name is required")
+                                .max(
+                                    50,
+                                    "The ingredient name must be less than 50 characters"
+                                ),
+                            quantityOfTheIngredientUsedInThisStep: z
+                                .number()
+                                .positive(
+                                    "Quantity used in this step must be greater than 0"
+                                ),
+                            unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
+                                z.nativeEnum(UnitOfMeasurementEnum),
+                        })
+                    )
                     .min(
                         1,
                         "If ingredientsUsedInThisStep is NOT undefined, you must have at least one ingredient"
