@@ -2,7 +2,6 @@ import type { FlowcoreEvent } from "@flowcore/pathways";
 import { eq } from "drizzle-orm";
 import type z from "zod";
 import type {
-    foodRecipeEventContract,
     recipeIngredientsSchema,
     recipeInstructionsSchema,
     recipeMetadataSchema,
@@ -82,7 +81,7 @@ export async function handlerRecipeInstructionsCreated(
     // This will require creating a recipe_instructions table
     console.log(
         "Instructions to be stored:",
-        event.payload.stepForStepInstructionsToMakeTheFoodRecipe
+        event.payload.stepByStepInstructionsToMakeTheFoodRecipe
     );
 }
 
@@ -97,7 +96,7 @@ export async function handlerRecipeInstructionsUpdated(
     // This will require creating a recipe_instructions table
     console.log(
         "Instructions to be updated:",
-        event.payload.stepForStepInstructionsToMakeTheFoodRecipe
+        event.payload.stepByStepInstructionsToMakeTheFoodRecipe
     );
 }
 
@@ -109,22 +108,4 @@ export async function handlerRecipeDeleted(
     console.log("received a recipe deleted event ✅", event);
 
     await db.delete(recipes).where(eq(recipes.id, event.payload.id));
-}
-
-// Keep the old handler for backward compatibility
-export async function handlerRecipeUpdated(
-    event: Omit<FlowcoreEvent, "payload"> & {
-        payload: z.infer<typeof foodRecipeEventContract>;
-    }
-) {
-    console.log("received a recipe updated event ✅", event);
-
-    await db
-        .update(recipes)
-        .set({
-            name: event.payload.nameOfTheFoodRecipe,
-            description:
-                event.payload.generalDescriptionOfTheFoodRecipe || null,
-        })
-        .where(eq(recipes.id, event.payload.id));
 }

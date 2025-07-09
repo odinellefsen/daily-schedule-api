@@ -106,7 +106,7 @@ export const recipeIngredientsSchema = z.object({
 // Recipe instructions schema (for instructions updates)
 export const recipeInstructionsSchema = z.object({
     recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
-    stepForStepInstructionsToMakeTheFoodRecipe: z
+    stepByStepInstructionsToMakeTheFoodRecipe: z
         .array(
             z.object({
                 id: z.string().uuid("The ID of the step must be a valid UUID"),
