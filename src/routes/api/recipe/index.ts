@@ -2,9 +2,9 @@ import { eq, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { ZodError } from "zod";
 import {
+    recipeCreateSchema,
     recipeIngredientsSchema,
     recipeInstructionsSchema,
-    recipeMetadataSchema,
 } from "../../../contracts/recipe";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schema";
@@ -17,12 +17,12 @@ export const recipe = new Hono();
 recipe.post("/", async (c) => {
     try {
         const body = await c.req.json();
-        const parsedBody = recipeMetadataSchema.parse(body);
+        const parsedBody = recipeCreateSchema.parse(body);
 
         // Check for existing recipe
         const existingRecipe = await db.query.recipes.findFirst({
             where: or(
-                eq(recipes.id, parsedBody.id),
+                eq(recipes.id, parsedBody.recipeId),
                 eq(recipes.name, parsedBody.nameOfTheFoodRecipe)
             ),
         });
@@ -40,7 +40,7 @@ recipe.post("/", async (c) => {
 
         return c.json(
             ApiResponse.success("Recipe metadata created", {
-                recipeId: parsedBody.id,
+                recipeId: parsedBody.recipeId,
             }),
             StatusCodes.CREATED
         );

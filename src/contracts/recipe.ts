@@ -51,9 +51,10 @@ export enum MealTimingEnum {
     SUPPER = "Supper",
 }
 
-// Recipe metadata schema (for recipe creation)
-export const recipeMetadataSchema = z.object({
-    recipeId: z.string().uuid("The ID must be a valid UUID"),
+// Recipe create schema
+// This schema is used to create a recipe
+export const recipeCreateSchema = z.object({
+    recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
     whenIsMealEaten: z.nativeEnum(MealTimingEnum),
     nameOfTheFoodRecipe: z
         .string()
@@ -71,9 +72,10 @@ export const recipeMetadataSchema = z.object({
         )
         .optional(),
 });
-export type RecipeMetadataType = z.infer<typeof recipeMetadataSchema>;
+export type RecipeCreateType = z.infer<typeof recipeCreateSchema>;
 
-// Recipe ingredients schema (for ingredients creation and updates)
+// Recipe ingredients schema
+// This schema is used to create and update ingredients for a recipe
 export const recipeIngredientsSchema = z.object({
     recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
     ingredientsOfTheFoodRecipe: z
@@ -81,7 +83,7 @@ export const recipeIngredientsSchema = z.object({
             z.object({
                 ingredientId: z
                     .string()
-                    .uuid("The ID of the ingredient must be a valid UUID"),
+                    .uuid("The ingredient ID must be a valid UUID"),
                 nameOfTheIngredient: z
                     .string()
                     .min(1, "The ingredient name is required")
@@ -105,15 +107,14 @@ export const recipeIngredientsSchema = z.object({
 });
 export type RecipeIngredientsType = z.infer<typeof recipeIngredientsSchema>;
 
-// Recipe instructions schema (for instructions creation and updates)
+// Recipe instructions schema
+// This schema is used to create and update instructions for a recipe
 export const recipeInstructionsSchema = z.object({
     recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
     stepByStepInstructionsToMakeTheFoodRecipe: z
         .array(
             z.object({
-                stepId: z
-                    .string()
-                    .uuid("The ID of the step must be a valid UUID"),
+                stepId: z.string().uuid("The step ID must be a valid UUID"),
                 stepNumber: z
                     .number()
                     .positive("Step number must be greater than 0")
@@ -131,7 +132,7 @@ export const recipeInstructionsSchema = z.object({
                             ingredientId: z
                                 .string()
                                 .uuid(
-                                    "The ID of the ingredient used in a step must be a valid UUID"
+                                    "The ingredient ID used in a step must be a valid UUID"
                                 ),
                             nameOfTheIngredientUsedInThisStep: z
                                 .string()

@@ -1,10 +1,8 @@
 import type { z } from "zod";
-import { MealTimingEnum, type recipeMetadataSchema } from "../contracts/recipe";
+import { MealTimingEnum, type recipeCreateSchema } from "../contracts/recipe";
 import { FlowcorePathways } from "../utils/flowcore";
 
-export const writeTest = async (
-    recipe: z.infer<typeof recipeMetadataSchema>
-) => {
+export const writeTest = async (recipe: z.infer<typeof recipeCreateSchema>) => {
     await FlowcorePathways.write("recipe.v0/recipe.created.v0", {
         data: recipe,
     });
