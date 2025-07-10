@@ -71,8 +71,9 @@ export const recipeMetadataSchema = z.object({
         )
         .optional(),
 });
+export type RecipeMetadataType = z.infer<typeof recipeMetadataSchema>;
 
-// Recipe ingredients schema (for ingredients updates)
+// Recipe ingredients schema (for ingredients creation and updates)
 export const recipeIngredientsSchema = z.object({
     recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
     ingredientsOfTheFoodRecipe: z
@@ -102,8 +103,9 @@ export const recipeIngredientsSchema = z.object({
             "The number of ingredients in the recipe must be less than 50"
         ),
 });
+export type RecipeIngredientsType = z.infer<typeof recipeIngredientsSchema>;
 
-// Recipe instructions schema (for instructions updates)
+// Recipe instructions schema (for instructions creation and updates)
 export const recipeInstructionsSchema = z.object({
     recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
     stepByStepInstructionsToMakeTheFoodRecipe: z
@@ -161,3 +163,4 @@ export const recipeInstructionsSchema = z.object({
         .min(1, "You must have at least one step")
         .max(30, "The number of steps in the recipe must be less than 30"),
 });
+export type RecipeInstructionsType = z.infer<typeof recipeInstructionsSchema>;
