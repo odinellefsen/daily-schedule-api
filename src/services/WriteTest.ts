@@ -1,5 +1,6 @@
 import type { z } from "zod";
-import { MealTimingEnum, type recipeCreateSchema } from "../contracts/recipe";
+import { MealTimingEnum } from "../contracts/recipe/recipe.shared_utils";
+import type { recipeCreateSchema } from "../contracts/recipe/recipe-entity.contract";
 import { FlowcorePathways } from "../utils/flowcore";
 
 export const writeTest = async (recipe: z.infer<typeof recipeCreateSchema>) => {
