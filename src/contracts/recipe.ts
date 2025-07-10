@@ -53,7 +53,7 @@ export enum MealTimingEnum {
 
 // Recipe metadata schema (for recipe creation)
 export const recipeMetadataSchema = z.object({
-    id: z.string().uuid("The ID must be a valid UUID"),
+    recipeId: z.string().uuid("The ID must be a valid UUID"),
     whenIsMealEaten: z.nativeEnum(MealTimingEnum),
     nameOfTheFoodRecipe: z
         .string()
@@ -78,7 +78,7 @@ export const recipeIngredientsSchema = z.object({
     ingredientsOfTheFoodRecipe: z
         .array(
             z.object({
-                id: z
+                ingredientId: z
                     .string()
                     .uuid("The ID of the ingredient must be a valid UUID"),
                 nameOfTheIngredient: z
@@ -109,7 +109,9 @@ export const recipeInstructionsSchema = z.object({
     stepByStepInstructionsToMakeTheFoodRecipe: z
         .array(
             z.object({
-                id: z.string().uuid("The ID of the step must be a valid UUID"),
+                stepId: z
+                    .string()
+                    .uuid("The ID of the step must be a valid UUID"),
                 stepNumber: z
                     .number()
                     .positive("Step number must be greater than 0")
@@ -119,12 +121,12 @@ export const recipeInstructionsSchema = z.object({
                     .min(1, "The instruction is required")
                     .max(
                         250,
-                        "The instruction must be less than 150 characters"
+                        "The instruction must be less than 250 characters"
                     ),
                 ingredientsUsedInThisStep: z
                     .array(
                         z.object({
-                            id: z
+                            ingredientId: z
                                 .string()
                                 .uuid(
                                     "The ID of the ingredient used in a step must be a valid UUID"

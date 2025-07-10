@@ -15,7 +15,7 @@ export const writeTest = async (
 // Example usage
 export const runTest = async (): Promise<void> => {
     const testRecipe = {
-        id: crypto.randomUUID(),
+        recipeId: crypto.randomUUID(),
         nameOfTheFoodRecipe: "Test Recipe",
         generalDescriptionOfTheFoodRecipe: "A test recipe",
         whenIsMealEaten: MealTimingEnum.DINNER,
