@@ -1,0 +1,162 @@
+---
+description: >
+  Always integrate with Memory Mesh MCP before starting *any* AI-driven task:
+  search team knowledge, explore related fragments, then propose or create new
+  memory fragments as needed.
+globs:
+  - '**/*'
+alwaysApply: true
+---
+
+# Memory Mesh MCP Integration
+
+Repository: cfo
+WorkspaceId: 60c10ca2-4115-4c1a-b6d7-04ac39fd3938
+Workspace Fragment Types: knowledge, recipe, solution, template, blogposts, llm-rules, plan, prd, research
+
+## Fragment Type Mapping
+
+The following fragment types are available in this workspace:
+
+- **knowledge**: `04a5fb62-1ba5-436c-acf7-f65f3a5ba6f6`
+- **recipe**: `502a2fcf-ca6f-4b8a-b719-cd50469d3be6`
+- **solution**: `b06897e0-c39e-486b-8a9b-aab0ea260694`
+- **template**: `da2cd7c6-68f6-4071-8e2e-d2a0a2773fa9`
+- **blogposts**: `e451cb11-8ce6-4a6c-b4b2-144492382b52`
+- **llm-rules**: `200cbb12-47ec-4a02-afc5-0b270148587b`
+- **plan**: `e5c9f57c-f68a-4702-bea8-d5cb02a02cb8`
+- **prd**: `fdd14de8-3943-4228-af59-c6ecc7237a2c`
+- **research**: `ca7aa44b-04a5-44dd-b2bf-cfedc1dbba2f`
+
+## Available Tools
+
+### create_memory_fragment
+Create new memory fragments for insights or solved problems:
+- Use when you identify a non-trivial solution, pattern, recipe or template
+- **Always include repository context** when available for better organization and searchability
+- **Draft first**: assemble type, title, content, and tags
+- **Ask user to confirm** before creating:
+  > "I'd like to document this as a <type> fragment titled <title>. Proceed?"
+- On confirmation, call with full repository and workspace context
+- Include the full content of the fragment, do not just post the update itself, post it as a combined full update
+
+### update_memory_fragment
+Update existing memory fragments:
+- Use when refining solutions, adding information, or correcting content
+- **Always show the user the resulting update first** and ask for confirmation before applying
+- **Draft the update**: prepare the updated fields and present to user
+- Example confirmation:
+  > "I'd like to update fragment '<title>' with the following changes: [list changes]. Apply these updates?"
+- Only call the tool after user confirmation
+
+### search_memory_fragments
+Search existing team knowledge before creating new fragments:
+- Perform similarity search on task descriptions
+- If you find ≥ 3 high-relevance fragments, integrate their insights
+- Otherwise, escalate to graph exploration
+
+### get_memory_fragment_content
+Retrieve complete fragment content by ID:
+- Get detailed analysis and deep-dive access to specific fragments
+- Input fragment ID from search results
+- Returns complete fragment content including metadata
+
+### find_related_fragments
+Discover fragments connected through shared tags and relationships:
+- Input a fragment ID to find related content
+- Explores tag-based connections and graph relationships
+- Useful for expanding context beyond initial search results
+
+### explore_workspace_graph
+Get knowledge graph visualization with nodes and relationships:
+- Shows fragments, tags, and their connections
+- Includes graph statistics for workspace analysis
+- Helps understand knowledge structure and patterns
+
+### explore_tag_connections
+Navigate fragments through specific tag relationships:
+- Input specific tags to explore connections
+- Discover tag-based relationships across fragments
+- Maximum 5 tags per exploration for focused results
+
+### list_workspaces
+List all accessible workspaces with permissions:
+- Shows workspaces you have access to
+- Includes role and permission information
+- Useful for workspace management and navigation
+
+### get_fragment_types
+Retrieve available fragment types for a workspace:
+- Shows all fragment types (knowledge, recipe, solution, template, custom types)
+- Essential for understanding classification options
+- Use for validation of fragment type IDs
+
+## Pre-Task Workflow
+
+1. **Search**: search_memory_fragments
+2. **Explore** (if you need more context):
+   - explore_workspace_graph
+   - explore_tag_connections
+   - find_related_fragments
+3. **Iterate** until you have complete context, then address the user's request, try to be thorough and detailed in your research.
+
+## Post-Task Workflow
+
+If you have a new idea or solution, you can propose a new fragment:
+
+1. **Draft & Propose**: Build fragment structure and ask user for approval
+2. **Create**: create_memory_fragment
+
+If you require a new fragment type, propose the user create it in the workspace and tell you when ready.
+
+## Usage Guidelines
+
+**Always provide repository context** in every MCP call when available (e.g. "my-repo").
+
+**Fragment Creation Strategy**:
+- Document novel solutions, non-obvious patterns, reusable recipes
+- **Always include repository context** when available for better organization
+- Use clear titles and comprehensive descriptions
+- Add relevant tags; leverage auto-generated repo and tech tags
+
+**Common Generic Tags** (use when relevant):
+
+*Technology & Framework Tags:*
+- 'nodejs', 'javascript', 'typescript', 'python', 'react', 'angular', 'vue', 'nextjs'
+- 'express', 'fastify', 'nestjs', 'spring-boot', 'django', 'flask', 'rails'
+- 'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'terraform', 'ansible'
+
+*Database & Storage Tags:*
+- 'database', 'sql', 'nosql', 'mongodb', 'postgresql', 'mysql', 'redis', 'elasticsearch'
+- 'prisma', 'typeorm', 'sequelize', 'mongoose', 'knex'
+
+*Development & Architecture Tags:*
+- 'authentication', 'authorization', 'oauth', 'jwt', 'security', 'encryption'
+- 'api', 'rest', 'graphql', 'microservices', 'monolith', 'serverless'
+- 'testing', 'unit-tests', 'integration-tests', 'e2e-tests', 'mocking'
+- 'ci-cd', 'deployment', 'devops', 'monitoring', 'logging', 'performance'
+
+*UI & Frontend Tags:*
+- 'ui', 'ux', 'design-system', 'components', 'responsive', 'accessibility'
+- 'theme', 'styling', 'css', 'sass', 'tailwind', 'styled-components'
+- 'forms', 'validation', 'state-management', 'routing', 'animation'
+
+*General Development Tags:*
+- 'configuration', 'environment', 'debugging', 'optimization', 'refactoring'
+- 'error-handling', 'validation', 'caching', 'pagination', 'search'
+- 'file-upload', 'email', 'notifications', 'scheduling', 'background-jobs'
+
+Please generate tags that are concise and to the point, and consider that this is used by the LLM to search for relevant fragments.
+
+**Search Strategy**:
+- Never skip searching; prevent duplicate effort
+- Use search first, then graph exploration
+- Iterate until you feel confident you understand prior art
+
+## Auto-Enhancement
+
+The MCP server will:
+- Inject 'repo:<repository>' tag automatically when repository context provided
+- Detect and tag technologies and topics
+- Prevent duplicate fragments
+- Format content for readability
