@@ -1,6 +1,6 @@
 import { UnitOfMeasurementEnum } from "../recipe";
-import { categoryHelpers } from "./food-categories.contract";
 import type { FoodItemType } from "./food-item.contract";
+import { categoryHelpers } from "./food-item-categories.contract";
 
 // Example food definitions showing the hierarchical category system
 export const exampleFoodItems: FoodItemType[] = [

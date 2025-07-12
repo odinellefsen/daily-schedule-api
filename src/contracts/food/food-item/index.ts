@@ -1,3 +1,3 @@
-export * from "./food-categories.contract";
-export * from "./food-examples.contract";
 export * from "./food-item.contract";
+export * from "./food-item-categories.contract";
+export * from "./food-item-examples.contract";

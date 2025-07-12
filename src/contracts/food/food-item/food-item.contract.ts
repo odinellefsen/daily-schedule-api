@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { UnitOfMeasurementEnum } from "../recipe";
-import { foodCategorySchema } from "./food-categories.contract";
+import { foodCategorySchema } from "./food-item-categories.contract";
 
 // Food item with multiple possible units, each with their own nutrition
 export const foodItemSchema = z.object({
