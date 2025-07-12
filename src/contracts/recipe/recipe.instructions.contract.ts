@@ -13,7 +13,7 @@ export const recipeInstructionsSchema = z.object({
                     .number()
                     .positive("Step number must be greater than 0")
                     .int("Step number must be an integer"),
-                instruction: z
+                stepInstruction: z
                     .string()
                     .min(1, "The instruction is required")
                     .max(
