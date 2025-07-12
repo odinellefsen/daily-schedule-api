@@ -4,12 +4,12 @@ import { z } from "zod";
 export const foodItemSchema = z.object({
     foodItemId: z.string().uuid(),
     userId: z.string().uuid(),
-    nameOfTheFoodItem: z
+    name: z
         .string()
         .min(1, "The name of the food item is required")
         .max(100, "The name of the food item must be less than 100 characters"),
-    // New hierarchical category system
-    foodItemCategoryHierarchy: z
+    categoryHierarchy: z
+        // this looks like ["fruit", "citrus", "lime"]
         .array(
             z
                 .string()
@@ -25,10 +25,6 @@ export const foodItemSchema = z.object({
             "if foodItemCategoryHierarchy is NOT undefined, then you must have atleast 1 string in the array"
         )
         .max(5, "Maximum 5 category levels allowed")
-        .optional(),
-    description: z
-        .string()
-        .max(250, "Description must be less than 250 characters")
         .optional(),
 });
 
