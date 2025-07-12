@@ -5,7 +5,7 @@ import { UnitOfMeasurementEnum } from "./recipe.shared_utils";
 // This schema is used to create and update instructions for a recipe
 export const recipeInstructionsSchema = z.object({
     recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
-    stepByStepInstructionsToMakeTheFoodRecipe: z
+    stepByStepInstructionsToMakeTheRecipe: z
         .array(
             z.object({
                 stepId: z.string().uuid("The step ID must be a valid UUID"),

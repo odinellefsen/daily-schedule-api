@@ -7,7 +7,7 @@ import { UnitOfMeasurementEnum } from "./recipe.shared_utils";
 // THIS IS A ZOD SCHEMA OBJECT
 export const recipeIngredientsSchema = z.object({
     recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
-    ingredientsOfTheFoodRecipe: z
+    ingredientsOfTheRecipe: z
         .array(
             z.object({
                 ingredientId: z

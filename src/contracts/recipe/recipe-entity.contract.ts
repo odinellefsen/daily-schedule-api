@@ -3,23 +3,23 @@
 import { z } from "zod";
 import { MealTimingEnum } from "./recipe.shared_utils";
 
-// This schema is used to create a recipe
+// This schema is used to create a recipe for foods and drinks
 export const recipeCreateSchema = z.object({
     recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
-    whenIsMealEaten: z.nativeEnum(MealTimingEnum),
-    nameOfTheFoodRecipe: z
+    whenIsItEaten: z.nativeEnum(MealTimingEnum),
+    nameOfTheRecipe: z
         .string()
-        .min(1, "The name of the food recipe is required")
-        .max(75, "The name of the food recipe must be less than 75 characters"),
-    generalDescriptionOfTheFoodRecipe: z
+        .min(1, "The name of the recipe is required")
+        .max(75, "The name of the recipe must be less than 75 characters"),
+    generalDescriptionOfTheRecipe: z
         .string()
         .min(
             1,
-            "If generalDescriptionOfTheFoodRecipe is NOT undefined, you must have at least one character"
+            "If generalDescriptionOfTheRecipe is NOT undefined, you must have at least one character"
         )
         .max(
             250,
-            "The general description of the food recipe must be less than 250 characters"
+            "The general description of the recipe must be less than 250 characters"
         )
         .optional(),
 });

@@ -3,10 +3,18 @@ import { UnitOfMeasurementEnum } from "../recipe/recipe.shared_utils";
 
 const mealCreateSchema = z.object({
     mealId: z.string().uuid("Invalid meal UUID"),
-    recipeIds: z.array(z.string().uuid("Invalid recipe ID")),
+    recipes: z.array(
+        z.object({
+            recipeId: z.string().uuid("Invalid recipe ID"),
+            recipeName: z
+                .string()
+                .min(1, "The recipe name is required")
+                .max(75, "The recipe name must be less than 75 characters"),
+        })
+    ),
 });
 
-const mealStepByStepInstructions = z.object({
+const mealStepByStepInstructionsSchema = z.object({
     mealId: z.string().uuid("Invalid meal UUID"),
     stepByStepInstructions: z.array(
         z.object({
@@ -44,5 +52,5 @@ const mealStepByStepInstructions = z.object({
 
 export type MealCreateType = z.infer<typeof mealCreateSchema>;
 export type MealStepByStepInstructionsType = z.infer<
-    typeof mealStepByStepInstructions
+    typeof mealStepByStepInstructionsSchema
 >;
