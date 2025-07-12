@@ -4,7 +4,6 @@ import z from "zod";
 import { UnitOfMeasurementEnum } from "./recipe.shared_utils";
 
 // This schema is used to create and update ingredients for a recipe
-// THIS IS A ZOD SCHEMA OBJECT
 export const recipeIngredientsSchema = z.object({
     recipeId: z.string().uuid(),
     ingredientsOfTheRecipe: z
@@ -33,5 +32,4 @@ export const recipeIngredientsSchema = z.object({
         ),
 });
 
-// CONVERTED TO ZOD TYPE
 export type RecipeIngredientsType = z.infer<typeof recipeIngredientsSchema>;
