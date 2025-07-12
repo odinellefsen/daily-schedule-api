@@ -7,7 +7,7 @@ import { MealTimingEnum } from "./recipe.shared_utils";
 export const recipeMetadataSchema = z.object({
     recipeId: z.string().uuid(),
     userId: z.string().uuid(),
-    whenIsItEaten: z.nativeEnum(MealTimingEnum),
+    whenIsItConsumed: z.nativeEnum(MealTimingEnum),
     nameOfTheRecipe: z
         .string()
         .min(1, "The name of the recipe is required")

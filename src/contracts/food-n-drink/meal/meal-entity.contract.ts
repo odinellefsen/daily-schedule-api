@@ -3,7 +3,8 @@ import { z } from "zod";
 // This schema is used to create and update a meal
 export const mealMetadataSchema = z.object({
     mealId: z.string().uuid(),
-    hasMealBeenEaten: z.boolean().default(false),
+    userId: z.string().uuid(),
+    hasMealBeenConsumed: z.boolean().default(false),
     recipes: z
         .array(
             z.object({
