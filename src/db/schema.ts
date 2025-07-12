@@ -48,17 +48,6 @@ export const mealSteps = pgTable("meal_steps", {
     completed: boolean("completed").notNull().default(false),
 });
 
-export const mealStepsIngredients = pgTable("meal_steps_ingredients", {
-    id: uuid("id").primaryKey(),
-    mealStepId: uuid("meal_step_id").references(() => mealSteps.id, {
-        onDelete: "cascade",
-    }),
-    ingredientName: text("ingredient_name").notNull(),
-    quantity: integer("quantity").notNull(),
-    unit: text("unit").notNull(),
-    notes: text("notes"),
-});
-
 export const todos = pgTable("todos", {
     id: uuid("id").primaryKey(),
     description: text("description").notNull(),
@@ -77,9 +66,6 @@ export type NewMeal = typeof meals.$inferInsert;
 
 export type MealStep = typeof mealSteps.$inferSelect;
 export type NewMealStep = typeof mealSteps.$inferInsert;
-
-export type MealStepsIngredient = typeof mealStepsIngredients.$inferSelect;
-export type NewMealStepsIngredient = typeof mealStepsIngredients.$inferInsert;
 
 export type Todo = typeof todos.$inferSelect;
 export type NewTodo = typeof todos.$inferInsert;
