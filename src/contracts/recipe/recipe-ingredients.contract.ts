@@ -6,13 +6,11 @@ import { UnitOfMeasurementEnum } from "./recipe.shared_utils";
 // This schema is used to create and update ingredients for a recipe
 // THIS IS A ZOD SCHEMA OBJECT
 export const recipeIngredientsSchema = z.object({
-    recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
+    recipeId: z.string().uuid(),
     ingredientsOfTheRecipe: z
         .array(
             z.object({
-                ingredientId: z
-                    .string()
-                    .uuid("The ingredient ID must be a valid UUID"),
+                ingredientId: z.string().uuid(),
                 nameOfTheIngredient: z
                     .string()
                     .min(1, "The ingredient name is required")

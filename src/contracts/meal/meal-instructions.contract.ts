@@ -6,9 +6,9 @@ export const mealStepByStepInstructionsSchema = z.object({
     mealId: z.string().uuid("Invalid meal UUID"),
     stepByStepInstructions: z.array(
         z.object({
-            recipeId: z.string().uuid("Invalid recipe UUID"),
-            stepId: z.string().uuid("Invalid step UUID"),
-            isStepCompleted: z.boolean(),
+            recipeId: z.string().uuid(),
+            stepId: z.string().uuid(),
+            isStepCompleted: z.boolean().default(false),
             stepNumber: z.number().int().min(1),
             stepInstruction: z.string().min(1),
             ingredientsForThisStep: z.array(

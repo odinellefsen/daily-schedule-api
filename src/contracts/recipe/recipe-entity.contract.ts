@@ -5,7 +5,7 @@ import { MealTimingEnum } from "./recipe.shared_utils";
 
 // This schema is used to create a recipe for foods and drinks
 export const recipeCreateSchema = z.object({
-    recipeId: z.string().uuid("The recipe ID must be a valid UUID"),
+    recipeId: z.string().uuid(),
     whenIsItEaten: z.nativeEnum(MealTimingEnum),
     nameOfTheRecipe: z
         .string()

@@ -2,11 +2,12 @@ import { z } from "zod";
 
 // This schema is used to create a meal
 export const mealCreateSchema = z.object({
-    mealId: z.string().uuid("Invalid meal UUID"),
+    mealId: z.string().uuid(),
+    hasMealBeenEaten: z.boolean().default(false),
     recipes: z
         .array(
             z.object({
-                recipeId: z.string().uuid("Invalid recipe ID"),
+                recipeId: z.string().uuid(),
                 recipeName: z
                     .string()
                     .min(1, "The recipe name is required")
