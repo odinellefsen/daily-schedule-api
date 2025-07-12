@@ -1,13 +1,14 @@
 import { z } from "zod";
+import { UnitOfMeasurementEnum } from "../recipe";
 
 // Food item with multiple possible units, each with their own nutrition
 export const foodItemSchema = z.object({
-    foodId: z.string().uuid("Invalid food ID"),
-    userId: z.string().uuid("Invalid user ID"), // User owns their food definitions
-    name: z
+    foodItemId: z.string().uuid(),
+    userId: z.string().uuid(), // User owns their food definitions
+    nameOfTheFoodItem: z
         .string()
-        .min(1, "Food name is required")
-        .max(100, "Food name must be less than 100 characters"),
+        .min(1, "The name of the food item is required")
+        .max(100, "The name of the food item must be less than 100 characters"),
     category: z
         .string()
         .min(1, "Category is required")
@@ -22,11 +23,8 @@ export const foodItemSchema = z.object({
     units: z
         .array(
             z.object({
-                unitId: z.string().uuid("Invalid unit ID"),
-                unitName: z
-                    .string()
-                    .min(1, "Unit name is required")
-                    .max(50, "Unit name must be less than 50 characters"), // e.g., "medium", "slice", "cup", "100g"
+                unitId: z.string().uuid(),
+                unitName: z.nativeEnum(UnitOfMeasurementEnum),
                 unitDescription: z
                     .string()
                     .max(
