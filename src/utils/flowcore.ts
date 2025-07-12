@@ -5,10 +5,22 @@ import {
 } from "@flowcore/pathways";
 import { zodEnv } from "../../env";
 import {
-    recipeIngredientsSchema,
-    recipeInstructionsSchema,
-    recipeMetadataSchema,
-} from "../contracts/recipe";
+    mealConsumptionIntentSchema,
+    mealPlanModificationIntentSchema,
+    mealPlanningIntentSchema,
+    mealPreparationCompletionIntentSchema,
+    mealStepAssignmentIntentSchema,
+} from "../contracts/meal";
+import { recipeInstructionsSchema } from "../contracts/recipe/recipe.instructions.contract";
+import { recipeCreateSchema as recipeMetadataSchema } from "../contracts/recipe/recipe-entity.contract";
+import { recipeIngredientsSchema } from "../contracts/recipe/recipe-ingredients.contract";
+import {
+    handlerMealConsumptionCompleted,
+    handlerMealPlanModificationRequested,
+    handlerMealPlanningIntentInitiated,
+    handlerMealPreparationCompleted,
+    handlerMealStepAssignmentRequested,
+} from "../services/MealHandlers";
 import {
     handlerRecipeCreated,
     handlerRecipeDeleted,
@@ -33,6 +45,7 @@ export const FlowcorePathways = new PathwaysBuilder({
             connectionString: postgresUrl,
         })
     )
+    // Recipe pathways
     .register({
         flowType: "recipe.v0",
         eventType: "recipe.created.v0",
@@ -74,8 +87,40 @@ export const FlowcorePathways = new PathwaysBuilder({
         eventType: "recipe.deleted.v0",
         schema: recipeMetadataSchema,
         writable: true,
+    })
+    // Meal intent-driven pathways
+    .register({
+        flowType: "meal.v0",
+        eventType: "meal.planning.initiated.v0",
+        schema: mealPlanningIntentSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "meal.v0",
+        eventType: "meal.step.assignment.requested.v0",
+        schema: mealStepAssignmentIntentSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "meal.v0",
+        eventType: "meal.preparation.completed.v0",
+        schema: mealPreparationCompletionIntentSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "meal.v0",
+        eventType: "meal.consumption.completed.v0",
+        schema: mealConsumptionIntentSchema,
+        writable: true,
+    })
+    .register({
+        flowType: "meal.v0",
+        eventType: "meal.plan.modification.requested.v0",
+        schema: mealPlanModificationIntentSchema,
+        writable: true,
     });
 
+// Recipe handlers
 FlowcorePathways.handle("recipe.v0/recipe.created.v0", handlerRecipeCreated);
 FlowcorePathways.handle(
     "recipe.v0/recipe.metadata.updated.v0",
@@ -98,6 +143,28 @@ FlowcorePathways.handle(
     handlerRecipeInstructionsUpdated
 );
 FlowcorePathways.handle("recipe.v0/recipe.deleted.v0", handlerRecipeDeleted);
+
+// Meal intent-driven handlers
+FlowcorePathways.handle(
+    "meal.v0/meal.planning.initiated.v0",
+    handlerMealPlanningIntentInitiated
+);
+FlowcorePathways.handle(
+    "meal.v0/meal.step.assignment.requested.v0",
+    handlerMealStepAssignmentRequested
+);
+FlowcorePathways.handle(
+    "meal.v0/meal.preparation.completed.v0",
+    handlerMealPreparationCompleted
+);
+FlowcorePathways.handle(
+    "meal.v0/meal.consumption.completed.v0",
+    handlerMealConsumptionCompleted
+);
+FlowcorePathways.handle(
+    "meal.v0/meal.plan.modification.requested.v0",
+    handlerMealPlanModificationRequested
+);
 
 export const pathwaysRouter = new PathwayRouter(
     FlowcorePathways,
