@@ -1,56 +1,20 @@
 import { z } from "zod";
-import { UnitOfMeasurementEnum } from "../recipe/recipe.shared_utils";
 
-const mealCreateSchema = z.object({
+// This schema is used to create a meal
+export const mealCreateSchema = z.object({
     mealId: z.string().uuid("Invalid meal UUID"),
-    recipes: z.array(
-        z.object({
-            recipeId: z.string().uuid("Invalid recipe ID"),
-            recipeName: z
-                .string()
-                .min(1, "The recipe name is required")
-                .max(75, "The recipe name must be less than 75 characters"),
-        })
-    ),
-});
-
-const mealStepByStepInstructionsSchema = z.object({
-    mealId: z.string().uuid("Invalid meal UUID"),
-    stepByStepInstructions: z.array(
-        z.object({
-            recipeId: z.string().uuid("Invalid recipe UUID"),
-            stepId: z.string().uuid("Invalid step UUID"),
-            isStepCompleted: z.boolean(),
-            stepNumber: z.number().int().min(1),
-            stepInstruction: z.string().min(1),
-            ingredientsForThisStep: z.array(
-                z.object({
-                    ingredientId: z
-                        .string()
-                        .uuid(
-                            "The ingredient ID used in a step must be a valid UUID"
-                        ),
-                    nameOfTheIngredientUsedInThisStep: z
-                        .string()
-                        .min(1, "The ingredient name is required")
-                        .max(
-                            50,
-                            "The ingredient name must be less than 50 characters"
-                        ),
-                    quantityOfTheIngredientUsedInThisStep: z
-                        .number()
-                        .positive(
-                            "Quantity used in this step must be greater than 0"
-                        ),
-                    unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
-                        z.nativeEnum(UnitOfMeasurementEnum),
-                })
-            ),
-        })
-    ),
+    recipes: z
+        .array(
+            z.object({
+                recipeId: z.string().uuid("Invalid recipe ID"),
+                recipeName: z
+                    .string()
+                    .min(1, "The recipe name is required")
+                    .max(75, "The recipe name must be less than 75 characters"),
+            })
+        )
+        .min(1, "You must have at least one recipe")
+        .max(20, "You can only have up to 20 recipes in a meal"),
 });
 
 export type MealCreateType = z.infer<typeof mealCreateSchema>;
-export type MealStepByStepInstructionsType = z.infer<
-    typeof mealStepByStepInstructionsSchema
->;
