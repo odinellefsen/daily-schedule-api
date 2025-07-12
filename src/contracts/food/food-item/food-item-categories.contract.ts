@@ -1,9 +1,10 @@
 import { z } from "zod";
 
-// Flexible hierarchical category system
 export const foodCategorySchema = z.object({
     // Array of category levels: ["fruits", "citrus", "oranges"]
-    categories: z
+    foodItemCategoryHierarchyId: z.string().uuid(),
+    userId: z.string().uuid(),
+    foodItemCategoryHierarchy: z
         .array(
             z
                 .string()
