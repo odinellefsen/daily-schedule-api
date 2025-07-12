@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { UnitOfMeasurementEnum } from "../recipe";
+import { foodCategorySchema } from "./food-categories.contract";
 
 // Food item with multiple possible units, each with their own nutrition
 export const foodItemSchema = z.object({
@@ -9,11 +10,10 @@ export const foodItemSchema = z.object({
         .string()
         .min(1, "The name of the food item is required")
         .max(100, "The name of the food item must be less than 100 characters"),
-    category: z
-        .string()
-        .min(1, "Category is required")
-        .max(50, "Category must be less than 50 characters")
-        .optional(), // e.g., "fruits", "grains", "proteins", "dairy"
+
+    // New hierarchical category system
+    category: foodCategorySchema.optional(),
+
     description: z
         .string()
         .max(250, "Description must be less than 250 characters")
