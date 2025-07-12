@@ -1,23 +1,22 @@
 import z from "zod";
 import { UnitOfMeasurementEnum } from "../recipe/recipe.shared_utils";
 
-// This schema is used to create step by step instructions for a meal
+// This schema is used to create and update step by step instructions for a meal
 export const mealStepByStepInstructionsSchema = z.object({
-    mealId: z.string().uuid("Invalid meal UUID"),
+    mealId: z.string().uuid(),
     stepByStepInstructions: z.array(
         z.object({
             recipeId: z.string().uuid(),
             stepId: z.string().uuid(),
             isStepCompleted: z.boolean().default(false),
-            stepNumber: z.number().int().min(1),
-            stepInstruction: z.string().min(1),
+            stepNumber: z.number().int(),
+            stepInstruction: z
+                .string()
+                .min(1)
+                .max(250, "The instruction must be less than 250 characters"),
             ingredientsForThisStep: z.array(
                 z.object({
-                    ingredientId: z
-                        .string()
-                        .uuid(
-                            "The ingredient ID used in a step must be a valid UUID"
-                        ),
+                    ingredientId: z.string().uuid(),
                     nameOfTheIngredientUsedInThisStep: z
                         .string()
                         .min(1, "The ingredient name is required")

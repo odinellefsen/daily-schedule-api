@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-// This schema is used to create a meal
-export const mealCreateSchema = z.object({
+// This schema is used to create and update a meal
+export const mealMetadataSchema = z.object({
     mealId: z.string().uuid(),
     hasMealBeenEaten: z.boolean().default(false),
     recipes: z
@@ -18,4 +18,4 @@ export const mealCreateSchema = z.object({
         .max(20, "You can only have up to 20 recipes in a meal"),
 });
 
-export type MealCreateType = z.infer<typeof mealCreateSchema>;
+export type MealCreateType = z.infer<typeof mealMetadataSchema>;
