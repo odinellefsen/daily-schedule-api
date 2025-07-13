@@ -24,4 +24,4 @@ export const recipeMetadataSchema = z.object({
         )
         .optional(),
 });
-export type RecipeCreateType = z.infer<typeof recipeMetadataSchema>;
+export type RecipeMetadataType = z.infer<typeof recipeMetadataSchema>;
