@@ -1,5 +1,3 @@
-// Recipe create schema
-
 import { z } from "zod";
 import { MealTimingEnum } from "./recipe.shared_utils";
 
