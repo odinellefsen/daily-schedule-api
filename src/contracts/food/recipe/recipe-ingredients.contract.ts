@@ -1,5 +1,3 @@
-// Recipe ingredients schema
-
 import z from "zod";
 import { UnitOfMeasurementEnum } from "./recipe.shared_utils";
 
@@ -10,6 +8,7 @@ export const recipeIngredientsSchema = z.object({
         .array(
             z.object({
                 ingredientId: z.string().uuid(),
+                foodItemId: z.string().uuid().optional(),
                 nameOfTheIngredient: z
                     .string()
                     .min(1, "The ingredient name is required")
