@@ -1,5 +1,4 @@
 import z from "zod";
-import { UnitOfMeasurementEnum } from "./recipe.shared_utils";
 
 // This schema is used to create and update ingredients for a recipe
 export const recipeIngredientsSchema = z.object({
@@ -8,20 +7,13 @@ export const recipeIngredientsSchema = z.object({
         .array(
             z.object({
                 ingredientId: z.string().uuid(),
-                foodItemId: z.string().uuid().optional(),
-                nameOfTheIngredient: z
+                descriptionOfIngredientUnitAndQuantity: z
                     .string()
-                    .min(1, "The ingredient name is required")
+                    .min(1, "The ingredient is required")
                     .max(
-                        50,
-                        "The ingredient name must be less than 50 characters"
+                        100,
+                        "The ingredient must be less than 100 characters"
                     ),
-                quantityOfTheIngredient: z
-                    .number()
-                    .positive("Quantity must be greater than 0"),
-                unitOfMeasurementOfTheIngredientQuantity: z.nativeEnum(
-                    UnitOfMeasurementEnum
-                ),
             })
         )
         .min(1, "You must have at least one ingredient")
