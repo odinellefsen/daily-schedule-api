@@ -22,7 +22,8 @@ export const recipeInstructionsSchema = z.object({
                 ingredientsUsedInThisStep: z
                     .array(
                         z.object({
-                            ingredientId: z.string().uuid(),
+                            ingredientInAStepId: z.string().uuid(),
+                            foodItemId: z.string().uuid().optional(),
                             nameOfTheIngredientUsedInThisStep: z
                                 .string()
                                 .min(1, "The ingredient name is required")
