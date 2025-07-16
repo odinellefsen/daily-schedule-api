@@ -19,11 +19,16 @@ export const recipeInstructionsSchema = z.object({
                         250,
                         "The instruction must be less than 250 characters"
                     ),
-                ingredientsUsedInThisStep: z
+                ingredientsUsedInStep: z
                     .array(
                         z.object({
-                            ingredientInAStepId: z.string().uuid(),
-                            foodItemId: z.string().uuid().optional(),
+                            ingredientInStepId: z.string().uuid(""),
+                            foodItemId: z
+                                .string()
+                                .uuid(
+                                    "Using a food item that you have stored requires it's UUID"
+                                )
+                                .optional(),
                             nameOfTheIngredientUsedInThisStep: z
                                 .string()
                                 .min(1, "The ingredient name is required")
