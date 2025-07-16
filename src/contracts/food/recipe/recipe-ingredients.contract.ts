@@ -7,7 +7,7 @@ export const recipeIngredientsSchema = z.object({
         .array(
             z.object({
                 ingredientId: z.string().uuid(),
-                descriptionOfIngredientUnitAndQuantity: z
+                ingredientUnitAndQuantity: z
                     .string()
                     .min(1, "The ingredient is required")
                     .max(
