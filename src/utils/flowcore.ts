@@ -26,17 +26,13 @@ export const FlowcorePathways = new PathwaysBuilder({
     .register({
         flowType: "food-item.v0",
         eventType: "food-item.created.v0",
-        writable: true,
-        maxRetries: 3,
-        retryDelayMs: 1000,
+        retryDelayMs: 10000,
         schema: foodItemSchema,
     })
     .register({
         flowType: "food-item.v0",
-        eventType: "food-item.updated.v0",
-        writable: true,
-        maxRetries: 3,
-        retryDelayMs: 1000,
+        eventType: "food-item.metadata.updated.v0",
+        retryDelayMs: 10000,
         schema: foodItemUpdatedSchema,
     });
 
