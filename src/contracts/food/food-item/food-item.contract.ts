@@ -28,4 +28,8 @@ export const foodItemSchema = z.object({
         .optional(),
 });
 
+export const foodItemUpdatedSchema = foodItemSchema.extend({
+    oldValues: foodItemSchema,
+});
+
 export type FoodItemType = z.infer<typeof foodItemSchema>;
