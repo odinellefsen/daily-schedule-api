@@ -12,12 +12,9 @@ import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 export const foodItem = new Hono();
 
 foodItem.post("/", async (c) => {
-    const rawJsonBody = await c.req.json();
-    const userId = c.req.header("X-User-Id");
-
+    const rawUserId = c.req.header("X-User-Id");
     const userIdSchema = z.string().uuid("Invalid user UUID");
-
-    const parsedUserId = userIdSchema.safeParse(userId);
+    const parsedUserId = userIdSchema.safeParse(rawUserId);
 
     if (!parsedUserId.success) {
         return c.json(
@@ -25,12 +22,13 @@ foodItem.post("/", async (c) => {
             StatusCodes.BAD_REQUEST
         );
     }
+    const safeUserId = parsedUserId.data;
 
+    const rawJsonBody = await c.req.json();
     const createFoodItemRequestSchema = z.object({
         foodItemName: z.string().min(1),
         categoryHierarchy: z.array(z.string()).optional(),
     });
-
     const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawJsonBody);
 
     if (!parsedJsonBody.success) {
@@ -42,14 +40,15 @@ foodItem.post("/", async (c) => {
             StatusCodes.BAD_REQUEST
         );
     }
+    const safeCreateFoodItemJsonBody = parsedJsonBody.data;
 
     const existingFoodItem = await db
         .select()
         .from(foodItems)
         .where(
             and(
-                eq(foodItems.name, parsedJsonBody.data.foodItemName),
-                eq(foodItems.userId, userId as string)
+                eq(foodItems.name, safeCreateFoodItemJsonBody.foodItemName),
+                eq(foodItems.userId, safeUserId)
             )
         );
 
@@ -62,9 +61,9 @@ foodItem.post("/", async (c) => {
 
     const newFoodItem: FoodItemType = {
         foodItemId: crypto.randomUUID(),
-        userId: userId as string,
-        name: parsedJsonBody.data.foodItemName,
-        categoryHierarchy: parsedJsonBody.data.categoryHierarchy,
+        userId: safeUserId,
+        name: safeCreateFoodItemJsonBody.foodItemName,
+        categoryHierarchy: safeCreateFoodItemJsonBody.categoryHierarchy,
     };
 
     try {
