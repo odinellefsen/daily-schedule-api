@@ -26,7 +26,10 @@ foodItem.post("/", async (c) => {
 
     const rawJsonBody = await c.req.json();
     const createFoodItemRequestSchema = z.object({
-        foodItemName: z.string().min(1, "Food item name min length is 1"),
+        foodItemName: z
+            .string()
+            .min(1, "Food item name min length is 1")
+            .max(100, "Food item name max length is 100"),
         categoryHierarchy: z.array(z.string()).optional(),
     });
     const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawJsonBody);
