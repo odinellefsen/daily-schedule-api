@@ -15,7 +15,6 @@ foodItem.post("/", async (c) => {
     const rawUserId = c.req.header("X-User-Id");
     const userIdSchema = z.string().uuid("Invalid user UUID");
     const parsedUserId = userIdSchema.safeParse(rawUserId);
-
     if (!parsedUserId.success) {
         return c.json(
             ApiResponse.error("User ID is required", parsedUserId.error.errors),
@@ -26,11 +25,10 @@ foodItem.post("/", async (c) => {
 
     const rawJsonBody = await c.req.json();
     const createFoodItemRequestSchema = z.object({
-        foodItemName: z.string().min(1),
+        foodItemName: z.string().min(1, "Food item name min length is 1"),
         categoryHierarchy: z.array(z.string()).optional(),
     });
     const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawJsonBody);
-
     if (!parsedJsonBody.success) {
         return c.json(
             ApiResponse.error(
