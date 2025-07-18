@@ -4,7 +4,10 @@ import {
     PathwaysBuilder,
 } from "@flowcore/pathways";
 import { zodEnv } from "../../env";
-import { foodItemSchema } from "../contracts/food/food-item";
+import {
+    foodItemSchema,
+    foodItemUpdatedSchema,
+} from "../contracts/food/food-item";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
 const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
@@ -27,6 +30,14 @@ export const FlowcorePathways = new PathwaysBuilder({
         maxRetries: 3,
         retryDelayMs: 1000,
         schema: foodItemSchema,
+    })
+    .register({
+        flowType: "food-item.v0",
+        eventType: "food-item.updated.v0",
+        writable: true,
+        maxRetries: 3,
+        retryDelayMs: 1000,
+        schema: foodItemUpdatedSchema,
     });
 
 export const pathwaysRouter = new PathwayRouter(
