@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import z, { ZodError } from "zod";
+import z from "zod";
 import {
     type FoodItemType,
     foodItemSchema,
