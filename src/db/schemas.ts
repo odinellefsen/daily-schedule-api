@@ -58,6 +58,12 @@ export const todos = pgTable("todos", {
     }),
 });
 
+export const foodItems = pgTable("food_items", {
+    id: uuid("id").primaryKey(),
+    name: text("name").notNull(),
+    categoryHierarchy: text("category_hierarchy").notNull(),
+});
+
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
 
