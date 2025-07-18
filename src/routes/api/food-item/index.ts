@@ -12,12 +12,16 @@ import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 export const foodItem = new Hono();
 
 foodItem.post("/", async (c) => {
-    const rawData = await c.req.json();
+    const rawJsonBody = await c.req.json();
     const userId = c.req.header("X-User-Id");
 
-    if (!userId) {
+    const userIdSchema = z.string().uuid("Invalid user UUID");
+
+    const parsedUserId = userIdSchema.safeParse(userId);
+
+    if (!parsedUserId.success) {
         return c.json(
-            ApiResponse.error("User ID is required"),
+            ApiResponse.error("User ID is required", parsedUserId.error.errors),
             StatusCodes.BAD_REQUEST
         );
     }
@@ -27,7 +31,7 @@ foodItem.post("/", async (c) => {
         categoryHierarchy: z.array(z.string()).optional(),
     });
 
-    const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawData);
+    const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawJsonBody);
 
     if (!parsedJsonBody.success) {
         return c.json(
