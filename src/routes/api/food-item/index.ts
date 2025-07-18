@@ -1,5 +1,10 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { ZodError } from "zod";
+import {
+    type FoodItemType,
+    foodItemSchema,
+} from "../../../contracts/food/food-item";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
@@ -8,25 +13,63 @@ export const foodItem = new Hono();
 
 type CreateFoodItemRequest = {
     name: string;
-    categoryHierarchy: string[];
+    categoryHierarchy: string[] | undefined;
 };
 
 foodItem.post("/", async (c) => {
-    const foodItem = (await c.req.json()) as CreateFoodItemRequest;
+    const requestData = (await c.req.json()) as CreateFoodItemRequest;
+    const userId = c.req.header("X-User-Id");
 
-    const existingFoodItems = await db
+    const existingFoodItem = await db
         .select()
         .from(foodItems)
-        .where(eq(foodItems.name, foodItem.name));
+        .where(
+            and(
+                eq(foodItems.name, requestData.name),
+                eq(foodItems.userId, userId as string)
+            )
+        );
 
-    if (existingFoodItems.length === 0) {
+    if (existingFoodItem.length > 0) {
         return c.json(
             ApiResponse.error("Food item already exists"),
             StatusCodes.CONFLICT
         );
     }
 
-    return c.json({ message: "No food items found" }, 404);
+    const newFoodItem: FoodItemType = {
+        foodItemId: crypto.randomUUID(),
+        userId: userId as string,
+        name: requestData.name,
+        categoryHierarchy: requestData.categoryHierarchy,
+    };
+
+    try {
+        const validatedFoodItem = foodItemSchema.parse(newFoodItem);
+        console.log("Validation successful:", validatedFoodItem);
+
+        // emit event
+        // const emitCreateFoodItemEvent = await FlowcorePathways.write("");
+
+        return c.json(
+            ApiResponse.success(
+                "Food item created successfully",
+                validatedFoodItem
+            ),
+            StatusCodes.CREATED
+        );
+    } catch (error) {
+        if (error instanceof ZodError) {
+            return c.json(
+                ApiResponse.error("Invalid food item data", error.errors),
+                StatusCodes.BAD_REQUEST
+            );
+        }
+        return c.json(
+            ApiResponse.error("Invalid food item data", error),
+            StatusCodes.BAD_REQUEST
+        );
+    }
 });
 
 export default foodItem;

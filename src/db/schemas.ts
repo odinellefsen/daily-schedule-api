@@ -62,6 +62,7 @@ export const foodItems = pgTable("food_items", {
     id: uuid("id").primaryKey(),
     name: text("name").notNull(),
     categoryHierarchy: text("category_hierarchy").notNull(),
+    userId: uuid("user_id").notNull(),
 });
 
 export type Recipe = typeof recipes.$inferSelect;
