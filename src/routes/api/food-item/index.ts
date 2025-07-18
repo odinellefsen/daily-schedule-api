@@ -8,6 +8,7 @@ import {
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
+import { FlowcorePathways } from "../../../utils/flowcore";
 
 export const foodItem = new Hono();
 
@@ -49,10 +50,9 @@ foodItem.post("/", async (c) => {
                 eq(foodItems.userId, safeUserId)
             )
         );
-
     if (existingFoodItem.length > 0) {
         return c.json(
-            ApiResponse.error("Food item already exists"),
+            ApiResponse.error("Food item with name already exists"),
             StatusCodes.CONFLICT
         );
     }
@@ -64,32 +64,35 @@ foodItem.post("/", async (c) => {
         categoryHierarchy: safeCreateFoodItemJsonBody.categoryHierarchy,
     };
 
-    try {
-        const validatedFoodItem = foodItemSchema.parse(newFoodItem);
-        console.log("Validation successful:", validatedFoodItem);
-
-        // emit event
-        // const emitCreateFoodItemEvent = await FlowcorePathways.write("");
-
+    const createFoodItemEvent = foodItemSchema.safeParse(newFoodItem);
+    if (!createFoodItemEvent.success) {
         return c.json(
-            ApiResponse.success(
-                "Food item created successfully",
-                validatedFoodItem
+            ApiResponse.error(
+                "Invalid food item data",
+                createFoodItemEvent.error.errors
             ),
-            StatusCodes.CREATED
-        );
-    } catch (error) {
-        if (error instanceof ZodError) {
-            return c.json(
-                ApiResponse.error("Invalid food item data", error.errors),
-                StatusCodes.BAD_REQUEST
-            );
-        }
-        return c.json(
-            ApiResponse.error("Invalid food item data", error),
             StatusCodes.BAD_REQUEST
         );
     }
+    const safeCreateFoodItemEvent = createFoodItemEvent.data;
+
+    try {
+        await FlowcorePathways.write("food-item.v0/food-item.created.v0", {
+            data: safeCreateFoodItemEvent,
+        });
+    } catch (error) {
+        return c.json(
+            ApiResponse.error("Failed to create food item", error),
+            StatusCodes.SERVER_ERROR
+        );
+    }
+
+    return c.json(
+        ApiResponse.success(
+            "Food item created successfully",
+            safeCreateFoodItemEvent
+        )
+    );
 });
 
 export default foodItem;

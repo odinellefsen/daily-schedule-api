@@ -25,3 +25,9 @@ dataCore:
           description: "Recipe archived event"
         recipe.deleted.v0:
           description: "Recipe permanently deleted event"
+    food-item.v0:
+      eventTypes:
+        food-item.created.v0:
+          description: "basic metadata information about a new food item"
+        food-item.metadata.updated.v0:
+          description: "Same schema as food-item.created.v0"
