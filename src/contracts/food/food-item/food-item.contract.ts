@@ -33,3 +33,4 @@ export const foodItemUpdatedSchema = foodItemSchema.extend({
 });
 
 export type FoodItemType = z.infer<typeof foodItemSchema>;
+export type FoodItemUpdatedType = z.infer<typeof foodItemUpdatedSchema>;
