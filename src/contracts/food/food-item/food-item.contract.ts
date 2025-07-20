@@ -39,3 +39,4 @@ export const foodItemArchivedSchema = foodItemSchema.extend({
 
 export type FoodItemType = z.infer<typeof foodItemSchema>;
 export type FoodItemUpdatedType = z.infer<typeof foodItemUpdatedSchema>;
+export type FoodItemArchivedType = z.infer<typeof foodItemArchivedSchema>;
