@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import z from "zod";
 import {
     type FoodItemUpdatedType,
-    foodItemSchema,
+    foodItemUpdatedSchema,
 } from "../../../contracts/food/food-item";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
@@ -10,6 +10,7 @@ import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import foodItem from ".";
 
+// client side request schema
 const updateFoodItemRequestSchema = z.object({
     foodItemName: z
         .string()
@@ -43,16 +44,13 @@ foodItem.patch("/", async (c) => {
     }
     const safeCreateFoodItemJsonBody = parsedJsonBody.data;
 
-    const foodItem = await db
-        .select()
-        .from(foodItems)
-        .where(
-            and(
-                eq(foodItems.name, safeCreateFoodItemJsonBody.foodItemName),
-                eq(foodItems.userId, safeUserId)
-            )
-        );
-    if (foodItem.length <= 0) {
+    const foodItemFromDb = await db.query.foodItems.findFirst({
+        where: and(
+            eq(foodItems.name, safeCreateFoodItemJsonBody.foodItemName),
+            eq(foodItems.userId, safeUserId)
+        ),
+    });
+    if (!foodItemFromDb) {
         return c.json(
             ApiResponse.error("Food item not found"),
             StatusCodes.NOT_FOUND
@@ -60,19 +58,20 @@ foodItem.patch("/", async (c) => {
     }
 
     const updatedFoodItem: FoodItemUpdatedType = {
-        foodItemId: foodItem[0].id,
+        foodItemId: foodItemFromDb.id,
         userId: safeUserId,
         name: safeCreateFoodItemJsonBody.foodItemName,
         categoryHierarchy: safeCreateFoodItemJsonBody.categoryHierarchy,
         oldValues: {
-            foodItemId: foodItem[0].id,
-            userId: foodItem[0].userId,
-            name: foodItem[0].name,
-            categoryHierarchy: foodItem[0].categoryHierarchy.split(","),
+            foodItemId: foodItemFromDb.id,
+            userId: foodItemFromDb.userId,
+            name: foodItemFromDb.name,
+            categoryHierarchy: foodItemFromDb.categoryHierarchy.split(","),
         },
     };
 
-    const updatedFoodItemEvent = foodItemSchema.safeParse(updatedFoodItem);
+    const updatedFoodItemEvent =
+        foodItemUpdatedSchema.safeParse(updatedFoodItem);
     if (!updatedFoodItemEvent.success) {
         return c.json(
             ApiResponse.error(
@@ -85,9 +84,12 @@ foodItem.patch("/", async (c) => {
     const safeUpdatedFoodItemEvent = updatedFoodItemEvent.data;
 
     try {
-        await FlowcorePathways.write("food-item.v0/food-item.created.v0", {
-            data: safeUpdatedFoodItemEvent,
-        });
+        await FlowcorePathways.write(
+            "food-item.v0/food-item.metadata.updated.v0",
+            {
+                data: safeUpdatedFoodItemEvent,
+            }
+        );
     } catch (error) {
         return c.json(
             ApiResponse.error("Failed to create food item", error),
