@@ -19,8 +19,6 @@ const createFoodItemRequestSchema = z.object({
     categoryHierarchy: z.array(z.string()).optional(),
 });
 
-// Note: Authentication middleware is applied centrally in the main food-item router
-
 foodItem.post("/", async (c) => {
     const userId = c.userId;
 

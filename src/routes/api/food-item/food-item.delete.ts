@@ -16,13 +16,7 @@ const deleteFoodItemRequestSchema = z.object({
         .string()
         .min(1, "Food item name min length is 1")
         .max(100, "Food item name max length is 100"),
-    reasonForArchiving: z
-        .string()
-        .optional()
-        .default("User requested deletion"),
 });
-
-// Note: Authentication middleware is already applied in the main food-item router
 
 foodItem.delete("/", async (c) => {
     const userId = c.userId;
@@ -70,7 +64,7 @@ foodItem.delete("/", async (c) => {
         categoryHierarchy: foodItemFromDb.categoryHierarchy
             ? foodItemFromDb.categoryHierarchy.split(",")
             : undefined,
-        reasonForArchiving: safeDeleteFoodItemRequestBody.reasonForArchiving,
+        reasonForArchiving: "User requested deletion",
     };
 
     const foodItemArchivedEvent =

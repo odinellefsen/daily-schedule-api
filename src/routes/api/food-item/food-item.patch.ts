@@ -19,8 +19,6 @@ const updateFoodItemRequestSchema = z.object({
     categoryHierarchy: z.array(z.string()).optional(),
 });
 
-// Note: Authentication middleware is already applied in the main food-item router
-
 foodItem.patch("/", async (c) => {
     // User ID is now available from Clerk authentication context
     const userId = c.userId;
