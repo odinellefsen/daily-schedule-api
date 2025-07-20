@@ -10,6 +10,15 @@ import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import foodItem from ".";
 
+// client side request schema
+const createFoodItemRequestSchema = z.object({
+    foodItemName: z
+        .string()
+        .min(1, "Food item name min length is 1")
+        .max(100, "Food item name max length is 100"),
+    categoryHierarchy: z.array(z.string()).optional(),
+});
+
 foodItem.post("/", async (c) => {
     const rawUserId = c.req.header("X-User-Id");
     const userIdSchema = z.string().uuid("Invalid user UUID");
@@ -23,13 +32,6 @@ foodItem.post("/", async (c) => {
     const safeUserId = parsedUserId.data;
 
     const rawJsonBody = await c.req.json();
-    const createFoodItemRequestSchema = z.object({
-        foodItemName: z
-            .string()
-            .min(1, "Food item name min length is 1")
-            .max(100, "Food item name max length is 100"),
-        categoryHierarchy: z.array(z.string()).optional(),
-    });
     const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawJsonBody);
     if (!parsedJsonBody.success) {
         return c.json(
@@ -59,7 +61,7 @@ foodItem.post("/", async (c) => {
     }
 
     const newFoodItem: FoodItemType = {
-        foodItemId: crypto.randomUUID(),
+        id: crypto.randomUUID(),
         userId: safeUserId,
         name: safeCreateFoodItemJsonBody.foodItemName,
         categoryHierarchy: safeCreateFoodItemJsonBody.categoryHierarchy,

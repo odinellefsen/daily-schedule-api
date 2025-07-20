@@ -31,22 +31,23 @@ foodItem.patch("/", async (c) => {
     }
     const safeUserId = parsedUserId.data;
 
-    const rawJsonBody = await c.req.json();
-    const parsedJsonBody = updateFoodItemRequestSchema.safeParse(rawJsonBody);
-    if (!parsedJsonBody.success) {
+    const rawRequestJsonBody = await c.req.json();
+    const parsedRequestJsonBody =
+        updateFoodItemRequestSchema.safeParse(rawRequestJsonBody);
+    if (!parsedRequestJsonBody.success) {
         return c.json(
             ApiResponse.error(
                 "Invalid food item data",
-                parsedJsonBody.error.errors
+                parsedRequestJsonBody.error.errors
             ),
             StatusCodes.BAD_REQUEST
         );
     }
-    const safeCreateFoodItemJsonBody = parsedJsonBody.data;
+    const safeUpdateFoodItemRequestBody = parsedRequestJsonBody.data;
 
     const foodItemFromDb = await db.query.foodItems.findFirst({
         where: and(
-            eq(foodItems.name, safeCreateFoodItemJsonBody.foodItemName),
+            eq(foodItems.name, safeUpdateFoodItemRequestBody.foodItemName),
             eq(foodItems.userId, safeUserId)
         ),
     });
@@ -58,12 +59,12 @@ foodItem.patch("/", async (c) => {
     }
 
     const updatedFoodItem: FoodItemUpdatedType = {
-        foodItemId: foodItemFromDb.id,
+        id: foodItemFromDb.id,
         userId: safeUserId,
-        name: safeCreateFoodItemJsonBody.foodItemName,
-        categoryHierarchy: safeCreateFoodItemJsonBody.categoryHierarchy,
+        name: safeUpdateFoodItemRequestBody.foodItemName,
+        categoryHierarchy: safeUpdateFoodItemRequestBody.categoryHierarchy,
         oldValues: {
-            foodItemId: foodItemFromDb.id,
+            id: foodItemFromDb.id,
             userId: foodItemFromDb.userId,
             name: foodItemFromDb.name,
             categoryHierarchy: foodItemFromDb.categoryHierarchy.split(","),
@@ -99,7 +100,7 @@ foodItem.patch("/", async (c) => {
 
     return c.json(
         ApiResponse.success(
-            "Food item created successfully",
+            "Food item updated successfully",
             safeUpdatedFoodItemEvent
         )
     );

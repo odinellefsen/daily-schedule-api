@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Food item with multiple possible units, each with their own nutrition
 export const foodItemSchema = z.object({
-    foodItemId: z.string().uuid(),
+    id: z.string().uuid(),
     userId: z.string().uuid(),
     name: z
         .string()
@@ -10,6 +10,7 @@ export const foodItemSchema = z.object({
         .max(100, "The name of the food item must be less than 100 characters"),
     categoryHierarchy: z
         // this looks like ["fruit", "citrus", "lime"]
+        // from highest level to lowest level
         .array(
             z
                 .string()
