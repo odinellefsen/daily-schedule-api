@@ -6,7 +6,6 @@ import {
 } from "../../../contracts/food/food-item";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
-import { requireAuth } from "../../../middleware/auth";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import foodItem from ".";
