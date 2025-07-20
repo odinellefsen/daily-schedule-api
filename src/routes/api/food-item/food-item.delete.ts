@@ -6,6 +6,7 @@ import {
 } from "../../../contracts/food/food-item/food-item.contract";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
+import { requireAuth } from "../../../middleware/auth";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import { foodItem } from ".";
@@ -16,19 +17,23 @@ const deleteFoodItemRequestSchema = z.object({
         .string()
         .min(1, "Food item name min length is 1")
         .max(100, "Food item name max length is 100"),
+    reasonForArchiving: z
+        .string()
+        .optional()
+        .default("User requested deletion"),
 });
 
+// Note: Authentication middleware is already applied in the main food-item router
+
 foodItem.delete("/", async (c) => {
-    const rawUserId = c.req.header("X-User-Id");
-    const userIdSchema = z.string().uuid("Invalid user UUID");
-    const parsedUserId = userIdSchema.safeParse(rawUserId);
-    if (!parsedUserId.success) {
+    const userId = c.userId;
+
+    if (!userId) {
         return c.json(
-            ApiResponse.error("User ID is required", parsedUserId.error.errors),
-            StatusCodes.BAD_REQUEST
+            ApiResponse.error("Authentication failed - no user ID"),
+            StatusCodes.UNAUTHORIZED
         );
     }
-    const safeUserId = parsedUserId.data;
 
     const rawRequestJsonBody = await c.req.json();
     const parsedRequestJsonBody =
@@ -47,7 +52,7 @@ foodItem.delete("/", async (c) => {
     const foodItemFromDb = await db.query.foodItems.findFirst({
         where: and(
             eq(foodItems.name, safeDeleteFoodItemRequestBody.foodItemName),
-            eq(foodItems.userId, safeUserId)
+            eq(foodItems.userId, userId)
         ),
     });
 
@@ -60,10 +65,13 @@ foodItem.delete("/", async (c) => {
 
     const foodItemArchived: FoodItemArchivedType = {
         id: foodItemFromDb.id,
-        userId: safeUserId,
+        userId: userId,
         name: foodItemFromDb.name,
-        categoryHierarchy: foodItemFromDb.categoryHierarchy.split(","),
-        reasonForArchiving: "User requested deletion",
+        // Convert database string back to array format for contract
+        categoryHierarchy: foodItemFromDb.categoryHierarchy
+            ? foodItemFromDb.categoryHierarchy.split(",")
+            : undefined,
+        reasonForArchiving: safeDeleteFoodItemRequestBody.reasonForArchiving,
     };
 
     const foodItemArchivedEvent =
@@ -85,8 +93,15 @@ foodItem.delete("/", async (c) => {
         });
     } catch (error) {
         return c.json(
-            ApiResponse.error("Failed to create food item", error),
+            ApiResponse.error("Failed to archive food item", error),
             StatusCodes.SERVER_ERROR
         );
     }
+
+    return c.json(
+        ApiResponse.success(
+            "Food item archived successfully",
+            safeFoodItemArchivedEvent
+        )
+    );
 });

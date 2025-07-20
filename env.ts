@@ -6,6 +6,9 @@ export const envSchema = z.object({
     FLOWCORE_DATA_CORE_NAME: z.string(),
     FLOWCORE_WEBHOOK_API_KEY: z.string(),
     FLOWCORE_WEBHOOK_BASE_URL: z.string(),
+    // Clerk Authentication
+    CLERK_PUBLISHABLE_KEY: z.string(),
+    CLERK_SECRET_KEY: z.string(),
 });
 
 export const zodEnv = envSchema.parse(process.env);

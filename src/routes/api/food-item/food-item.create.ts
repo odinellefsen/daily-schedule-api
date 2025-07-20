@@ -6,6 +6,7 @@ import {
 } from "../../../contracts/food/food-item";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
+import { requireAuth } from "../../../middleware/auth";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import foodItem from ".";
@@ -19,17 +20,17 @@ const createFoodItemRequestSchema = z.object({
     categoryHierarchy: z.array(z.string()).optional(),
 });
 
+// Note: Authentication middleware is applied centrally in the main food-item router
+
 foodItem.post("/", async (c) => {
-    const rawUserId = c.req.header("X-User-Id");
-    const userIdSchema = z.string().uuid("Invalid user UUID");
-    const parsedUserId = userIdSchema.safeParse(rawUserId);
-    if (!parsedUserId.success) {
+    const userId = c.userId;
+
+    if (!userId) {
         return c.json(
-            ApiResponse.error("User ID is required", parsedUserId.error.errors),
-            StatusCodes.BAD_REQUEST
+            ApiResponse.error("Authentication failed - no user ID"),
+            StatusCodes.UNAUTHORIZED
         );
     }
-    const safeUserId = parsedUserId.data;
 
     const rawJsonBody = await c.req.json();
     const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawJsonBody);
@@ -50,7 +51,7 @@ foodItem.post("/", async (c) => {
         .where(
             and(
                 eq(foodItems.name, safeCreateFoodItemJsonBody.foodItemName),
-                eq(foodItems.userId, safeUserId)
+                eq(foodItems.userId, userId)
             )
         );
     if (existingFoodItem.length > 0) {
@@ -62,7 +63,7 @@ foodItem.post("/", async (c) => {
 
     const newFoodItem: FoodItemType = {
         id: crypto.randomUUID(),
-        userId: safeUserId,
+        userId: userId,
         name: safeCreateFoodItemJsonBody.foodItemName,
         categoryHierarchy: safeCreateFoodItemJsonBody.categoryHierarchy,
     };
