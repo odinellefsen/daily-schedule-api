@@ -33,5 +33,9 @@ export const foodItemUpdatedSchema = foodItemSchema.extend({
     oldValues: foodItemSchema,
 });
 
+export const foodItemArchivedSchema = foodItemSchema.extend({
+    reasonForArchiving: z.string().min(1, "Reason for archiving is required"),
+});
+
 export type FoodItemType = z.infer<typeof foodItemSchema>;
 export type FoodItemUpdatedType = z.infer<typeof foodItemUpdatedSchema>;

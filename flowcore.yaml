@@ -2,7 +2,7 @@ version: 1
 tenant: odinellefsen
 dataCore:
   name: daily-schedule
-  deleteProtection: true
+  deleteProtection: false
   isPublic: false
   description: "Daily schedule data collection for daily scheduler"
   flowTypes:
@@ -28,6 +28,9 @@ dataCore:
     food-item.v0:
       eventTypes:
         food-item.created.v0:
-          description: "basic metadata information about a new food item"
-        food-item.metadata.updated.v0:
-          description: "Same schema as food-item.created.v0"
+          description: "main entry point for food item entity"
+        food-item.updated.v0:
+          description: "main entry point metadata updated"
+        food-item.archived.v0:
+          description: "main entry point for food item archived event"
+        
