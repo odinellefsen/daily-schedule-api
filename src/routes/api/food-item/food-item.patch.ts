@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import z from "zod";
 import {
-    type FoodItemType,
+    type FoodItemUpdatedType,
     foodItemSchema,
 } from "../../../contracts/food/food-item";
 import { db } from "../../../db";
@@ -9,6 +9,14 @@ import { foodItems } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import foodItem from ".";
+
+const updateFoodItemRequestSchema = z.object({
+    foodItemName: z
+        .string()
+        .min(1, "Food item name min length is 1")
+        .max(100, "Food item name max length is 100"),
+    categoryHierarchy: z.array(z.string()).optional(),
+});
 
 foodItem.patch("/", async (c) => {
     const rawUserId = c.req.header("X-User-Id");
@@ -23,14 +31,7 @@ foodItem.patch("/", async (c) => {
     const safeUserId = parsedUserId.data;
 
     const rawJsonBody = await c.req.json();
-    const createFoodItemRequestSchema = z.object({
-        foodItemName: z
-            .string()
-            .min(1, "Food item name min length is 1")
-            .max(100, "Food item name max length is 100"),
-        categoryHierarchy: z.array(z.string()).optional(),
-    });
-    const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawJsonBody);
+    const parsedJsonBody = updateFoodItemRequestSchema.safeParse(rawJsonBody);
     if (!parsedJsonBody.success) {
         return c.json(
             ApiResponse.error(
@@ -42,7 +43,7 @@ foodItem.patch("/", async (c) => {
     }
     const safeCreateFoodItemJsonBody = parsedJsonBody.data;
 
-    const existingFoodItem = await db
+    const foodItem = await db
         .select()
         .from(foodItems)
         .where(
@@ -51,35 +52,41 @@ foodItem.patch("/", async (c) => {
                 eq(foodItems.userId, safeUserId)
             )
         );
-    if (existingFoodItem.length > 0) {
+    if (foodItem.length <= 0) {
         return c.json(
-            ApiResponse.error("Food item with name already exists"),
-            StatusCodes.CONFLICT
+            ApiResponse.error("Food item not found"),
+            StatusCodes.NOT_FOUND
         );
     }
 
-    const newFoodItem: FoodItemType = {
-        foodItemId: crypto.randomUUID(),
+    const updatedFoodItem: FoodItemUpdatedType = {
+        foodItemId: foodItem[0].id,
         userId: safeUserId,
         name: safeCreateFoodItemJsonBody.foodItemName,
         categoryHierarchy: safeCreateFoodItemJsonBody.categoryHierarchy,
+        oldValues: {
+            foodItemId: foodItem[0].id,
+            userId: foodItem[0].userId,
+            name: foodItem[0].name,
+            categoryHierarchy: foodItem[0].categoryHierarchy.split(","),
+        },
     };
 
-    const createFoodItemEvent = foodItemSchema.safeParse(newFoodItem);
-    if (!createFoodItemEvent.success) {
+    const updatedFoodItemEvent = foodItemSchema.safeParse(updatedFoodItem);
+    if (!updatedFoodItemEvent.success) {
         return c.json(
             ApiResponse.error(
                 "Invalid food item data",
-                createFoodItemEvent.error.errors
+                updatedFoodItemEvent.error.errors
             ),
             StatusCodes.BAD_REQUEST
         );
     }
-    const safeCreateFoodItemEvent = createFoodItemEvent.data;
+    const safeUpdatedFoodItemEvent = updatedFoodItemEvent.data;
 
     try {
         await FlowcorePathways.write("food-item.v0/food-item.created.v0", {
-            data: safeCreateFoodItemEvent,
+            data: safeUpdatedFoodItemEvent,
         });
     } catch (error) {
         return c.json(
@@ -91,7 +98,7 @@ foodItem.patch("/", async (c) => {
     return c.json(
         ApiResponse.success(
             "Food item created successfully",
-            safeCreateFoodItemEvent
+            safeUpdatedFoodItemEvent
         )
     );
 });
