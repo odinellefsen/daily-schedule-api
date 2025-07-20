@@ -85,12 +85,9 @@ foodItem.patch("/", async (c) => {
     const safeUpdatedFoodItemEvent = updatedFoodItemEvent.data;
 
     try {
-        await FlowcorePathways.write(
-            "food-item.v0/food-item.metadata.updated.v0",
-            {
-                data: safeUpdatedFoodItemEvent,
-            }
-        );
+        await FlowcorePathways.write("food-item.v0/food-item.updated.v0", {
+            data: safeUpdatedFoodItemEvent,
+        });
     } catch (error) {
         return c.json(
             ApiResponse.error("Failed to create food item", error),
