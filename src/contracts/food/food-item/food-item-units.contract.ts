@@ -8,14 +8,14 @@ export const foodItemUnitSchema = z.object({
         .array(
             z.object({
                 id: z.string().uuid(),
-                unitName: z.nativeEnum(UnitOfMeasurementEnum),
-                unitDescription: z
+                unitOfMeasurement: z.nativeEnum(UnitOfMeasurementEnum),
+                unitDescription: z // e.g., "a medium whole apple (about 180g)", "a large whole apple (about 220g)", "a thick slice of bread (about 30g)"
                     .string()
                     .max(
                         100,
                         "Unit description must be less than 100 characters"
                     )
-                    .optional(), // e.g., "a medium whole apple (about 180g)", "a large whole apple","1 thick slice"
+                    .optional(),
 
                 // Nutrition per 1 unit (of selected unit)
                 // for example per "WHOLE" apple, per "SLICE" of bread, per "CLOVE" of garlic, etc.
@@ -23,27 +23,27 @@ export const foodItemUnitSchema = z.object({
                     calories: z
                         .number()
                         .min(0, "Calories must be 0 or greater"),
-                    protein: z // in grams
+                    proteinInGrams: z // in grams
                         .number()
                         .min(0, "Protein must be 0 or greater")
                         .optional(),
-                    carbohydrates: z // in grams
+                    carbohydratesInGrams: z // in grams
                         .number()
                         .min(0, "Carbohydrates must be 0 or greater")
                         .optional(),
-                    fat: z // in grams
+                    fatInGrams: z // in grams
                         .number()
                         .min(0, "Fat must be 0 or greater")
                         .optional(),
-                    fiber: z // in grams
+                    fiberInGrams: z // in grams
                         .number()
                         .min(0, "Fiber must be 0 or greater")
                         .optional(),
-                    sugar: z // in grams
+                    sugarInGrams: z // in grams
                         .number()
                         .min(0, "Sugar must be 0 or greater")
                         .optional(),
-                    sodium: z // in milligrams
+                    sodiumInMilligrams: z // in milligrams
                         .number()
                         .min(0, "Sodium must be 0 or greater")
                         .optional(),
