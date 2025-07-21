@@ -77,6 +77,7 @@ export const foodItemUnits = pgTable("food_item_units", {
     fiberInGrams: integer("fiber_in_grams").notNull(),
     sugarInGrams: integer("sugar_in_grams").notNull(),
     sodiumInMilligrams: integer("sodium_in_milligrams").notNull(),
+    source: text("source").notNull(),
 });
 
 export type Recipe = typeof recipes.$inferSelect;

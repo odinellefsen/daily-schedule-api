@@ -8,6 +8,7 @@ import {
     foodItemArchivedSchema,
     foodItemSchema,
     foodItemUnitSchema,
+    foodItemUnitUpdatedSchema,
     foodItemUpdatedSchema,
 } from "../contracts/food/food-item";
 
@@ -48,6 +49,12 @@ export const FlowcorePathways = new PathwaysBuilder({
         eventType: "food-item.units.created.v0",
         retryDelayMs: 10000,
         schema: foodItemUnitSchema,
+    })
+    .register({
+        flowType: "food-item.v0",
+        eventType: "food-item.units.updated.v0",
+        retryDelayMs: 10000,
+        schema: foodItemUnitUpdatedSchema,
     });
 
 export const pathwaysRouter = new PathwayRouter(

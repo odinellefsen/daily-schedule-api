@@ -40,7 +40,6 @@ foodItem.post("/:foodItemId/units", async (c) => {
             StatusCodes.BAD_REQUEST
         );
     }
-
     const safeCreateFoodItemUnitJsonBody = parsedJsonBodyRequest.data;
 
     const relatedFoodItem = await db.query.foodItems.findFirst({
@@ -66,18 +65,18 @@ foodItem.post("/:foodItemId/units", async (c) => {
         })),
     };
 
-    const createFoodItemUnitEvent =
+    const createdFoodItemUnitEvent =
         foodItemUnitSchema.safeParse(newFoodItemUnits);
-    if (!createFoodItemUnitEvent.success) {
+    if (!createdFoodItemUnitEvent.success) {
         return c.json(
             ApiResponse.error(
                 "Invalid food item unit data",
-                createFoodItemUnitEvent.error.errors
+                createdFoodItemUnitEvent.error.errors
             ),
             StatusCodes.BAD_REQUEST
         );
     }
-    const safeCreateFoodItemUnitEvent = createFoodItemUnitEvent.data;
+    const safeCreateFoodItemUnitEvent = createdFoodItemUnitEvent.data;
 
     try {
         await FlowcorePathways.write(

@@ -61,4 +61,9 @@ export const foodItemUnitSchema = z.object({
         .max(20, "Food can have at most 20 units"),
 });
 
+export const foodItemUnitUpdatedSchema = foodItemUnitSchema.extend({
+    oldValues: foodItemUnitSchema,
+});
+
 export type FoodItemUnitType = z.infer<typeof foodItemUnitSchema>;
+export type FoodItemUnitUpdatedType = z.infer<typeof foodItemUnitUpdatedSchema>;
