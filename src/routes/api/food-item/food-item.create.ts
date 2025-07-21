@@ -20,14 +20,7 @@ const createFoodItemRequestSchema = z.object({
 });
 
 foodItem.post("/", async (c) => {
-    const userId = c.userId;
-
-    if (!userId) {
-        return c.json(
-            ApiResponse.error("Authentication failed - no user ID"),
-            StatusCodes.UNAUTHORIZED
-        );
-    }
+    const userId = c.userId!;
 
     const rawJsonBody = await c.req.json();
     const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawJsonBody);

@@ -26,14 +26,7 @@ const createFoodItemUnitRequestSchema = foodItemUnitSchema
     });
 
 foodItem.post("/:foodItemId/units", async (c) => {
-    const userId = c.userId;
-
-    if (!userId) {
-        return c.json(
-            ApiResponse.error("Authentication failed - no user ID"),
-            StatusCodes.UNAUTHORIZED
-        );
-    }
+    const userId = c.userId!;
 
     const rawJsonBodyRequest = await c.req.json();
     const parsedJsonBodyRequest =

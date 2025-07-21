@@ -20,14 +20,7 @@ const updateFoodItemRequestSchema = z.object({
 });
 
 foodItem.patch("/", async (c) => {
-    const userId = c.userId;
-
-    if (!userId) {
-        return c.json(
-            ApiResponse.error("Authentication failed - no user ID"),
-            StatusCodes.UNAUTHORIZED
-        );
-    }
+    const userId = c.userId!;
 
     const rawRequestJsonBody = await c.req.json();
     const parsedRequestJsonBody =
