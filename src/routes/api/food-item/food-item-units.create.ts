@@ -67,53 +67,11 @@ foodItem.post("/:foodItemId/units", async (c) => {
 
     const newFoodItemUnits: FoodItemUnitType = {
         foodItemId: relatedFoodItem.id,
-        units: [
-            {
-                id: crypto.randomUUID(),
-                unitOfMeasurement: UnitOfMeasurementEnum.WHOLE,
-                unitDescription: "medium whole apple (about 180g)",
-                nutritionPerOfThisUnit: {
-                    calories: 95,
-                    proteinInGrams: 0.5,
-                    carbohydratesInGrams: 25,
-                    fatInGrams: 0.3,
-                    fiberInGrams: 4,
-                    sugarInGrams: 19,
-                    sodiumInMilligrams: 2,
-                },
-                source: "user_measured",
-            },
-            {
-                id: crypto.randomUUID(),
-                unitOfMeasurement: UnitOfMeasurementEnum.SLICE,
-                unitDescription: "thin slice of apple (about 20g)",
-                nutritionPerOfThisUnit: {
-                    calories: 11,
-                    proteinInGrams: 0.1,
-                    carbohydratesInGrams: 3,
-                    fatInGrams: 0.0,
-                    fiberInGrams: 0.4,
-                    sugarInGrams: 2.1,
-                    sodiumInMilligrams: 0.2,
-                },
-                source: "user_measured",
-            },
-            {
-                id: crypto.randomUUID(),
-                unitOfMeasurement: UnitOfMeasurementEnum.SLICE,
-                unitDescription: "thick slice of apple (about 40g)",
-                nutritionPerOfThisUnit: {
-                    calories: 11,
-                    proteinInGrams: 0.1,
-                    carbohydratesInGrams: 3,
-                    fatInGrams: 0.0,
-                    fiberInGrams: 0.4,
-                    sugarInGrams: 2.1,
-                    sodiumInMilligrams: 0.2,
-                },
-                source: "user_measured",
-            },
-        ],
+        units: safeCreateFoodItemUnitJsonBody.units.map((unit) => ({
+            id: crypto.randomUUID(),
+            ...unit,
+            source: "user_measured" as const,
+        })),
     };
     const createFoodItemUnitEvent =
         foodItemUnitSchema.safeParse(newFoodItemUnits);
