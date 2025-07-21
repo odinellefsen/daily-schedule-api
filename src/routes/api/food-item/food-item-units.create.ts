@@ -4,7 +4,6 @@ import {
     type FoodItemUnitType,
     foodItemUnitSchema,
 } from "../../../contracts/food/food-item/food-item-units.contract";
-import { UnitOfMeasurementEnum } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
@@ -73,6 +72,7 @@ foodItem.post("/:foodItemId/units", async (c) => {
             source: "user_measured" as const,
         })),
     };
+
     const createFoodItemUnitEvent =
         foodItemUnitSchema.safeParse(newFoodItemUnits);
     if (!createFoodItemUnitEvent.success) {
