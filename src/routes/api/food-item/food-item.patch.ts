@@ -20,7 +20,6 @@ const updateFoodItemRequestSchema = z.object({
 });
 
 foodItem.patch("/", async (c) => {
-    // User ID is now available from Clerk authentication context
     const userId = c.userId;
 
     if (!userId) {

@@ -7,7 +7,7 @@ export const foodItemUnitSchema = z.object({
     units: z
         .array(
             z.object({
-                unitId: z.string().uuid(),
+                id: z.string().uuid(),
                 unitName: z.nativeEnum(UnitOfMeasurementEnum),
                 unitDescription: z
                     .string()
@@ -17,40 +17,37 @@ export const foodItemUnitSchema = z.object({
                     )
                     .optional(), // e.g., "1 medium apple (about 180g)", "1 thick slice"
 
-                // Nutrition per 1 unit
-                nutritionPerUnit: z.object({
+                // Nutrition per 1 unit (of selected unit)
+                // for example 1 "WHOLE" apple, 1 "SLICE" of bread, 1 "CLOVE" of garlic, etc.
+                nutritionPerOfThisUnit: z.object({
                     calories: z
                         .number()
                         .min(0, "Calories must be 0 or greater"),
-                    protein: z
+                    protein: z // in grams
                         .number()
                         .min(0, "Protein must be 0 or greater")
-                        .optional(), // grams
-                    carbohydrates: z
+                        .optional(),
+                    carbohydrates: z // in grams
                         .number()
                         .min(0, "Carbohydrates must be 0 or greater")
-                        .optional(), // grams
-                    fat: z
+                        .optional(),
+                    fat: z // in grams
                         .number()
                         .min(0, "Fat must be 0 or greater")
-                        .optional(), // grams
-                    fiber: z
+                        .optional(),
+                    fiber: z // in grams
                         .number()
                         .min(0, "Fiber must be 0 or greater")
-                        .optional(), // grams
-                    sugar: z
+                        .optional(),
+                    sugar: z // in grams
                         .number()
                         .min(0, "Sugar must be 0 or greater")
-                        .optional(), // grams
-                    sodium: z
+                        .optional(),
+                    sodium: z // in milligrams
                         .number()
                         .min(0, "Sodium must be 0 or greater")
-                        .optional(), // milligrams
+                        .optional(),
                 }),
-
-                // Metadata
-                isDefault: z.boolean().default(false), // Which unit to show first
-                estimatedWeight: z.number().positive().optional(), // grams (for reference)
                 source: z
                     .enum([
                         "user_measured",
