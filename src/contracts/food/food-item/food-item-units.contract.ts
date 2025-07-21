@@ -3,7 +3,7 @@ import { UnitOfMeasurementEnum } from "../recipe";
 
 export const foodItemUnitSchema = z.object({
     // Each food can have multiple units with their own nutrition
-    foodItemId: z.string().uuid(),
+    id: z.string().uuid(),
     units: z
         .array(
             z.object({
