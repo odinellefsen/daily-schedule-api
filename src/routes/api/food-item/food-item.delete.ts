@@ -19,7 +19,7 @@ const deleteFoodItemRequestSchema = z.object({
 });
 
 foodItem.delete("/", async (c) => {
-    const userId = c.userId!;
+    const safeUserId = c.userId!;
 
     const rawRequestJsonBody = await c.req.json();
     const parsedRequestJsonBody =
@@ -38,7 +38,7 @@ foodItem.delete("/", async (c) => {
     const foodItemFromDb = await db.query.foodItems.findFirst({
         where: and(
             eq(foodItems.name, safeDeleteFoodItemRequestBody.foodItemName),
-            eq(foodItems.userId, userId)
+            eq(foodItems.userId, safeUserId)
         ),
     });
 
@@ -51,7 +51,7 @@ foodItem.delete("/", async (c) => {
 
     const foodItemArchived: FoodItemArchivedType = {
         id: foodItemFromDb.id,
-        userId: userId,
+        userId: safeUserId,
         name: foodItemFromDb.name,
         // Convert database string back to array format for contract
         categoryHierarchy: foodItemFromDb.categoryHierarchy

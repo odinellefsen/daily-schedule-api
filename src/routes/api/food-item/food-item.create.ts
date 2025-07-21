@@ -20,7 +20,7 @@ const createFoodItemRequestSchema = z.object({
 });
 
 foodItem.post("/", async (c) => {
-    const userId = c.userId!;
+    const safeUserId = c.userId!;
 
     const rawJsonBody = await c.req.json();
     const parsedJsonBody = createFoodItemRequestSchema.safeParse(rawJsonBody);
@@ -41,7 +41,7 @@ foodItem.post("/", async (c) => {
         .where(
             and(
                 eq(foodItems.name, safeCreateFoodItemJsonBody.foodItemName),
-                eq(foodItems.userId, userId)
+                eq(foodItems.userId, safeUserId)
             )
         );
     if (existingFoodItem.length > 0) {
@@ -53,7 +53,7 @@ foodItem.post("/", async (c) => {
 
     const newFoodItem: FoodItemType = {
         id: crypto.randomUUID(),
-        userId: userId,
+        userId: safeUserId,
         name: safeCreateFoodItemJsonBody.foodItemName,
         categoryHierarchy: safeCreateFoodItemJsonBody.categoryHierarchy,
     };

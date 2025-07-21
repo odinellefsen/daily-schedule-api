@@ -20,7 +20,7 @@ const updateFoodItemRequestSchema = z.object({
 });
 
 foodItem.patch("/", async (c) => {
-    const userId = c.userId!;
+    const safeUserId = c.userId!;
 
     const rawRequestJsonBody = await c.req.json();
     const parsedRequestJsonBody =
@@ -39,7 +39,7 @@ foodItem.patch("/", async (c) => {
     const foodItemFromDb = await db.query.foodItems.findFirst({
         where: and(
             eq(foodItems.name, safeUpdateFoodItemRequestBody.foodItemName),
-            eq(foodItems.userId, userId)
+            eq(foodItems.userId, safeUserId)
         ),
     });
     if (!foodItemFromDb) {
@@ -51,7 +51,7 @@ foodItem.patch("/", async (c) => {
 
     const updatedFoodItem: FoodItemUpdatedType = {
         id: foodItemFromDb.id,
-        userId: userId,
+        userId: safeUserId,
         name: safeUpdateFoodItemRequestBody.foodItemName,
         categoryHierarchy: safeUpdateFoodItemRequestBody.categoryHierarchy,
         oldValues: {

@@ -26,7 +26,7 @@ const createFoodItemUnitRequestSchema = foodItemUnitSchema
     });
 
 foodItem.post("/:foodItemId/units", async (c) => {
-    const userId = c.userId!;
+    const safeUserId = c.userId!;
 
     const rawJsonBodyRequest = await c.req.json();
     const parsedJsonBodyRequest =
@@ -46,7 +46,7 @@ foodItem.post("/:foodItemId/units", async (c) => {
     const relatedFoodItem = await db.query.foodItems.findFirst({
         where: and(
             eq(foodItems.name, safeCreateFoodItemUnitJsonBody.foodItemName),
-            eq(foodItems.userId, userId)
+            eq(foodItems.userId, safeUserId)
         ),
     });
 
