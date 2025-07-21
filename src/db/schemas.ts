@@ -65,6 +65,20 @@ export const foodItems = pgTable("food_items", {
     userId: uuid("user_id").notNull(),
 });
 
+export const foodItemUnits = pgTable("food_item_units", {
+    id: uuid("id").primaryKey(), // same food item can have multiple units with same unit of measurement
+    foodItemId: uuid("food_item_id").references(() => foodItems.id),
+    unitOfMeasurement: text("unit_of_measurement").notNull(),
+    unitDescription: text("unit_description"),
+    calories: integer("calories").notNull(),
+    proteinInGrams: integer("protein_in_grams").notNull(),
+    carbohydratesInGrams: integer("carbohydrates_in_grams").notNull(),
+    fatInGrams: integer("fat_in_grams").notNull(),
+    fiberInGrams: integer("fiber_in_grams").notNull(),
+    sugarInGrams: integer("sugar_in_grams").notNull(),
+    sodiumInMilligrams: integer("sodium_in_milligrams").notNull(),
+});
+
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
 

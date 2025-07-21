@@ -3,7 +3,7 @@ import { UnitOfMeasurementEnum } from "../recipe";
 
 export const foodItemUnitSchema = z.object({
     // Each food can have multiple units with their own nutrition
-    id: z.string().uuid(),
+    foodItemId: z.string().uuid(),
     units: z
         .array(
             z.object({
@@ -16,7 +16,6 @@ export const foodItemUnitSchema = z.object({
                         "Unit description must be less than 100 characters"
                     )
                     .optional(),
-
                 // Nutrition per 1 unit (of selected unit)
                 // for example per "WHOLE" apple, per "SLICE" of bread, per "CLOVE" of garlic, etc.
                 nutritionPerOfThisUnit: z.object({
@@ -56,10 +55,6 @@ export const foodItemUnitSchema = z.object({
                         "estimated",
                     ])
                     .default("user_measured"),
-                notes: z
-                    .string()
-                    .max(200, "Notes must be less than 200 characters")
-                    .optional(),
             })
         )
         .min(1, "Food must have at least one unit")

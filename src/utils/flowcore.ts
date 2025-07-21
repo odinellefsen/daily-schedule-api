@@ -7,6 +7,7 @@ import { zodEnv } from "../../env";
 import {
     foodItemArchivedSchema,
     foodItemSchema,
+    foodItemUnitSchema,
     foodItemUpdatedSchema,
 } from "../contracts/food/food-item";
 
@@ -41,6 +42,12 @@ export const FlowcorePathways = new PathwaysBuilder({
         eventType: "food-item.archived.v0",
         retryDelayMs: 10000,
         schema: foodItemArchivedSchema,
+    })
+    .register({
+        flowType: "food-item.v0",
+        eventType: "food-item.units.created.v0",
+        retryDelayMs: 10000,
+        schema: foodItemUnitSchema,
     });
 
 export const pathwaysRouter = new PathwayRouter(
