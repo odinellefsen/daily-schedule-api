@@ -41,7 +41,8 @@ export const clerkAuth = () => {
                 );
             }
 
-            const token = authHeader.substring(7); // Remove "Bearer " prefix
+            // Removing "Bearer " prefix
+            const token = authHeader.substring(7);
 
             // Verify the JWT token with Clerk
             const payload = await verifyToken(token, {

@@ -8,5 +8,8 @@ foodItem.use("/*", requireAuth());
 import "./food-item.create";
 import "./food-item.patch";
 import "./food-item.delete";
+import "./food-item-units.create";
+import "./food-item-units.patch";
+import "./food-item-units.delete";
 
 export default foodItem;
