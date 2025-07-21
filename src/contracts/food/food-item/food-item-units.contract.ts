@@ -15,10 +15,10 @@ export const foodItemUnitSchema = z.object({
                         100,
                         "Unit description must be less than 100 characters"
                     )
-                    .optional(), // e.g., "1 medium apple (about 180g)", "1 thick slice"
+                    .optional(), // e.g., "a medium whole apple (about 180g)", "a large whole apple","1 thick slice"
 
                 // Nutrition per 1 unit (of selected unit)
-                // for example 1 "WHOLE" apple, 1 "SLICE" of bread, 1 "CLOVE" of garlic, etc.
+                // for example per "WHOLE" apple, per "SLICE" of bread, per "CLOVE" of garlic, etc.
                 nutritionPerOfThisUnit: z.object({
                     calories: z
                         .number()
