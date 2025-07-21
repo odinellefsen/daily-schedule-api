@@ -76,7 +76,11 @@ foodItem.patch("/:foodItemId/units", async (c) => {
         },
         unitOfMeasurement: unit.unitOfMeasurement as UnitOfMeasurementEnum,
         unitDescription: unit.unitDescription,
-        source: unit.source,
+        source: unit.source as
+            | "user_measured"
+            | "package_label"
+            | "database"
+            | "estimated",
     }));
 
     if (!relatedFoodItemUnits) {
@@ -97,8 +101,7 @@ foodItem.patch("/:foodItemId/units", async (c) => {
             foodItemId: relatedFoodItem.id,
             units: oldUnitFieldValues.map((unit) => ({
                 id: unit.id,
-                unitOfMeasurement:
-                    unit.unitOfMeasurement as UnitOfMeasurementEnum,
+                unitOfMeasurement: unit.unitOfMeasurement,
                 unitDescription: unit.unitDescription ?? undefined,
                 nutritionPerOfThisUnit: {
                     calories: unit.nutritionPerOfThisUnit.calories,
@@ -111,11 +114,7 @@ foodItem.patch("/:foodItemId/units", async (c) => {
                     sodiumInMilligrams:
                         unit.nutritionPerOfThisUnit.sodiumInMilligrams,
                 },
-                source: unit.source as
-                    | "user_measured"
-                    | "package_label"
-                    | "database"
-                    | "estimated",
+                source: unit.source,
             })),
         },
     };
