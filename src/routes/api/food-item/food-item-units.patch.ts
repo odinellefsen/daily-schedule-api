@@ -20,11 +20,6 @@ const updateFoodItemUnitRequestSchema = foodItemUnitSchema
     })
     .extend({
         foodItemName: z.string().min(1, "Food item name min length is 1"),
-        units: z.array(
-            foodItemUnitSchema.shape.units.element.omit({
-                id: true,
-            })
-        ),
     });
 
 foodItem.patch("/:foodItemId/units", async (c) => {
@@ -94,7 +89,6 @@ foodItem.patch("/:foodItemId/units", async (c) => {
     const updatedFoodItemUnits: FoodItemUnitUpdatedType = {
         foodItemId: relatedFoodItem.id,
         units: safeUpdateFoodItemUnitJsonBody.units.map((unit) => ({
-            id: crypto.randomUUID(),
             ...unit,
         })),
         oldValues: {
