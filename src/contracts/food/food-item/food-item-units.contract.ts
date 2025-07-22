@@ -2,7 +2,7 @@ import { z } from "zod";
 import { UnitOfMeasurementEnum } from "../recipe";
 
 export const foodItemUnitSchema = z.object({
-    // Each food can have multiple units with their own nutrition
+    // Each food can have multiple units with their own nutritional values
     foodItemId: z.string().uuid(),
     units: z
         .array(
