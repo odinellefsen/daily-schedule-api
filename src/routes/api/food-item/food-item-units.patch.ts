@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import z from "zod";
 import {
+    type FoodItemUnitType,
     type FoodItemUnitUpdatedType,
     foodItemUnitSchema,
     foodItemUnitUpdatedSchema,
@@ -22,7 +23,6 @@ const updateFoodItemUnitRequestSchema = foodItemUnitSchema
         units: z.array(
             foodItemUnitSchema.shape.units.element.omit({
                 id: true,
-                source: true,
             })
         ),
     });
@@ -63,26 +63,6 @@ foodItem.patch("/:foodItemId/units", async (c) => {
         .from(foodItemUnits)
         .where(eq(foodItemUnits.foodItemId, relatedFoodItem.id));
 
-    const oldUnitFieldValues = relatedFoodItemUnits.map((unit) => ({
-        id: unit.id,
-        nutritionPerOfThisUnit: {
-            calories: unit.calories,
-            proteinInGrams: unit.proteinInGrams,
-            fatInGrams: unit.fatInGrams,
-            carbohydratesInGrams: unit.carbohydratesInGrams,
-            fiberInGrams: unit.fiberInGrams,
-            sugarInGrams: unit.sugarInGrams,
-            sodiumInMilligrams: unit.sodiumInMilligrams,
-        },
-        unitOfMeasurement: unit.unitOfMeasurement as UnitOfMeasurementEnum,
-        unitDescription: unit.unitDescription,
-        source: unit.source as
-            | "user_measured"
-            | "package_label"
-            | "database"
-            | "estimated",
-    }));
-
     if (!relatedFoodItemUnits) {
         return c.json(
             ApiResponse.error("Food item units do not exist"),
@@ -90,12 +70,32 @@ foodItem.patch("/:foodItemId/units", async (c) => {
         );
     }
 
+    const oldUnitFieldValues: FoodItemUnitType["units"] =
+        relatedFoodItemUnits.map((unit) => ({
+            id: unit.id,
+            nutritionPerOfThisUnit: {
+                calories: unit.calories,
+                proteinInGrams: unit.proteinInGrams,
+                fatInGrams: unit.fatInGrams,
+                carbohydratesInGrams: unit.carbohydratesInGrams,
+                fiberInGrams: unit.fiberInGrams,
+                sugarInGrams: unit.sugarInGrams,
+                sodiumInMilligrams: unit.sodiumInMilligrams,
+            },
+            unitOfMeasurement: unit.unitOfMeasurement as UnitOfMeasurementEnum,
+            unitDescription: unit.unitDescription ?? undefined,
+            source: unit.source as
+                | "user_measured"
+                | "package_label"
+                | "database"
+                | "estimated",
+        }));
+
     const updatedFoodItemUnits: FoodItemUnitUpdatedType = {
         foodItemId: relatedFoodItem.id,
         units: safeUpdateFoodItemUnitJsonBody.units.map((unit) => ({
             id: crypto.randomUUID(),
             ...unit,
-            source: "user_measured" as const,
         })),
         oldValues: {
             foodItemId: relatedFoodItem.id,
