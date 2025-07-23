@@ -1,11 +1,10 @@
 import z from "zod";
-import { foodItemUnitSchema } from "../../../contracts/food/food-item";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import foodItem from "./food-item.create";
 
 // client side request schema
 const deleteFoodItemUnitRequestSchema = z.object({
-    unitId: z.string().uuid(),
+    unitIds: z.union([z.string().uuid(), z.array(z.string().uuid())]),
 });
 
 foodItem.delete("/:foodItemId/units", async (c) => {
@@ -13,7 +12,7 @@ foodItem.delete("/:foodItemId/units", async (c) => {
 
     const rawJsonBodyRequest = await c.req.json();
     const parsedJsonBodyRequest =
-        foodItemUnitSchema.safeParse(rawJsonBodyRequest);
+        deleteFoodItemUnitRequestSchema.safeParse(rawJsonBodyRequest);
     if (!parsedJsonBodyRequest.success) {
         return c.json(
             ApiResponse.error(
