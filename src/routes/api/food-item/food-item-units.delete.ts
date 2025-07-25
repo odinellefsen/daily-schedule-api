@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import z from "zod";
 import {
     type FoodItemUnitType,
@@ -33,47 +33,54 @@ foodItem.delete("/:foodItemId/units", async (c) => {
     }
     const safeDeleteFoodItemUnitRequestBody = parsedJsonBodyRequest.data;
 
-    const foodItemArr: FoodItemUnitType["units"] = [];
-    let foodItemId = "";
-    let hasFoodItemIdBeenSet = false;
+    const foodItemUnitsFromDb = await db.query.foodItemUnits.findMany({
+        where: inArray(
+            foodItemUnits.id,
+            safeDeleteFoodItemUnitRequestBody.unitIds
+        ),
+    });
 
-    for (const unitId of safeDeleteFoodItemUnitRequestBody.unitIds) {
-        const foodItemUnitFromDb = await db.query.foodItemUnits.findFirst({
-            where: eq(foodItemUnits.id, unitId),
-        });
-
-        if (!foodItemUnitFromDb) {
-            return c.json(
-                ApiResponse.error(`Food item unit not found`),
-                StatusCodes.NOT_FOUND
-            );
-        }
-        if (!hasFoodItemIdBeenSet) {
-            foodItemId = foodItemUnitFromDb.foodItemId;
-            hasFoodItemIdBeenSet = true;
-        }
-
-        foodItemArr.push({
-            id: foodItemUnitFromDb.id,
-            unitOfMeasurement:
-                foodItemUnitFromDb.unitOfMeasurement as UnitOfMeasurementEnum,
-            unitDescription: foodItemUnitFromDb.unitDescription ?? undefined,
-            nutritionPerOfThisUnit: {
-                calories: foodItemUnitFromDb.calories,
-                proteinInGrams: foodItemUnitFromDb.proteinInGrams,
-                carbohydratesInGrams: foodItemUnitFromDb.carbohydratesInGrams,
-                fatInGrams: foodItemUnitFromDb.fatInGrams,
-                fiberInGrams: foodItemUnitFromDb.fiberInGrams,
-                sugarInGrams: foodItemUnitFromDb.sugarInGrams,
-                sodiumInMilligrams: foodItemUnitFromDb.sodiumInMilligrams,
-            },
-            source: foodItemUnitFromDb.source as
-                | "user_measured"
-                | "package_label"
-                | "database"
-                | "estimated",
-        });
+    if (
+        foodItemUnitsFromDb.length !==
+        safeDeleteFoodItemUnitRequestBody.unitIds.length
+    ) {
+        return c.json(
+            ApiResponse.error("One or more food item units not found"),
+            StatusCodes.NOT_FOUND
+        );
     }
+
+    const uniqueFoodItemIds = new Set(
+        foodItemUnitsFromDb.map((unit) => unit.foodItemId)
+    );
+    if (uniqueFoodItemIds.size !== 1) {
+        return c.json(
+            ApiResponse.error("All units must belong to the same food item"),
+            StatusCodes.BAD_REQUEST
+        );
+    }
+
+    const foodItemId = foodItemUnitsFromDb[0].foodItemId;
+
+    const foodItemArr = foodItemUnitsFromDb.map((unit) => ({
+        id: unit.id,
+        unitOfMeasurement: unit.unitOfMeasurement as UnitOfMeasurementEnum,
+        unitDescription: unit.unitDescription ?? undefined,
+        nutritionPerOfThisUnit: {
+            calories: unit.calories,
+            proteinInGrams: unit.proteinInGrams,
+            carbohydratesInGrams: unit.carbohydratesInGrams,
+            fatInGrams: unit.fatInGrams,
+            fiberInGrams: unit.fiberInGrams,
+            sugarInGrams: unit.sugarInGrams,
+            sodiumInMilligrams: unit.sodiumInMilligrams,
+        },
+        source: unit.source as
+            | "user_measured"
+            | "package_label"
+            | "database"
+            | "estimated",
+    }));
 
     const newDeleteFoodItemUnitEvent = foodItemUnitDeletedSchema.safeParse({
         foodItemId,
@@ -88,12 +95,13 @@ foodItem.delete("/:foodItemId/units", async (c) => {
             StatusCodes.BAD_REQUEST
         );
     }
+    const safeDeleteFoodItemUnitEvent = newDeleteFoodItemUnitEvent.data;
 
     try {
         await FlowcorePathways.write(
             "food-item.v0/food-item.units.deleted.v0",
             {
-                data: newDeleteFoodItemUnitEvent.data,
+                data: safeDeleteFoodItemUnitEvent,
             }
         );
     } catch (error) {
