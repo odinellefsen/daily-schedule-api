@@ -60,7 +60,7 @@ foodItem.patch("/", async (c) => {
             name: foodItemFromDb.name,
             // Convert database string back to array format for contract
             categoryHierarchy: foodItemFromDb.categoryHierarchy
-                ? foodItemFromDb.categoryHierarchy.split(",")
+                ? foodItemFromDb.categoryHierarchy
                 : undefined,
         },
     };
