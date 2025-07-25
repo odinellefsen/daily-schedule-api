@@ -65,5 +65,8 @@ export const foodItemUnitUpdatedSchema = foodItemUnitSchema.extend({
     oldValues: foodItemUnitSchema,
 });
 
+export const foodItemUnitDeletedSchema = foodItemUnitSchema;
+
 export type FoodItemUnitType = z.infer<typeof foodItemUnitSchema>;
 export type FoodItemUnitUpdatedType = z.infer<typeof foodItemUnitUpdatedSchema>;
+export type FoodItemUnitDeletedType = z.infer<typeof foodItemUnitDeletedSchema>;
