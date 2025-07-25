@@ -67,7 +67,11 @@ foodItem.delete("/:foodItemId/units", async (c) => {
                 sugarInGrams: foodItemUnitFromDb.sugarInGrams,
                 sodiumInMilligrams: foodItemUnitFromDb.sodiumInMilligrams,
             },
-            source: "user_measured" as const,
+            source: foodItemUnitFromDb.source as
+                | "user_measured"
+                | "package_label"
+                | "database"
+                | "estimated",
         });
     }
 
