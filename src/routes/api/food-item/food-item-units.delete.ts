@@ -1,9 +1,6 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import z from "zod";
-import {
-    type FoodItemUnitType,
-    foodItemUnitDeletedSchema,
-} from "../../../contracts/food/food-item";
+import { foodItemUnitDeletedSchema } from "../../../contracts/food/food-item";
 import type { UnitOfMeasurementEnum } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
 import { foodItemUnits } from "../../../db/schemas";
@@ -17,8 +14,6 @@ const deleteFoodItemUnitRequestSchema = z.object({
 });
 
 foodItem.delete("/:foodItemId/units", async (c) => {
-    const safeUserId = c.userId!;
-
     const rawJsonBodyRequest = await c.req.json();
     const parsedJsonBodyRequest =
         deleteFoodItemUnitRequestSchema.safeParse(rawJsonBodyRequest);
