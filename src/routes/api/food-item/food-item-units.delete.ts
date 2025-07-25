@@ -8,6 +8,7 @@ import type { UnitOfMeasurementEnum } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
 import { foodItemUnits } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
+import { FlowcorePathways } from "../../../utils/flowcore";
 import foodItem from "./food-item.create";
 
 // client side request schema
@@ -83,4 +84,21 @@ foodItem.delete("/:foodItemId/units", async (c) => {
             StatusCodes.BAD_REQUEST
         );
     }
+
+    try {
+        await FlowcorePathways.write(
+            "food-item.v0/food-item.units.deleted.v0",
+            {
+                data: newDeleteFoodItemUnitEvent.data,
+            }
+        );
+    } catch (error) {
+        console.error(error);
+        return c.json(
+            ApiResponse.error("Failed to delete food item units"),
+            StatusCodes.SERVER_ERROR
+        );
+    }
+
+    return c.json(ApiResponse.success("Food item units deleted"));
 });
