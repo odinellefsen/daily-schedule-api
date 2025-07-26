@@ -31,6 +31,15 @@ export const recipeStepIngredients = pgTable("recipe_steps_ingredients", {
     notes: text("notes"),
 });
 
+export const recipeIngredients = pgTable("recipe_ingredients", {
+    id: uuid("id").primaryKey(),
+    recipeId: uuid("recipe_id")
+        .references(() => recipes.id)
+        .notNull(),
+    ingredientText: text("ingredient_text").notNull(),
+    sortOrder: integer("sort_order").notNull(),
+});
+
 export const meals = pgTable("meals", {
     id: uuid("id").primaryKey(),
     recipeId: uuid("recipe_id")

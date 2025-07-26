@@ -14,6 +14,9 @@ import {
 } from "../contracts/food/food-item";
 import {
     recipeArchiveSchema,
+    recipeIngredientsArchiveSchema,
+    recipeIngredientsSchema,
+    recipeIngredientsUpdateSchema,
     recipeInstructionsArchiveSchema,
     recipeInstructionsSchema,
     recipeInstructionsUpdateSchema,
@@ -35,6 +38,11 @@ import {
     handleRecipeCreated,
     handleRecipeUpdated,
 } from "../handlers/recipe/recipe.handler";
+import {
+    handleRecipeIngredientsArchived,
+    handleRecipeIngredientsCreated,
+    handleRecipeIngredientsUpdated,
+} from "../handlers/recipe/recipe-ingredients.handler";
 import {
     handleRecipeInstructionsArchived,
     handleRecipeInstructionsCreated,
@@ -127,6 +135,24 @@ export const FlowcorePathways = new PathwaysBuilder({
         retryDelayMs: 10000,
         schema: recipeInstructionsArchiveSchema,
     })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe-ingredients.created.v0",
+        retryDelayMs: 10000,
+        schema: recipeIngredientsSchema,
+    })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe-ingredients.updated.v0",
+        retryDelayMs: 10000,
+        schema: recipeIngredientsUpdateSchema,
+    })
+    .register({
+        flowType: "recipe.v0",
+        eventType: "recipe-ingredients.archived.v0",
+        retryDelayMs: 10000,
+        schema: recipeIngredientsArchiveSchema,
+    })
     .handle("food-item.v0/food-item.created.v0", handleFoodItemCreated)
     .handle("food-item.v0/food-item.updated.v0", handleFoodItemUpdated)
     .handle("food-item.v0/food-item.archived.v0", handleFoodItemArchived)
@@ -156,6 +182,18 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle(
         "recipe.v0/recipe-instructions.archived.v0",
         handleRecipeInstructionsArchived
+    )
+    .handle(
+        "recipe.v0/recipe-ingredients.created.v0",
+        handleRecipeIngredientsCreated
+    )
+    .handle(
+        "recipe.v0/recipe-ingredients.updated.v0",
+        handleRecipeIngredientsUpdated
+    )
+    .handle(
+        "recipe.v0/recipe-ingredients.archived.v0",
+        handleRecipeIngredientsArchived
     );
 
 export const pathwaysRouter = new PathwayRouter(
