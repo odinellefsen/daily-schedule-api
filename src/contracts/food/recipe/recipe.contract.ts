@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { MealTimingEnum } from "./recipe.shared_utils";
 
-// This schema is used to create and update a recipe for foods and drinks
 export const recipeSchema = z.object({
     id: z.string().uuid(),
     userId: z.string().uuid(),

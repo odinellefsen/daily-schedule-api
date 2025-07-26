@@ -1,7 +1,6 @@
 import z from "zod";
 import { UnitOfMeasurementEnum } from "../food-item/food-item.shared_utils";
 
-// This schema is used to create and update step by step instructions for a meal
 export const mealStepByStepInstructionsSchema = z.object({
     mealId: z.string().uuid(),
     stepByStepInstructions: z.array(
