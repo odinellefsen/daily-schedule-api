@@ -22,12 +22,22 @@ export const recipeInstructionsSchema = z.object({
                 ingredientsUsedInStep: z
                     .array(
                         z.object({
-                            ingredientInStepId: z.string().uuid(""),
-                            foodItemId: z
-                                .string()
-                                .uuid(
-                                    "Using a food item that you have stored requires it's UUID"
-                                )
+                            id: z.string().uuid(),
+                            foodItem: z
+                                .object({
+                                    foodItemId: z.string().uuid(),
+                                    foodItemName: z
+                                        .string()
+                                        .min(
+                                            1,
+                                            "The food item name is required"
+                                        )
+                                        .max(
+                                            100,
+                                            "The food item name must be less than 100 characters"
+                                        ),
+                                    foodItemUnitId: z.string().uuid(),
+                                })
                                 .optional(),
                             nameOfTheIngredientUsedInThisStep: z
                                 .string()
