@@ -23,36 +23,44 @@ export const recipeInstructionsSchema = z.object({
                     .array(
                         z.object({
                             id: z.string().uuid(),
-                            foodItem: z
-                                .object({
-                                    foodItemId: z.string().uuid(),
-                                    foodItemName: z
+                            ingredient: z.union([
+                                // this object is for when the ingredient is a registered food item
+                                z
+                                    .object({
+                                        foodItemId: z.string().uuid(),
+                                        foodItemName: z
+                                            .string()
+                                            .min(
+                                                1,
+                                                "The food item name is required"
+                                            )
+                                            .max(
+                                                100,
+                                                "The food item name must be less than 100 characters"
+                                            ),
+                                        foodItemUnitId: z.string().uuid(),
+                                        quantityOfFoodItem: z
+                                            .number()
+                                            .positive(
+                                                "Quantity used in this step must be greater than 0"
+                                            ),
+                                    })
+                                    .optional(),
+                                // this object is a more ad-hoc ingredient with no nutrition information
+                                z.object({
+                                    id: z.string().uuid(),
+                                    nameOfTheIngredientUsedInThisStep: z
                                         .string()
                                         .min(
                                             1,
-                                            "The food item name is required"
+                                            "The ingredient name is required"
                                         )
                                         .max(
-                                            100,
-                                            "The food item name must be less than 100 characters"
+                                            50,
+                                            "The ingredient name must be less than 50 characters"
                                         ),
-                                    foodItemUnitId: z.string().uuid(),
-                                })
-                                .optional(),
-                            nameOfTheIngredientUsedInThisStep: z
-                                .string()
-                                .min(1, "The ingredient name is required")
-                                .max(
-                                    50,
-                                    "The ingredient name must be less than 50 characters"
-                                ),
-                            quantityOfTheIngredientUsedInThisStep: z
-                                .number()
-                                .positive(
-                                    "Quantity used in this step must be greater than 0"
-                                ),
-                            unitOfMeasurementOfTheIngredientQuantityUsedInThisStep:
-                                z.nativeEnum(UnitOfMeasurementEnum),
+                                }),
+                            ]),
                         })
                     )
                     .min(
