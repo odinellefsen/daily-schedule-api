@@ -5,6 +5,7 @@ export const mealStepByStepInstructionsSchema = z.object({
     mealId: z.string().uuid(),
     stepByStepInstructions: z.array(
         z.object({
+            id: z.string().uuid(),
             recipeId: z.string().uuid(),
             stepId: z.string().uuid(),
             isStepCompleted: z.boolean().default(false),
