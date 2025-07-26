@@ -56,4 +56,18 @@ export const recipeInstructionsSchema = z.object({
         .max(30, "The number of steps in the recipe must be less than 30"),
 });
 
+export const recipeInstructionsUpdateSchema = recipeInstructionsSchema.extend({
+    oldValues: recipeInstructionsSchema,
+});
+
+export const recipeInstructionsArchiveSchema = recipeInstructionsSchema.extend({
+    reasonForArchiving: z.string().min(1, "Reason for archiving is required"),
+});
+
 export type RecipeInstructionsType = z.infer<typeof recipeInstructionsSchema>;
+export type RecipeInstructionsUpdateType = z.infer<
+    typeof recipeInstructionsUpdateSchema
+>;
+export type RecipeInstructionsArchiveType = z.infer<
+    typeof recipeInstructionsArchiveSchema
+>;

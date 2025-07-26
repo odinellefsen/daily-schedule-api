@@ -22,4 +22,15 @@ export const recipeCreateSchema = z.object({
         )
         .optional(),
 });
+
+export const recipeUpdateSchema = recipeCreateSchema.extend({
+    oldValues: recipeCreateSchema,
+});
+
+export const recipeArchiveSchema = recipeCreateSchema.extend({
+    reasonForArchiving: z.string().min(1, "Reason for archiving is required"),
+});
+
 export type RecipeMetadataType = z.infer<typeof recipeCreateSchema>;
+export type RecipeUpdateType = z.infer<typeof recipeUpdateSchema>;
+export type RecipeArchiveType = z.infer<typeof recipeArchiveSchema>;
