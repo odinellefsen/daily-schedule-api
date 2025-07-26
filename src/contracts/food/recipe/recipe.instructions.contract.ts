@@ -26,6 +26,7 @@ export const recipeInstructionsSchema = z.object({
                                 // this object is for when the ingredient is a registered food item (with nutrition information)
                                 z
                                     .object({
+                                        foodItemUnitId: z.string().uuid(),
                                         foodItemId: z.string().uuid(),
                                         foodItemName: z
                                             .string()
@@ -37,7 +38,6 @@ export const recipeInstructionsSchema = z.object({
                                                 100,
                                                 "The food item name must be less than 100 characters"
                                             ),
-                                        foodItemUnitId: z.string().uuid(),
                                         quantityOfFoodItem: z
                                             .number()
                                             .positive(
