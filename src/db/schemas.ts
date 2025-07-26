@@ -52,6 +52,16 @@ export const meals = pgTable("meals", {
     recipes: text("recipes").notNull(), // JSON array of recipe instances
 });
 
+export const mealIngredients = pgTable("meal_ingredients", {
+    id: uuid("id").primaryKey(),
+    mealId: uuid("meal_id")
+        .notNull()
+        .references(() => meals.id, { onDelete: "cascade" }),
+    recipeId: uuid("recipe_id").notNull(),
+    ingredientText: text("ingredient_text").notNull(),
+    sortOrder: integer("sort_order").notNull(),
+});
+
 export const mealSteps = pgTable("meal_steps", {
     id: uuid("id").primaryKey(),
     mealId: uuid("meal_id")

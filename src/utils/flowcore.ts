@@ -14,6 +14,9 @@ import {
 } from "../contracts/food/food-item";
 import {
     mealArchiveSchema,
+    mealIngredientsArchiveSchema,
+    mealIngredientsSchema,
+    mealIngredientsUpdateSchema,
     mealInstructionsArchiveSchema,
     mealInstructionsUpdateSchema,
     mealSchema,
@@ -47,6 +50,11 @@ import {
     handleMealCreated,
     handleMealUpdated,
 } from "../handlers/meal/meal.handler";
+import {
+    handleMealIngredientsArchived,
+    handleMealIngredientsCreated,
+    handleMealIngredientsUpdated,
+} from "../handlers/meal/meal-ingredients.handler";
 import {
     handleMealInstructionsArchived,
     handleMealInstructionsCreated,
@@ -212,6 +220,24 @@ export const FlowcorePathways = new PathwaysBuilder({
         schema: mealInstructionsArchiveSchema,
     })
     .register({
+        flowType: "meal.v0",
+        eventType: "meal-ingredients.created.v0",
+        retryDelayMs: 10000,
+        schema: mealIngredientsSchema,
+    })
+    .register({
+        flowType: "meal.v0",
+        eventType: "meal-ingredients.updated.v0",
+        retryDelayMs: 10000,
+        schema: mealIngredientsUpdateSchema,
+    })
+    .register({
+        flowType: "meal.v0",
+        eventType: "meal-ingredients.archived.v0",
+        retryDelayMs: 10000,
+        schema: mealIngredientsArchiveSchema,
+    })
+    .register({
         flowType: "recipe.v0",
         eventType: "recipe-version.v0",
         retryDelayMs: 10000,
@@ -282,6 +308,12 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle(
         "meal.v0/meal-instructions.archived.v0",
         handleMealInstructionsArchived
+    )
+    .handle("meal.v0/meal-ingredients.created.v0", handleMealIngredientsCreated)
+    .handle("meal.v0/meal-ingredients.updated.v0", handleMealIngredientsUpdated)
+    .handle(
+        "meal.v0/meal-ingredients.archived.v0",
+        handleMealIngredientsArchived
     );
 
 export const pathwaysRouter = new PathwayRouter(
