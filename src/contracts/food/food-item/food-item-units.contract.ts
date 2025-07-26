@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UnitOfMeasurementEnum } from "../recipe";
+import { UnitOfMeasurementEnum } from "./food-item.shared_utils";
 
 // Base schema for a single food unit
 export const foodItemUnitBaseSchema = z.object({

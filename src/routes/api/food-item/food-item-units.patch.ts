@@ -6,7 +6,7 @@ import {
     foodItemUnitSchema,
     foodItemUnitUpdatedSchema,
 } from "../../../contracts/food/food-item";
-import type { UnitOfMeasurementEnum } from "../../../contracts/food/recipe";
+import type { UnitOfMeasurementEnum } from "../../../contracts/food/food-item/food-item.shared_utils";
 import { db } from "../../../db";
 import { foodItems, foodItemUnits } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";

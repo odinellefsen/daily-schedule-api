@@ -2,7 +2,7 @@ import { z } from "zod";
 import { MealTimingEnum } from "./recipe.shared_utils";
 
 // This schema is used to create and update a recipe for foods and drinks
-export const recipeCreateSchema = z.object({
+export const recipeSchema = z.object({
     id: z.string().uuid(),
     userId: z.string().uuid(),
     whenIsItConsumed: z.array(z.nativeEnum(MealTimingEnum)).optional(),
@@ -23,14 +23,14 @@ export const recipeCreateSchema = z.object({
         .optional(),
 });
 
-export const recipeUpdateSchema = recipeCreateSchema.extend({
-    oldValues: recipeCreateSchema,
+export const recipeUpdateSchema = recipeSchema.extend({
+    oldValues: recipeSchema,
 });
 
-export const recipeArchiveSchema = recipeCreateSchema.extend({
+export const recipeArchiveSchema = recipeSchema.extend({
     reasonForArchiving: z.string().min(1, "Reason for archiving is required"),
 });
 
-export type RecipeMetadataType = z.infer<typeof recipeCreateSchema>;
+export type RecipeMetadataType = z.infer<typeof recipeSchema>;
 export type RecipeUpdateType = z.infer<typeof recipeUpdateSchema>;
 export type RecipeArchiveType = z.infer<typeof recipeArchiveSchema>;

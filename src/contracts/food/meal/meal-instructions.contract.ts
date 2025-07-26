@@ -1,5 +1,5 @@
 import z from "zod";
-import { UnitOfMeasurementEnum } from "../recipe/recipe.shared_utils";
+import { UnitOfMeasurementEnum } from "../food-item/food-item.shared_utils";
 
 // This schema is used to create and update step by step instructions for a meal
 export const mealStepByStepInstructionsSchema = z.object({
