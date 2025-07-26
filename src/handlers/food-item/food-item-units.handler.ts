@@ -1,5 +1,10 @@
 import type { FlowcoreEvent } from "@flowcore/pathways";
-import type { FoodItemUnitType } from "../../contracts/food/food-item";
+import { and, eq, inArray } from "drizzle-orm";
+import type {
+    FoodItemUnitDeletedType,
+    FoodItemUnitType,
+    FoodItemUnitUpdatedType,
+} from "../../contracts/food/food-item";
 import { db } from "../../db";
 import { foodItemUnits } from "../../db/schemas";
 
@@ -27,4 +32,51 @@ export async function handleFoodItemUnitsCreated(
             source: unit.source,
         }))
     );
+}
+
+export async function handleFoodItemUnitsUpdated(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: FoodItemUnitUpdatedType;
+    }
+) {
+    const { payload } = event;
+
+    for (const unit of payload.units) {
+        await db
+            .update(foodItemUnits)
+            .set({
+                unitOfMeasurement: unit.unitOfMeasurement,
+                unitDescription: unit.unitDescription,
+                calories: unit.nutritionPerOfThisUnit.calories,
+                proteinInGrams: unit.nutritionPerOfThisUnit.proteinInGrams,
+                carbohydratesInGrams:
+                    unit.nutritionPerOfThisUnit.carbohydratesInGrams,
+                fatInGrams: unit.nutritionPerOfThisUnit.fatInGrams,
+                fiberInGrams: unit.nutritionPerOfThisUnit.fiberInGrams,
+                sugarInGrams: unit.nutritionPerOfThisUnit.sugarInGrams,
+                sodiumInMilligrams:
+                    unit.nutritionPerOfThisUnit.sodiumInMilligrams,
+                source: unit.source,
+            })
+            .where(eq(foodItemUnits.id, unit.id));
+    }
+}
+
+export async function handleFoodItemUnitsDeleted(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: FoodItemUnitDeletedType;
+    }
+) {
+    const { payload } = event;
+
+    const unitIds = payload.units.map((unit) => unit.id);
+
+    await db
+        .delete(foodItemUnits)
+        .where(
+            and(
+                inArray(foodItemUnits.id, unitIds),
+                eq(foodItemUnits.foodItemId, payload.foodItemId)
+            )
+        );
 }

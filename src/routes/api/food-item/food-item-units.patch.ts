@@ -97,6 +97,7 @@ foodItem.patch("/:foodItemId/units", async (c) => {
                 id: unit.id,
                 unitOfMeasurement: unit.unitOfMeasurement,
                 unitDescription: unit.unitDescription ?? undefined,
+                source: unit.source,
                 nutritionPerOfThisUnit: {
                     calories: unit.nutritionPerOfThisUnit.calories,
                     proteinInGrams: unit.nutritionPerOfThisUnit.proteinInGrams,
@@ -108,7 +109,6 @@ foodItem.patch("/:foodItemId/units", async (c) => {
                     sodiumInMilligrams:
                         unit.nutritionPerOfThisUnit.sodiumInMilligrams,
                 },
-                source: unit.source,
             })),
         },
     };
