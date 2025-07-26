@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { foodItemUnitBaseSchema } from "../food-item/food-item-units.contract";
 
 // This schema is used to create and update instructions for a recipe
 export const recipeInstructionsSchema = z.object({
     recipeId: z.string().uuid(),
-    stepByStepInstructionsToMakeTheRecipe: z
+    stepByStepInstructions: z
         .array(
             z.object({
                 id: z.string().uuid(),
@@ -22,46 +21,24 @@ export const recipeInstructionsSchema = z.object({
                 ingredientsUsedInStep: z
                     .array(
                         z.object({
-                            id: z.string().uuid(),
-                            ingredient: z.union([
-                                // This object is for when the ingredient is a registered food item with nutrition information.
-                                z
-                                    .object({
-                                        foodItemUnitId: z.string().uuid(),
-                                        foodItemUnit: foodItemUnitBaseSchema,
-                                        foodItemId: z.string().uuid(),
-                                        foodItemName: z
-                                            .string()
-                                            .min(
-                                                1,
-                                                "The food item name is required"
-                                            )
-                                            .max(
-                                                100,
-                                                "The food item name must be less than 100 characters"
-                                            ),
-                                        quantityOfFoodItemUnit: z
-                                            .number()
-                                            .positive(
-                                                "Quantity used in this step must be greater than 0"
-                                            ),
-                                    })
-                                    .optional(),
-                                // This object is a more ad-hoc ingredient with no nutrition information.
-                                z.object({
-                                    id: z.string().uuid(),
-                                    nameAndQuantityOfIngredient: z
-                                        .string()
-                                        .min(
-                                            1,
-                                            "The ingredient name is required"
-                                        )
-                                        .max(
-                                            50,
-                                            "The ingredient name must be less than 50 characters"
-                                        ),
-                                }),
-                            ]),
+                            foodItemUnitId: z.string().uuid(),
+                            foodItemId: z.string().uuid(),
+                            quantityOfFoodItemUnit: z
+                                .number()
+                                .positive(
+                                    "Quantity used in this step must be greater than 0"
+                                )
+                                .max(
+                                    1_000_000,
+                                    "Quantity is unreasonably large"
+                                )
+                                .refine(
+                                    (n) => Math.floor(n * 1000) === n * 1000,
+                                    {
+                                        message: "Max 3 decimal places allowed",
+                                    }
+                                )
+                                .default(1),
                         })
                     )
                     .min(
@@ -78,4 +55,5 @@ export const recipeInstructionsSchema = z.object({
         .min(1, "You must have at least one step")
         .max(30, "The number of steps in the recipe must be less than 30"),
 });
+
 export type RecipeInstructionsType = z.infer<typeof recipeInstructionsSchema>;
