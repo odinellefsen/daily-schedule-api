@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { UnitOfMeasurementEnum } from "./recipe.shared_utils";
 
 // This schema is used to create and update instructions for a recipe
 export const recipeInstructionsSchema = z.object({
@@ -24,7 +23,7 @@ export const recipeInstructionsSchema = z.object({
                         z.object({
                             id: z.string().uuid(),
                             ingredient: z.union([
-                                // this object is for when the ingredient is a registered food item
+                                // this object is for when the ingredient is a registered food item (with nutrition information)
                                 z
                                     .object({
                                         foodItemId: z.string().uuid(),
