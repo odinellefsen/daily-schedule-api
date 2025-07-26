@@ -6,8 +6,8 @@ export const recipeIngredientsSchema = z.object({
     ingredientsOfTheRecipe: z
         .array(
             z.object({
-                ingredientId: z.string().uuid(),
-                ingredientUnitAndQuantity: z
+                id: z.string().uuid(),
+                ingredientUnitAndQuantityInWords: z
                     .string()
                     .min(1, "The ingredient is required")
                     .max(

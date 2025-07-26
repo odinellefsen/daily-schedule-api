@@ -1,40 +1,40 @@
 export enum UnitOfMeasurementEnum {
     // Weight units
-    GRAM = "Grams",
-    KILOGRAM = "Kilograms",
+    GRAM = "Gram",
+    KILOGRAM = "Kilogram",
 
     // Volume units
-    MILLILITER = "Milliliters",
-    LITER = "Liters",
-    TABLESPOON = "Tablespoons",
-    TEASPOON = "Teaspoons",
+    MILLILITER = "Milliliter",
+    LITER = "Liter",
+    TABLESPOON = "Tablespoon",
+    TEASPOON = "Teaspoon",
 
     // Count units
-    PIECE = "Pieces",
+    PIECE = "Piece",
     WHOLE = "Whole",
 
     // Approximate units
-    PINCH = "Pinches",
-    HANDFUL = "Handfuls",
+    PINCH = "Pinch",
+    HANDFUL = "Handful",
 
     // Contextual units
-    CLOVE = "Cloves", // for garlic
-    SLICE = "Slices", // for bread, tomatoes
-    STRIP = "Strips", // for bacon
-    HEAD = "Heads", // for lettuce, cabbage
-    BUNCH = "Bunches", // for herbs
+    CLOVE = "Clove", // for garlic
+    SLICE = "Slice", // for bread, tomatoes
+    STRIP = "Strip", // for bacon
+    HEAD = "Head", // for lettuce, cabbage
+    BUNCH = "Bunch", // for herbs
 
     // Flexible
-    TO_TASTE = "To Taste",
-    AS_NEEDED = "As Needed",
+    TO_TASTE = "To taste",
+    AS_NEEDED = "As needed",
 
     // Beverage based
-    SHOT = "Shots",
-    DASH = "Dashes",
-    DROP = "Drops",
-    SPLASH = "Splashes",
-    SCOOP = "Scoops",
-    DRIZZLE = "Drizzles",
+    SHOT = "Shot",
+    DASH = "Dash",
+    DROP = "Drop",
+    SPLASH = "Splash",
+    SCOOP = "Scoop",
+    DRIZZLE = "Drizzle",
 }
 
 export enum MealTimingEnum {
