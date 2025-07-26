@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const mealSchema = z.object({
-    mealId: z.string().uuid(),
+    id: z.string().uuid(),
     userId: z.string().uuid(),
     hasMealBeenConsumed: z.boolean().default(false),
     recipes: z
