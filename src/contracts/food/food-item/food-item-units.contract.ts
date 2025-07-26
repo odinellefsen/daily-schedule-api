@@ -2,7 +2,7 @@ import { z } from "zod";
 import { UnitOfMeasurementEnum } from "../recipe";
 
 // Base schema for a single food unit
-export const foodUnitSchema = z.object({
+export const foodItemUnitBaseSchema = z.object({
     id: z.string().uuid(),
     unitOfMeasurement: z.nativeEnum(UnitOfMeasurementEnum),
     unitDescription: z // e.g., "a medium whole apple (about 180g)", "a large whole apple (about 220g)", "a thick slice of bread (about 30g)"
@@ -47,7 +47,7 @@ export const foodItemUnitSchema = z.object({
     // Each food can have multiple units with their own nutritional values
     foodItemId: z.string().uuid(),
     units: z
-        .array(foodUnitSchema)
+        .array(foodItemUnitBaseSchema)
         .min(1, "Food must have at least one unit")
         .max(20, "Food can have at most 20 units"),
 });
@@ -59,9 +59,9 @@ export const foodItemUnitUpdatedSchema = foodItemUnitSchema.extend({
 export const foodItemUnitDeletedSchema = foodItemUnitSchema;
 
 // Schema for a single food unit (references the base schema)
-export const singleFoodUnitSchema = foodUnitSchema;
+export const singleFoodUnitSchema = foodItemUnitBaseSchema;
 
-export type FoodUnitType = z.infer<typeof foodUnitSchema>;
+export type FoodUnitType = z.infer<typeof foodItemUnitBaseSchema>;
 export type FoodItemUnitType = z.infer<typeof foodItemUnitSchema>;
 export type FoodItemUnitUpdatedType = z.infer<typeof foodItemUnitUpdatedSchema>;
 export type FoodItemUnitDeletedType = z.infer<typeof foodItemUnitDeletedSchema>;

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { foodItemSchema } from "../food-item";
+import { foodItemUnitBaseSchema } from "../food-item/food-item-units.contract";
 
 // This schema is used to create and update instructions for a recipe
 export const recipeInstructionsSchema = z.object({
@@ -23,32 +25,22 @@ export const recipeInstructionsSchema = z.object({
                         z.object({
                             id: z.string().uuid(),
                             ingredient: z.union([
-                                // this object is for when the ingredient is a registered food item (with nutrition information)
+                                // this object is for when the ingredient is a registered food item with nutrition information.
                                 z
                                     .object({
-                                        foodItemUnitId: z.string().uuid(),
-                                        foodItemId: z.string().uuid(),
-                                        foodItemName: z
-                                            .string()
-                                            .min(
-                                                1,
-                                                "The food item name is required"
-                                            )
-                                            .max(
-                                                100,
-                                                "The food item name must be less than 100 characters"
-                                            ),
-                                        quantityOfFoodItem: z
+                                        foodItemUnit: foodItemUnitBaseSchema,
+                                        foodItem: foodItemSchema,
+                                        quantityOfFoodItemUnit: z
                                             .number()
                                             .positive(
                                                 "Quantity used in this step must be greater than 0"
                                             ),
                                     })
                                     .optional(),
-                                // this object is a more ad-hoc ingredient with no nutrition information
+                                // this object is a more ad-hoc ingredient with no nutrition information.
                                 z.object({
                                     id: z.string().uuid(),
-                                    nameOfTheIngredientUsedInThisStep: z
+                                    nameAndQuantityOfIngredient: z
                                         .string()
                                         .min(
                                             1,
