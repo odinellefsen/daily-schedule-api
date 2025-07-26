@@ -23,6 +23,7 @@ import {
     recipeSchema,
     recipeUpdateSchema,
 } from "../contracts/food/recipe";
+import { recipeVersionSchema } from "../contracts/food/recipe/recipe-version.contract";
 import {
     handleFoodItemArchived,
     handleFoodItemCreated,
@@ -37,18 +38,20 @@ import {
     handleRecipeArchived,
     handleRecipeCreated,
     handleRecipeUpdated,
+    handleRecipeVersionUpdated,
 } from "../handlers/recipe/recipe.handler";
 import {
     handleRecipeIngredientsArchived,
     handleRecipeIngredientsCreated,
     handleRecipeIngredientsUpdated,
+    handleRecipeIngredientsVersionUpdated,
 } from "../handlers/recipe/recipe-ingredients.handler";
 import {
     handleRecipeInstructionsArchived,
     handleRecipeInstructionsCreated,
     handleRecipeInstructionsUpdated,
+    handleRecipeInstructionsVersionUpdated,
 } from "../handlers/recipe/recipe-instructions.handler";
-import { recipeVersionSchema } from "../contracts/food/recipe/recipe-version.contract";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
 const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
@@ -201,6 +204,15 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle(
         "recipe.v0/recipe-ingredients.archived.v0",
         handleRecipeIngredientsArchived
+    )
+    .handle("recipe.v0/recipe-version.v0", handleRecipeVersionUpdated)
+    .handle(
+        "recipe.v0/recipe-version.v0",
+        handleRecipeInstructionsVersionUpdated
+    )
+    .handle(
+        "recipe.v0/recipe-version.v0",
+        handleRecipeIngredientsVersionUpdated
     );
 
 export const pathwaysRouter = new PathwayRouter(

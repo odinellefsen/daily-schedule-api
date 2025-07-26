@@ -6,8 +6,9 @@ import type {
     recipeIngredientsSchema,
     recipeIngredientsUpdateSchema,
 } from "../../contracts/food/recipe";
+import type { recipeVersionSchema } from "../../contracts/food/recipe/recipe-version.contract";
 import { db } from "../../db";
-import { recipeIngredients } from "../../db/schemas";
+import { recipeIngredients, recipes } from "../../db/schemas";
 
 export async function handleRecipeIngredientsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
@@ -61,4 +62,20 @@ export async function handleRecipeIngredientsArchived(
     await db
         .delete(recipeIngredients)
         .where(eq(recipeIngredients.recipeId, payload.recipeId));
+}
+
+export async function handleRecipeIngredientsVersionUpdated(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: z.infer<typeof recipeVersionSchema>;
+    }
+) {
+    const { payload } = event;
+
+    // Update recipe version
+    await db
+        .update(recipes)
+        .set({
+            version: payload.version,
+        })
+        .where(eq(recipes.id, payload.recipeId));
 }
