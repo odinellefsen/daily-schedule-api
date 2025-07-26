@@ -17,6 +17,11 @@ import {
     handleFoodItemCreated,
     handleFoodItemUpdated,
 } from "../handlers/food-item/food-item.handler";
+import {
+    handleFoodItemUnitsCreated,
+    handleFoodItemUnitsDeleted,
+    handleFoodItemUnitsUpdated,
+} from "../handlers/food-item/food-item-units.handler";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
 const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
@@ -70,7 +75,19 @@ export const FlowcorePathways = new PathwaysBuilder({
     })
     .handle("food-item.v0/food-item.created.v0", handleFoodItemCreated)
     .handle("food-item.v0/food-item.updated.v0", handleFoodItemUpdated)
-    .handle("food-item.v0/food-item.archived.v0", handleFoodItemArchived);
+    .handle("food-item.v0/food-item.archived.v0", handleFoodItemArchived)
+    .handle(
+        "food-item.v0/food-item.units.created.v0",
+        handleFoodItemUnitsCreated
+    )
+    .handle(
+        "food-item.v0/food-item.units.updated.v0",
+        handleFoodItemUnitsUpdated
+    )
+    .handle(
+        "food-item.v0/food-item.units.deleted.v0",
+        handleFoodItemUnitsDeleted
+    );
 
 export const pathwaysRouter = new PathwayRouter(
     FlowcorePathways,
