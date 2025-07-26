@@ -4,7 +4,10 @@ import {
     type RecipeInstructionsUpdateType,
     recipeInstructionsUpdateSchema,
 } from "../../../contracts/food/recipe";
-import type { RecipeVersionType } from "../../../contracts/food/recipe/recipe-version.contract";
+import {
+    whatTriggeredVersionUpate,
+    type RecipeVersionType,
+} from "../../../contracts/food/recipe/recipe-version.contract";
 import { db } from "../../../db";
 import { recipeSteps, recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
@@ -144,6 +147,7 @@ recipe.patch("/instructions", async (c) => {
     const recipeVersionEvent: RecipeVersionType = {
         recipeId: recipeFromDb.id,
         version: newRecipeVersion,
+        whatTriggeredUpdate: whatTriggeredVersionUpate.recipeInstructions,
     };
 
     try {
