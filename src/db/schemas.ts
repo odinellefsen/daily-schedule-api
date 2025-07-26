@@ -9,8 +9,10 @@ import {
 
 export const recipes = pgTable("recipes", {
     id: uuid("id").primaryKey(),
-    name: text("name").notNull(),
-    description: text("description"),
+    userId: uuid("user_id").notNull(),
+    nameOfTheRecipe: text("name_of_the_recipe").notNull(),
+    generalDescriptionOfTheRecipe: text("general_description_of_the_recipe"),
+    whenIsItConsumed: text("when_is_it_consumed").array(),
 });
 
 export const recipeSteps = pgTable("recipe_steps", {
