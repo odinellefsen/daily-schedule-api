@@ -43,11 +43,13 @@ export const recipeIngredients = pgTable("recipe_ingredients", {
 
 export const meals = pgTable("meals", {
     id: uuid("id").primaryKey(),
-    recipeId: uuid("recipe_id")
-        .notNull()
-        .references(() => recipes.id),
+    userId: uuid("user_id").notNull(),
+    mealName: text("meal_name").notNull(),
     scheduledToBeEatenAt: timestamp("scheduled_to_be_eaten_at"),
-    completed: boolean("completed").notNull().default(false),
+    hasMealBeenConsumed: boolean("has_meal_been_consumed")
+        .notNull()
+        .default(false),
+    recipes: text("recipes").notNull(), // JSON array of recipe instances
 });
 
 export const mealSteps = pgTable("meal_steps", {
@@ -55,9 +57,15 @@ export const mealSteps = pgTable("meal_steps", {
     mealId: uuid("meal_id")
         .notNull()
         .references(() => meals.id, { onDelete: "cascade" }),
+    recipeId: uuid("recipe_id").notNull(),
+    originalRecipeStepId: uuid("original_recipe_step_id").notNull(),
     instruction: text("instruction").notNull(),
     stepNumber: integer("step_number").notNull(),
-    completed: boolean("completed").notNull().default(false),
+    isStepCompleted: boolean("is_step_completed").notNull().default(false),
+    estimatedDurationMinutes: integer("estimated_duration_minutes"),
+    assignedToDate: text("assigned_to_date"), // YYYY-MM-DD format
+    todoId: uuid("todo_id"),
+    ingredientsUsedInStep: text("ingredients_used_in_step"), // JSON array
 });
 
 export const todos = pgTable("todos", {

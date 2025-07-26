@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import foodItem from "./food-item";
+import meal from "./meal";
 import recipe from "./recipe";
 import transformer from "./transformer";
 
@@ -12,6 +13,7 @@ api.get("/", (c) => {
 api.route("/transformer/", transformer);
 
 api.route("/food-item", foodItem);
+api.route("/meal", meal);
 api.route("/recipe", recipe);
 
 export default api;
