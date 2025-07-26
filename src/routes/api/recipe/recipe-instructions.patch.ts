@@ -4,6 +4,7 @@ import {
     type RecipeInstructionsUpdateType,
     recipeInstructionsUpdateSchema,
 } from "../../../contracts/food/recipe";
+import type { RecipeVersionType } from "../../../contracts/food/recipe/recipe-version.contract";
 import { db } from "../../../db";
 import { recipeSteps, recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
@@ -65,6 +66,9 @@ recipe.patch("/instructions", async (c) => {
             StatusCodes.NOT_FOUND
         );
     }
+
+    const recipeVersion = recipeFromDb.version;
+    const newRecipeVersion = recipeVersion + 1;
 
     // Get existing instructions
     const existingInstructions = await db
@@ -133,6 +137,22 @@ recipe.patch("/instructions", async (c) => {
     } catch (error) {
         return c.json(
             ApiResponse.error("Failed to update recipe instructions", error),
+            StatusCodes.SERVER_ERROR
+        );
+    }
+
+    const recipeVersionEvent: RecipeVersionType = {
+        recipeId: recipeFromDb.id,
+        version: newRecipeVersion,
+    };
+
+    try {
+        await FlowcorePathways.write("recipe.v0/recipe-version.v0", {
+            data: recipeVersionEvent,
+        });
+    } catch (error) {
+        return c.json(
+            ApiResponse.error("Failed to update recipe version", error),
             StatusCodes.SERVER_ERROR
         );
     }
