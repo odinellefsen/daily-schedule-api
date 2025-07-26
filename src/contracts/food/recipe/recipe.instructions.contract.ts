@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { foodItemSchema } from "../food-item";
 import { foodItemUnitBaseSchema } from "../food-item/food-item-units.contract";
 
 // This schema is used to create and update instructions for a recipe
@@ -25,11 +24,22 @@ export const recipeInstructionsSchema = z.object({
                         z.object({
                             id: z.string().uuid(),
                             ingredient: z.union([
-                                // this object is for when the ingredient is a registered food item with nutrition information.
+                                // This object is for when the ingredient is a registered food item with nutrition information.
                                 z
                                     .object({
+                                        foodItemUnitId: z.string().uuid(),
                                         foodItemUnit: foodItemUnitBaseSchema,
-                                        foodItem: foodItemSchema,
+                                        foodItemId: z.string().uuid(),
+                                        foodItemName: z
+                                            .string()
+                                            .min(
+                                                1,
+                                                "The food item name is required"
+                                            )
+                                            .max(
+                                                100,
+                                                "The food item name must be less than 100 characters"
+                                            ),
                                         quantityOfFoodItemUnit: z
                                             .number()
                                             .positive(
@@ -37,7 +47,7 @@ export const recipeInstructionsSchema = z.object({
                                             ),
                                     })
                                     .optional(),
-                                // this object is a more ad-hoc ingredient with no nutrition information.
+                                // This object is a more ad-hoc ingredient with no nutrition information.
                                 z.object({
                                     id: z.string().uuid(),
                                     nameAndQuantityOfIngredient: z
