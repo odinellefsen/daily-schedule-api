@@ -73,12 +73,12 @@ export const foodItemUnits = pgTable("food_item_units", {
     unitOfMeasurement: text("unit_of_measurement").notNull(),
     unitDescription: text("unit_description"),
     calories: integer("calories").notNull(),
-    proteinInGrams: integer("protein_in_grams").notNull(),
-    carbohydratesInGrams: integer("carbohydrates_in_grams").notNull(),
-    fatInGrams: integer("fat_in_grams").notNull(),
-    fiberInGrams: integer("fiber_in_grams").notNull(),
-    sugarInGrams: integer("sugar_in_grams").notNull(),
-    sodiumInMilligrams: integer("sodium_in_milligrams").notNull(),
+    proteinInGrams: integer("protein_in_grams"),
+    carbohydratesInGrams: integer("carbohydrates_in_grams"),
+    fatInGrams: integer("fat_in_grams"),
+    fiberInGrams: integer("fiber_in_grams"),
+    sugarInGrams: integer("sugar_in_grams"),
+    sodiumInMilligrams: integer("sodium_in_milligrams"),
     source: text("source").notNull(),
 });
 
