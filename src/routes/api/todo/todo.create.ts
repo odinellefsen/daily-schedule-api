@@ -1,8 +1,5 @@
-import { and, eq } from "drizzle-orm";
 import z from "zod";
 import { type TodoType, todoSchema } from "../../../contracts/todo";
-import { db } from "../../../db";
-import { todos } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import todo from ".";
