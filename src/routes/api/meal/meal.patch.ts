@@ -1,11 +1,22 @@
 import { and, eq } from "drizzle-orm";
 import z from "zod";
 import {
+    type MealIngredientsUpdateType,
+    type MealInstructionsUpdateType,
     type MealUpdateType,
+    mealIngredientsUpdateSchema,
+    mealInstructionsUpdateSchema,
     mealUpdateSchema,
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
-import { meals, recipes } from "../../../db/schemas";
+import {
+    mealIngredients,
+    mealSteps,
+    meals,
+    recipeIngredients,
+    recipeSteps,
+    recipes,
+} from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import meal from ".";
@@ -77,6 +88,7 @@ meal.patch("/", async (c) => {
         recipeInstances.push({
             recipeId: recipeRef.recipeId,
             recipeName: recipeFromDb.nameOfTheRecipe,
+            recipeDescription: recipeFromDb.generalDescriptionOfTheRecipe || "",
             recipeVersion: recipeFromDb.version,
             scalingFactor: recipeRef.scalingFactor,
         });
@@ -96,7 +108,10 @@ meal.patch("/", async (c) => {
             scheduledToBeEatenAt:
                 mealFromDb.scheduledToBeEatenAt?.toISOString(),
             hasMealBeenConsumed: mealFromDb.hasMealBeenConsumed,
-            recipes: JSON.parse(mealFromDb.recipes),
+            recipes: JSON.parse(mealFromDb.recipes).map((recipe: any) => ({
+                ...recipe,
+                recipeDescription: recipe.recipeDescription || "",
+            })),
         },
     };
 
@@ -112,9 +127,144 @@ meal.patch("/", async (c) => {
     }
     const safeUpdateMealEvent = updateMealEvent.data;
 
+    // Get existing meal instructions and ingredients for oldValues
+    const existingMealSteps = await db
+        .select()
+        .from(mealSteps)
+        .where(eq(mealSteps.mealId, mealFromDb.id))
+        .orderBy(mealSteps.stepNumber);
+
+    const existingMealIngredients = await db
+        .select()
+        .from(mealIngredients)
+        .where(eq(mealIngredients.mealId, mealFromDb.id))
+        .orderBy(mealIngredients.sortOrder);
+
+    // Generate new instructions from updated recipe list
+    const allMealSteps = [];
+    let globalStepNumber = 1;
+
+    for (const recipeInstance of recipeInstances) {
+        const steps = await db
+            .select()
+            .from(recipeSteps)
+            .where(eq(recipeSteps.recipeId, recipeInstance.recipeId))
+            .orderBy(recipeSteps.stepNumber);
+
+        for (const step of steps) {
+            allMealSteps.push({
+                id: crypto.randomUUID(),
+                recipeId: recipeInstance.recipeId,
+                originalRecipeStepId: step.id,
+                isStepCompleted: false,
+                stepNumber: globalStepNumber++,
+                stepInstruction: step.instruction,
+                estimatedDurationMinutes: undefined,
+                assignedToDate: undefined,
+                todoId: undefined,
+                ingredientsUsedInStep: undefined,
+            });
+        }
+    }
+
+    // Generate new ingredients from updated recipe list
+    const allMealIngredients = [];
+    let globalSortOrder = 1;
+
+    for (const recipeInstance of recipeInstances) {
+        const ingredients = await db
+            .select()
+            .from(recipeIngredients)
+            .where(eq(recipeIngredients.recipeId, recipeInstance.recipeId))
+            .orderBy(recipeIngredients.sortOrder);
+
+        for (const ingredient of ingredients) {
+            allMealIngredients.push({
+                id: crypto.randomUUID(),
+                recipeId: recipeInstance.recipeId,
+                ingredientText: ingredient.ingredientText,
+                sortOrder: globalSortOrder++,
+            });
+        }
+    }
+
+    const updatedMealInstructions: MealInstructionsUpdateType = {
+        mealId: mealFromDb.id,
+        stepByStepInstructions: allMealSteps,
+        oldValues: {
+            mealId: mealFromDb.id,
+            stepByStepInstructions: existingMealSteps.map((step) => ({
+                id: step.id,
+                recipeId: step.recipeId,
+                originalRecipeStepId: step.originalRecipeStepId,
+                isStepCompleted: step.isStepCompleted,
+                stepNumber: step.stepNumber,
+                stepInstruction: step.instruction,
+                estimatedDurationMinutes:
+                    step.estimatedDurationMinutes || undefined,
+                assignedToDate: step.assignedToDate || undefined,
+                todoId: step.todoId || undefined,
+                ingredientsUsedInStep: step.ingredientsUsedInStep
+                    ? JSON.parse(step.ingredientsUsedInStep)
+                    : undefined,
+            })),
+        },
+    };
+
+    const updatedMealIngredients: MealIngredientsUpdateType = {
+        mealId: mealFromDb.id,
+        ingredients: allMealIngredients,
+        oldValues: {
+            mealId: mealFromDb.id,
+            ingredients: existingMealIngredients.map((ingredient) => ({
+                id: ingredient.id,
+                recipeId: ingredient.recipeId,
+                ingredientText: ingredient.ingredientText,
+                sortOrder: ingredient.sortOrder,
+            })),
+        },
+    };
+
+    // Validate the events
+    const instructionsUpdateEvent = mealInstructionsUpdateSchema.safeParse(
+        updatedMealInstructions
+    );
+    const ingredientsUpdateEvent = mealIngredientsUpdateSchema.safeParse(
+        updatedMealIngredients
+    );
+
+    if (!instructionsUpdateEvent.success) {
+        return c.json(
+            ApiResponse.error(
+                "Invalid meal instructions data",
+                instructionsUpdateEvent.error.errors
+            ),
+            StatusCodes.BAD_REQUEST
+        );
+    }
+
+    if (!ingredientsUpdateEvent.success) {
+        return c.json(
+            ApiResponse.error(
+                "Invalid meal ingredients data",
+                ingredientsUpdateEvent.error.errors
+            ),
+            StatusCodes.BAD_REQUEST
+        );
+    }
+
     try {
+        // Emit all 3 update events when recipes change
         await FlowcorePathways.write("meal.v0/meal.updated.v0", {
             data: safeUpdateMealEvent,
+        });
+
+        await FlowcorePathways.write("meal.v0/meal-instructions.updated.v0", {
+            data: instructionsUpdateEvent.data,
+        });
+
+        await FlowcorePathways.write("meal.v0/meal-ingredients.updated.v0", {
+            data: ingredientsUpdateEvent.data,
         });
     } catch (error) {
         return c.json(
@@ -124,7 +274,11 @@ meal.patch("/", async (c) => {
     }
 
     return c.json(
-        ApiResponse.success("Meal updated successfully", safeUpdateMealEvent)
+        ApiResponse.success("Meal updated successfully", {
+            meal: safeUpdateMealEvent,
+            instructions: instructionsUpdateEvent.data,
+            ingredients: ingredientsUpdateEvent.data,
+        })
     );
 });
 
