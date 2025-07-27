@@ -29,13 +29,12 @@ export const todoSchema = z.object({
     scheduledFor: z.string().datetime().optional(),
     completedAt: z.string().datetime().optional(),
 
-    // Optional relations - extensible for future domains
+    // Optional relations - extensible for future domains (fitness, shopping, bills, maintenance, etc.)
     // in the future, when there are more available domains, make it into a union type
     relations: z
         .array(
             z.object({
                 mealInstruction: mealInstructionRelationSchema.optional(),
-                // Future: fitness, shopping, bills, maintenance, etc.
             })
         )
         .min(
