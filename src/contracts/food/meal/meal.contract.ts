@@ -17,6 +17,13 @@ export const mealSchema = z.object({
                     .string()
                     .min(1, "The recipe name is required")
                     .max(75, "The recipe name must be less than 75 characters"),
+                recipeDescription: z
+                    .string()
+                    .min(1, "The recipe description is required")
+                    .max(
+                        250,
+                        "The recipe description must be less than 250 characters"
+                    ),
                 recipeVersion: z.number().int().positive(),
                 scalingFactor: z.number().positive().default(1.0),
             })

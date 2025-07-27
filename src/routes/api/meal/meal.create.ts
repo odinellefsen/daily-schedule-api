@@ -1,8 +1,20 @@
 import { and, eq } from "drizzle-orm";
 import z from "zod";
-import { type MealCreateType, mealSchema } from "../../../contracts/food/meal";
+import {
+    type MealCreateType,
+    type MealIngredientsType,
+    type MealStepByStepInstructionsType,
+    mealIngredientsSchema,
+    mealSchema,
+    mealStepByStepInstructionsSchema,
+} from "../../../contracts/food/meal";
 import { db } from "../../../db";
-import { meals, recipes } from "../../../db/schemas";
+import {
+    meals,
+    recipeIngredients,
+    recipeSteps,
+    recipes,
+} from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import meal from ".";
@@ -73,6 +85,7 @@ meal.post("/", async (c) => {
         recipeInstances.push({
             recipeId: recipeRef.recipeId,
             recipeName: recipeFromDb.nameOfTheRecipe,
+            recipeDescription: recipeFromDb.generalDescriptionOfTheRecipe || "",
             recipeVersion: recipeFromDb.version,
             scalingFactor: recipeRef.scalingFactor,
         });
@@ -99,9 +112,101 @@ meal.post("/", async (c) => {
     }
     const safeCreateMealEvent = createMealEvent.data;
 
+    // Fetch and flatten recipe instructions for snapshot
+    const allMealSteps = [];
+    let globalStepNumber = 1;
+
+    for (const recipeInstance of recipeInstances) {
+        const steps = await db
+            .select()
+            .from(recipeSteps)
+            .where(eq(recipeSteps.recipeId, recipeInstance.recipeId))
+            .orderBy(recipeSteps.stepNumber);
+
+        for (const step of steps) {
+            allMealSteps.push({
+                id: crypto.randomUUID(),
+                recipeId: recipeInstance.recipeId,
+                originalRecipeStepId: step.id,
+                isStepCompleted: false,
+                stepNumber: globalStepNumber++,
+                stepInstruction: step.instruction,
+                estimatedDurationMinutes: undefined, // Will be set later when planning todos
+                assignedToDate: undefined,
+                todoId: undefined,
+                ingredientsUsedInStep: undefined, // Basic recipe steps don't have attached ingredients yet
+            });
+        }
+    }
+
+    const mealInstructions: MealStepByStepInstructionsType = {
+        mealId: safeCreateMealEvent.id,
+        stepByStepInstructions: allMealSteps,
+    };
+
+    // Fetch and flatten recipe ingredients for snapshot
+    const allMealIngredients = [];
+    let globalSortOrder = 1;
+
+    for (const recipeInstance of recipeInstances) {
+        const ingredients = await db
+            .select()
+            .from(recipeIngredients)
+            .where(eq(recipeIngredients.recipeId, recipeInstance.recipeId))
+            .orderBy(recipeIngredients.sortOrder);
+
+        for (const ingredient of ingredients) {
+            allMealIngredients.push({
+                id: crypto.randomUUID(),
+                recipeId: recipeInstance.recipeId,
+                ingredientText: ingredient.ingredientText,
+                sortOrder: globalSortOrder++,
+            });
+        }
+    }
+
+    const mealIngredients: MealIngredientsType = {
+        mealId: safeCreateMealEvent.id,
+        ingredients: allMealIngredients,
+    };
+
+    // Validate the instruction and ingredient events
+    const instructionsEvent =
+        mealStepByStepInstructionsSchema.safeParse(mealInstructions);
+    const ingredientsEvent = mealIngredientsSchema.safeParse(mealIngredients);
+
+    if (!instructionsEvent.success) {
+        return c.json(
+            ApiResponse.error(
+                "Invalid meal instructions data",
+                instructionsEvent.error.errors
+            ),
+            StatusCodes.BAD_REQUEST
+        );
+    }
+
+    if (!ingredientsEvent.success) {
+        return c.json(
+            ApiResponse.error(
+                "Invalid meal ingredients data",
+                ingredientsEvent.error.errors
+            ),
+            StatusCodes.BAD_REQUEST
+        );
+    }
+
     try {
+        // Emit all 3 events for complete snapshot
         await FlowcorePathways.write("meal.v0/meal.created.v0", {
             data: safeCreateMealEvent,
+        });
+
+        await FlowcorePathways.write("meal.v0/meal-instructions.created.v0", {
+            data: instructionsEvent.data,
+        });
+
+        await FlowcorePathways.write("meal.v0/meal-ingredients.created.v0", {
+            data: ingredientsEvent.data,
         });
     } catch (error) {
         return c.json(
@@ -111,7 +216,11 @@ meal.post("/", async (c) => {
     }
 
     return c.json(
-        ApiResponse.success("Meal created successfully", safeCreateMealEvent)
+        ApiResponse.success("Meal created successfully", {
+            meal: safeCreateMealEvent,
+            instructions: instructionsEvent.data,
+            ingredients: ingredientsEvent.data,
+        })
     );
 });
 
