@@ -80,12 +80,12 @@ export const mealSteps = pgTable("meal_steps", {
 
 export const todos = pgTable("todos", {
     id: uuid("id").primaryKey(),
+    userId: uuid("user_id").notNull(),
     description: text("description").notNull(),
-    dueDate: timestamp("due_date"),
     completed: boolean("completed").notNull().default(false),
-    mealStepId: uuid("meal_step_id").references(() => mealSteps.id, {
-        onDelete: "set null",
-    }),
+    scheduledFor: timestamp("scheduled_for"),
+    completedAt: timestamp("completed_at"),
+    relations: text("relations"), // JSON array of relations
 });
 
 export const foodItems = pgTable("food_items", {

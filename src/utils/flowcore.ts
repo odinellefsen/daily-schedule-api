@@ -36,6 +36,11 @@ import {
 } from "../contracts/food/recipe";
 import { recipeVersionSchema } from "../contracts/food/recipe/recipe-version.contract";
 import {
+    todoArchiveSchema,
+    todoSchema,
+    todoUpdateSchema,
+} from "../contracts/todo";
+import {
     handleFoodItemArchived,
     handleFoodItemCreated,
     handleFoodItemUpdated,
@@ -78,6 +83,12 @@ import {
     handleRecipeInstructionsUpdated,
     handleRecipeInstructionsVersionUpdated,
 } from "../handlers/recipe/recipe-instructions.handler";
+import {
+    handleTodoArchived,
+    handleTodoCreated,
+    handleTodoMealSync,
+    handleTodoUpdated,
+} from "../handlers/todo/todo.handler";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
 const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
@@ -238,6 +249,24 @@ export const FlowcorePathways = new PathwaysBuilder({
         schema: mealIngredientsArchiveSchema,
     })
     .register({
+        flowType: "todo.v0",
+        eventType: "todo.created.v0",
+        retryDelayMs: 10000,
+        schema: todoSchema,
+    })
+    .register({
+        flowType: "todo.v0",
+        eventType: "todo.updated.v0",
+        retryDelayMs: 10000,
+        schema: todoUpdateSchema,
+    })
+    .register({
+        flowType: "todo.v0",
+        eventType: "todo.archived.v0",
+        retryDelayMs: 10000,
+        schema: todoArchiveSchema,
+    })
+    .register({
         flowType: "recipe.v0",
         eventType: "recipe-version.v0",
         retryDelayMs: 10000,
@@ -314,7 +343,11 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle(
         "meal.v0/meal-ingredients.archived.v0",
         handleMealIngredientsArchived
-    );
+    )
+    .handle("todo.v0/todo.created.v0", handleTodoCreated)
+    .handle("todo.v0/todo.updated.v0", handleTodoUpdated)
+    .handle("todo.v0/todo.updated.v0", handleTodoMealSync) // Cross-domain sync
+    .handle("todo.v0/todo.archived.v0", handleTodoArchived);
 
 export const pathwaysRouter = new PathwayRouter(
     FlowcorePathways,
