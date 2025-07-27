@@ -10,11 +10,11 @@ const mealRelationSchema = z.object({
     recipeName: z.string().optional(), // snapshot for context
 });
 
-// Future domain relations can be added here
-const fitnessRelationSchema = z.object({
-    workoutId: z.string().uuid(),
-    workoutName: z.string(),
-    exerciseId: z.string().uuid().optional(),
+const mealInstructionRelationSchema = z.object({
+    mealStepId: z.string().uuid(),
+    mealId: z.string().uuid(),
+    recipeId: z.string().uuid(),
+    stepNumber: z.number().int().positive(),
 });
 
 // Main todo schema
@@ -30,12 +30,19 @@ export const todoSchema = z.object({
     completedAt: z.string().datetime().optional(),
 
     // Optional relations - extensible for future domains
+    // in the future, when there are more available domains, make it into a union type
     relations: z
-        .object({
-            meal: mealRelationSchema.optional(),
-            fitness: fitnessRelationSchema.optional(),
-            // Future: shopping, bills, maintenance, etc.
-        })
+        .array(
+            z.object({
+                mealInstruction: mealInstructionRelationSchema.optional(),
+                // Future: fitness, shopping, bills, maintenance, etc.
+            })
+        )
+        .min(
+            1,
+            "if relations is NOT undefined, you must have at least one relation"
+        )
+        .max(5, "you can only have up to 5 relations")
         .optional(),
 });
 
