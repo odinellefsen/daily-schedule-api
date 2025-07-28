@@ -8,6 +8,7 @@ recipe.use("/*", requireAuth());
 import "./recipe.create";
 import "./recipe.patch";
 import "./recipe.delete";
+import "./recipe.list";
 import "./recipe-ingredients.create";
 import "./recipe-ingredients.patch";
 import "./recipe-ingredients.delete";

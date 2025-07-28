@@ -8,6 +8,7 @@ meal.use("/*", requireAuth());
 import "./meal.create";
 import "./meal.patch";
 import "./meal.delete";
+import "./meal.list";
 import "./meal-ingredients.create";
 import "./meal-ingredients.patch";
 import "./meal-ingredients.delete";
