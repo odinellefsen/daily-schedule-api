@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import z from "zod";
 import {
     type MealCreateType,
@@ -9,12 +9,7 @@ import {
     mealStepByStepInstructionsSchema,
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
-import {
-    meals,
-    recipeIngredients,
-    recipeSteps,
-    recipes,
-} from "../../../db/schemas";
+import { recipeIngredients, recipeSteps, recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 import meal from ".";
@@ -49,22 +44,6 @@ meal.post("/", async (c) => {
         );
     }
     const safeCreateMealJsonBody = parsedJsonBody.data;
-
-    const existingMeal = await db
-        .select()
-        .from(meals)
-        .where(
-            and(
-                eq(meals.mealName, safeCreateMealJsonBody.mealName),
-                eq(meals.userId, safeUserId)
-            )
-        );
-    if (existingMeal.length > 0) {
-        return c.json(
-            ApiResponse.error("Meal with name already exists"),
-            StatusCodes.CONFLICT
-        );
-    }
 
     // Get recipe snapshots with current versions
     const recipeInstances = [];
