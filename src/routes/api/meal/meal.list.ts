@@ -49,7 +49,6 @@ meal.get("/week", async (c) => {
             recipes: recipes.map((recipe: any) => ({
                 recipeName: recipe.recipeName,
                 recipeVersion: recipe.recipeVersion,
-                scalingFactor: recipe.scalingFactor,
             })),
             progress: {
                 completed: completedSteps.length,

@@ -32,7 +32,6 @@ const updateMealRequestSchema = z.object({
         .array(
             z.object({
                 recipeId: z.string().uuid(),
-                scalingFactor: z.number().positive().default(1.0),
             })
         )
         .min(1)
@@ -90,7 +89,6 @@ meal.patch("/", async (c) => {
             recipeName: recipeFromDb.nameOfTheRecipe,
             recipeDescription: recipeFromDb.generalDescriptionOfTheRecipe || "",
             recipeVersion: recipeFromDb.version,
-            scalingFactor: recipeRef.scalingFactor,
         });
     }
 

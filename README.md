@@ -225,7 +225,6 @@ Actionable tasks (standalone or meal-related)
             {
               "recipeName": "Pizza Dough",
               "recipeVersion": 3,
-              "scalingFactor": 1.0
             }
           ],
           "progress": {
@@ -267,11 +266,9 @@ Actionable tasks (standalone or meal-related)
   "recipes": [
     {
       "recipeId": "pizza-recipe-uuid",
-      "scalingFactor": 1.0
     },
     {
       "recipeId": "salad-recipe-uuid", 
-      "scalingFactor": 0.5
     }
   ]
 }
@@ -569,7 +566,6 @@ GET /api/recipe/search?timing=DINNER
 POST /api/meal {
   mealName: "Sunday Pizza Night",
   scheduledToBeEatenAt: "2024-01-14T18:00:00Z",
-  recipes: [{ recipeId: "pizza-uuid", scalingFactor: 1.0 }]
 }
 // System creates 8 cooking steps, shopping list
 
