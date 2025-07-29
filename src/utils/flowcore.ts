@@ -314,15 +314,6 @@ export const FlowcorePathways = new PathwaysBuilder({
         "recipe.v0/recipe-ingredients.archived.v0",
         handleRecipeIngredientsArchived
     )
-    .handle("recipe.v0/recipe-version.v0", handleRecipeVersionUpdated)
-    .handle(
-        "recipe.v0/recipe-version.v0",
-        handleRecipeInstructionsVersionUpdated
-    )
-    .handle(
-        "recipe.v0/recipe-version.v0",
-        handleRecipeIngredientsVersionUpdated
-    )
     .handle("meal.v0/meal.created.v0", handleMealCreated)
     .handle("meal.v0/meal.updated.v0", handleMealUpdated)
     .handle("meal.v0/meal.archived.v0", handleMealArchived)
@@ -345,9 +336,23 @@ export const FlowcorePathways = new PathwaysBuilder({
         handleMealIngredientsArchived
     )
     .handle("todo.v0/todo.created.v0", handleTodoCreated)
-    .handle("todo.v0/todo.updated.v0", handleTodoUpdated)
-    .handle("todo.v0/todo.updated.v0", handleTodoMealSync) // Cross-domain sync
+
     .handle("todo.v0/todo.archived.v0", handleTodoArchived);
+
+// Combined handler for recipe version events
+FlowcorePathways.handle("recipe.v0/recipe-version.v0", async (event) => {
+    // Execute all three handlers for recipe version events
+    await handleRecipeVersionUpdated(event);
+    await handleRecipeInstructionsVersionUpdated(event);
+    await handleRecipeIngredientsVersionUpdated(event);
+});
+
+// Combined handler for todo updated events
+FlowcorePathways.handle("todo.v0/todo.updated.v0", async (event) => {
+    // Execute both handlers for todo updated events
+    await handleTodoUpdated(event);
+    await handleTodoMealSync(event); // Cross-domain sync
+});
 
 export const pathwaysRouter = new PathwayRouter(
     FlowcorePathways,
