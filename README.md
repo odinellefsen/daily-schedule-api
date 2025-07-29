@@ -1,308 +1,547 @@
-# Daily Scheduler API
+# Daily Scheduler API - Client Integration Guide
 
 > **"Daily schedule planner to lessen decision fatigue and streamline your day"**
 
 ## 📋 Table of Contents
 
-1. [Project Philosophy](#project-philosophy)
-2. [Architecture Overview](#architecture-overview)
-3. [Domain Models](#domain-models)
-4. [Event Sourcing & Flow](#event-sourcing--flow)
-5. [API Reference](#api-reference)
-6. [Database Schema](#database-schema)
-7. [Complete User Journeys](#complete-user-journeys)
-8. [Frontend Integration Guide](#frontend-integration-guide)
-9. [Key Design Decisions](#key-design-decisions)
+1. [Application Philosophy](#application-philosophy)
+2. [User Experience Flow](#user-experience-flow)
+3. [API Overview](#api-overview)
+4. [Landing Page APIs](#landing-page-apis)
+5. [Configuration APIs](#configuration-apis)
+6. [Complete User Journeys](#complete-user-journeys)
+7. [Authentication](#authentication)
+8. [API Reference](#api-reference)
 
 ---
 
-## 🎯 Project Philosophy
+## 🎯 Application Philosophy
 
-### Core Problem
-**Decision fatigue** - The mental exhaustion from making countless daily decisions about meals, tasks, and routines.
+### The Core Problem
+**Decision fatigue** - The mental exhaustion from making countless daily decisions about what to cook, when to cook it, what ingredients to buy, and how to organize meal preparation.
 
-### Solution Strategy
-Create a **two-tier application**:
+### The Solution
+A **two-tier application** designed to eliminate daily decision-making:
 
-1. **Landing Page (Execution Mode)** - Dead simple todo list saying "do this, then this, then this"
-2. **Configuration Area (Planning Mode)** - Deep control for meal planning, recipe management, food tracking
+#### 🎯 **Landing Page (Execution Mode)**
+- **Purpose:** Zero-friction todo execution
+- **Experience:** "Just tell me what to do right now"
+- **Design:** Dead simple list - complete tasks, no decisions needed
+- **Usage:** Monday-Friday morning routine
 
-### User Experience Flow
-- **Sunday:** 20 minutes planning the week in configuration area
-- **Monday-Friday:** Landing page just shows actionable todos - zero decisions needed
+#### ⚙️ **Configuration Area (Planning Mode)** 
+- **Purpose:** Deep meal planning and recipe management
+- **Experience:** "Set up everything so the landing page is perfect"
+- **Design:** Rich interfaces for meal planning, recipe building, food tracking
+- **Usage:** Sunday planning session (20 minutes weekly)
 
----
+### Key Philosophy
+> **"Spend 20 minutes on Sunday planning, then have zero decisions Monday-Friday"**
 
-## 🏗️ Architecture Overview
-
-### Event-Driven Architecture (EDA)
-- **Flowcore** as event broker for all domain coordination
-- **Event Sourcing** - All changes are immutable events
-- **Domain Separation** - Food, Recipe, Meal, Todo domains are loosely coupled
-- **Cross-Domain Coordination** via events, not direct calls
-
-### Core Pattern: CREATE → EVENT → HANDLER → DATABASE
-
-```typescript
-// 1. REST Endpoint validates & emits event
-await FlowcorePathways.write("todo.v0/todo.created.v0", { data });
-
-// 2. Handler receives event & persists to DB
-export async function handleTodoCreated(event) {
-    await db.insert(todos).values(event.payload);
-}
-```
-
-### Key Principles
-- **No direct domain coupling** - Domains only know about their own data
-- **Event-driven coordination** - Changes propagate via Flowcore events
-- **Snapshot integrity** - Meals preserve recipe versions at creation time
-- **Replay safety** - Handlers never emit new events (prevents infinite loops)
+The complexity of meal planning, recipe management, and nutritional tracking happens in the configuration area so that the landing page can be absolutely frictionless.
 
 ---
 
-## 📊 Domain Models
+## 🔄 User Experience Flow
 
-### 🥘 Food Item Domain
-**Purpose:** Nutritional foundation for accurate meal planning
+### Weekly Cycle
+```
+Sunday (Planning):
+- Review upcoming week in meal planner
+- Select recipes for each day  
+- System generates complete shopping list
+- Drag meal steps to specific days/times
+- 20 minutes total = week fully planned
 
-```typescript
-// Core entities
-FoodItem: { id, userId, name, categoryHierarchy }
-FoodItemUnit: { id, foodItemId, unitOfMeasurement, calories, protein, carbs, fat }
-
-// Pattern: Build precise nutritional database over time
-// Example: "Medium Apple" → units: ["whole", "slice", "cup chopped"]
+Monday-Friday (Execution):
+- Open landing page = instant todo list
+- "Mix pizza dough at 4pm"
+- "Preheat oven at 6pm" 
+- "Take out trash"
+- Just follow the list, no thinking required
 ```
 
-### 📜 Recipe Domain  
-**Purpose:** Template instructions with versioning for historical integrity
-
-```typescript
-// Core entities
-Recipe: { id, userId, nameOfTheRecipe, description, whenIsItConsumed, version }
-RecipeStep: { id, recipeId, instruction, stepNumber }
-RecipeIngredient: { id, recipeId, ingredientText, sortOrder }
-
-// Versioning system: Any change bumps version number
-// Events: recipe.created.v0, recipe-version.v0 (on updates)
-```
-
-### 🍽️ Meal Domain
-**Purpose:** Recipe instances with complete snapshots for meal planning
-
-```typescript
-// Core entities  
-Meal: { id, userId, mealName, scheduledToBeEatenAt, hasMealBeenConsumed, recipes }
-MealStep: { id, mealId, recipeId, originalRecipeStepId, instruction, isStepCompleted }
-MealIngredient: { id, mealId, recipeId, ingredientText, sortOrder }
-
-// Critical: recipes field contains SNAPSHOTS at meal creation time
-recipes: [
-  {
-    recipeId: "uuid",
-    recipeName: "Pizza Dough",      // Snapshot
-    recipeDescription: "...",       // Snapshot  
-    recipeVersion: 3,               // Snapshot - preserves historical integrity
-    scalingFactor: 1.0
-  }
-]
-```
-
-### ✅ Todo Domain
-**Purpose:** Actionable tasks with optional cross-domain relations
-
-```typescript
-// Core entity
-Todo: { 
-  id, userId, description, completed, scheduledFor, completedAt,
-  relations?: [
-    {
-      mealInstruction?: {
-        mealStepId: "uuid",
-        mealId: "uuid", 
-        recipeId: "uuid",
-        stepNumber: 2
-      }
-    }
-  ]
-}
-
-// Most todos are standalone ("take out trash")
-// Some todos relate to meal steps (dragged from meal planning)
-```
+### The Magic
+**Complex meal preparation becomes simple, time-ordered tasks.** Instead of "make pizza tonight," you get:
+1. 2:00pm - Shop for ingredients 
+2. 4:00pm - Mix pizza dough
+3. 5:00pm - Prepare pizza sauce
+4. 6:00pm - Preheat oven
+5. 6:30pm - Assemble and bake pizza
 
 ---
 
-## ⚡ Event Sourcing & Flow
+## 🌐 API Overview
 
-### Event Naming Convention
-```
-{domain}.v0/{entity}.{action}.v0
+### Two-Tier API Design
 
-Examples:
-- food-item.v0/food-item.created.v0
-- recipe.v0/recipe-version.v0  
-- meal.v0/meal-instructions.updated.v0
-- todo.v0/todo.completed.v0
-```
+#### **Landing Page APIs** (Simple & Fast)
+- Designed for immediate consumption
+- Minimal data, maximum actionability
+- Time-ordered, priority-aware
+- Mobile-optimized responses
 
-### Critical Event Flows
+#### **Configuration APIs** (Rich & Detailed)
+- Designed for deep management
+- Complete datasets with metadata
+- Search, filtering, relationships
+- Desktop-optimized workflows
 
-#### 1. **Meal Creation = 3 Events (Complete Snapshot)**
-```typescript
-POST /api/meal → Emits:
-1. meal.v0/meal.created.v0          // Metadata + recipe snapshots
-2. meal.v0/meal-instructions.created.v0  // Flattened cooking steps  
-3. meal.v0/meal-ingredients.created.v0   // Shopping list
-```
+### Core Domains
 
-#### 2. **Recipe Updates = Version Bump**
-```typescript
-PATCH /api/recipe → Emits:
-1. recipe.v0/recipe.updated.v0      // Recipe change
-2. recipe.v0/recipe-version.v0      // Version increment
-```
+#### 🥘 **Food Items** 
+Nutritional building blocks with progressive accuracy
+- Create food database (apples, flour, etc.)
+- Add nutritional units (whole apple = 95 calories)
+- Search and manage food library
 
-#### 3. **Cross-Domain Coordination (Todo ↔ Meal)**
-```typescript
-// When todo marked complete:
-PATCH /api/todo → Emits:
-- todo.v0/todo.updated.v0
+#### 📜 **Recipes**
+Template instructions with versioning
+- Create step-by-step cooking instructions  
+- Manage ingredient lists
+- Version tracking for historical integrity
 
-// Multiple handlers respond:
-handleTodoUpdated()     // Updates todos table
-handleTodoMealSync()    // Updates mealSteps table (if meal relation exists)
-```
+#### 🍽️ **Meals** 
+Recipe instances for specific dates
+- Combine multiple recipes into planned meals
+- Generate shopping lists and cooking timelines
+- Track preparation progress
 
-### Handler Pattern (Runtime Validation)
-```typescript
-// Handlers use runtime validation to be selective
-export async function handleTodoMealSync(event: any) {
-    // Only handle todos with meal relations
-    if (!event.payload.relations?.[0]?.mealInstruction) {
-        return; // Ignore non-meal todos
-    }
-    
-    // Update meal step completion
-    await db.update(mealSteps)
-        .set({ isStepCompleted: event.payload.completed })
-        .where(eq(mealSteps.id, event.payload.relations[0].mealInstruction.mealStepId));
-}
-```
+#### ✅ **Todos**
+Actionable tasks (standalone or meal-related)
+- Simple tasks ("take out trash") 
+- Meal-derived tasks ("mix pizza dough")
+- Time-based scheduling and completion tracking
 
 ---
 
-## 🌐 API Reference
+## 📱 Landing Page APIs
 
-### Authentication
-All endpoints require `Authorization: Bearer <token>` header.  
-`userId` is extracted from JWT and used for data isolation.
-
-### 📱 Landing Page APIs (Frictionless)
+### Primary Endpoint: Today's Todo Feed
 
 #### `GET /api/todo/today`
-**Purpose:** Landing page todo feed - zero friction execution mode
+**Purpose:** The main landing page feed - shows exactly what to do right now
 
-```json
+```typescript
+// Response
 {
   "todos": [
     {
       "id": "uuid",
-      "description": "Mix pizza dough", 
-      "scheduledFor": "2024-01-14T16:00:00Z",
+      "description": "Mix pizza dough",
+      "scheduledFor": "2024-01-14T16:00:00Z", 
       "completed": false,
       "context": {
         "type": "meal",           // "meal" | "standalone"
-        "mealName": "Sunday Pizza",
+        "mealName": "Sunday Pizza Night",
         "stepNumber": 1,
-        "estimatedDuration": 15
+        "estimatedDuration": 15   // minutes
       },
       "urgency": "now",           // "overdue" | "now" | "upcoming" | "later"
       "canStartNow": true,
+      "isOverdue": false
+    },
+    {
+      "id": "uuid2",
+      "description": "Take out trash",
+      "scheduledFor": "2024-01-14T17:00:00Z",
+      "completed": false, 
+      "context": {
+        "type": "standalone"
+      },
+      "urgency": "upcoming",
+      "canStartNow": false,
       "isOverdue": false
     }
   ],
   "counts": {
     "total": 8,
-    "completed": 3, 
-    "remaining": 5,
+    "completed": 3,
+    "remaining": 5, 
     "overdue": 1
   }
 }
 ```
 
-### ⚙️ Configuration APIs (Deep Control)
+**UI Implementation:**
+- Sort by urgency: overdue (red) → now (green) → upcoming (yellow) → later (gray)
+- Show meal context as badge: "Step 1 of Sunday Pizza"
+- Disable actions for `canStartNow: false`
+- Simple complete/remove buttons
 
-#### Food Management
+### Todo Actions
+
+#### `PATCH /api/todo`
+**Purpose:** Mark todos complete or update scheduling
+
 ```typescript
-GET /api/food-item                    // List all food items with unit counts
-GET /api/food-item/search?q=apple     // Search food database
-GET /api/food-item/:id/units          // Units for specific food item  
-POST /api/food-item                   // Create food item
-POST /api/food-item/units             // Create nutritional unit
+// Mark complete
+{
+  "id": "uuid",
+  "completed": true,
+  "completedAt": "2024-01-14T16:15:00Z"
+}
+
+// Reschedule
+{
+  "id": "uuid", 
+  "scheduledFor": "2024-01-14T18:00:00Z"
+}
 ```
 
-#### Recipe Library  
+#### `DELETE /api/todo`
+**Purpose:** Remove todos
+
 ```typescript
-GET /api/recipe                       // Recipes with completeness metadata
-GET /api/recipe/:id                   // Full recipe with steps & ingredients
-GET /api/recipe/search?timing=DINNER  // Filter by meal timing
-POST /api/recipe                      // Create recipe template
-POST /api/recipe/instructions         // Add cooking steps
-POST /api/recipe/ingredients          // Add ingredient list
+{
+  "id": "uuid",
+  "reasonForArchiving": "No longer needed"
+}
 ```
 
-#### Meal Planning
+---
+
+## ⚙️ Configuration APIs
+
+### Meal Planning (Core Workflow)
+
+#### `GET /api/meal/week`
+**Purpose:** Weekly meal planning interface - the heart of the configuration area
+
 ```typescript
-GET /api/meal/week                    // Weekly meal plan with progress
-GET /api/meal/:id                     // Full meal with cooking progress
-POST /api/meal                        // Create meal (snapshots recipes)
-PATCH /api/meal                       // Add/remove recipes (rebuilds all)
+// Response
+{
+  "weekPlan": [
+    {
+      "date": "2024-01-14",
+      "dayName": "Sunday",
+      "meals": [
+        {
+          "mealId": "uuid",
+          "mealName": "Sunday Pizza Night",
+          "scheduledToBeEatenAt": "2024-01-14T18:00:00Z",
+          "hasMealBeenConsumed": false,
+          "recipes": [
+            {
+              "recipeName": "Pizza Dough",
+              "recipeVersion": 3,
+              "scalingFactor": 1.0
+            }
+          ],
+          "progress": {
+            "completed": 2,
+            "total": 8,
+            "percentage": 25
+          },
+          "nextStep": "Mix pizza dough",
+          "canStartPrep": "2024-01-14T16:00:00Z"  // 2 hours before meal
+        }
+      ],
+      "totalMeals": 1,
+      "completedMeals": 0
+    }
+    // ... more days
+  ],
+  "summary": {
+    "totalMeals": 7,
+    "completedMeals": 2,
+    "daysWithMeals": 5
+  }
+}
 ```
 
-#### Todo Management
+**UI Implementation:**
+- Calendar view with meal cards
+- Progress bars for cooking status
+- Drag-and-drop for rescheduling
+- "Start Prep" buttons based on `canStartPrep`
+
+#### `POST /api/meal` 
+**Purpose:** Create new meal plan - this generates the entire cooking workflow
+
 ```typescript
-GET /api/todo                         // All todos with relations
-POST /api/todo                        // Create standalone or meal-related todo
-PATCH /api/todo                       // Update completion, scheduling
-```
-
-### 🔄 Critical API Patterns
-
-#### **Meal Creation (Complete Snapshot)**
-```json
-POST /api/meal
+// Request
 {
   "mealName": "Sunday Pizza Night",
-  "scheduledToBeEatenAt": "2024-01-14T18:00:00Z", 
+  "scheduledToBeEatenAt": "2024-01-14T18:00:00Z",
   "recipes": [
     {
       "recipeId": "pizza-recipe-uuid",
       "scalingFactor": 1.0
+    },
+    {
+      "recipeId": "salad-recipe-uuid", 
+      "scalingFactor": 0.5
     }
   ]
 }
 
-// Response includes all 3 created datasets:
+// Response includes complete meal data
 {
-  "meal": { /* meal metadata with recipe snapshots */ },
-  "instructions": { /* flattened cooking steps */ },
-  "ingredients": { /* consolidated shopping list */ }
+  "meal": { /* meal metadata */ },
+  "instructions": { /* all cooking steps */ },
+  "ingredients": { /* shopping list */ }
 }
 ```
 
-#### **Todo with Meal Relation**
-```json
-POST /api/todo
+**What Happens:** System creates complete cooking timeline from recipes, generates shopping list, flattens all steps into sequential order.
+
+#### `GET /api/meal/{id}`
+**Purpose:** Detailed meal view for step management
+
+```typescript
+// Response
+{
+  "id": "meal-uuid",
+  "mealName": "Sunday Pizza Night", 
+  "scheduledToBeEatenAt": "2024-01-14T18:00:00Z",
+  "recipes": [/* recipe snapshots */],
+  "steps": [
+    {
+      "id": "step-uuid",
+      "recipeId": "pizza-recipe-uuid",
+      "instruction": "Mix flour and water",
+      "stepNumber": 1,
+      "isStepCompleted": false,
+      "estimatedDurationMinutes": 10,
+      "assignedToDate": null,  // Can be assigned to specific day
+      "todoId": null,          // Set when dragged to todo list
+      "ingredientsUsedInStep": [
+        {
+          "foodItemId": "flour-uuid",
+          "quantity": 2,
+          "unit": "cups"
+        }
+      ]
+    }
+    // ... more steps
+  ],
+  "progress": {
+    "completed": 1,
+    "total": 8, 
+    "percentage": 12.5
+  },
+  "nextStep": "Knead dough for 10 minutes",
+  "estimatedTimeRemaining": 45  // minutes
+}
+```
+
+**UI Implementation:**
+- Step-by-step checklist
+- Drag steps to calendar/todo list
+- Progress visualization
+- Timer integration for `estimatedDurationMinutes`
+
+### Recipe Management
+
+#### `GET /api/recipe`
+**Purpose:** Recipe library management
+
+```typescript
+// Response
+[
+  {
+    "id": "recipe-uuid",
+    "nameOfTheRecipe": "Pizza Dough",
+    "generalDescriptionOfTheRecipe": "Classic pizza dough recipe",
+    "whenIsItConsumed": ["DINNER"],
+    "version": 3,
+    "stepCount": 5,
+    "ingredientCount": 4,
+    "hasSteps": true,
+    "hasIngredients": true,
+    "completeness": "complete"  // "complete" | "incomplete"
+  }
+]
+```
+
+#### `GET /api/recipe/{id}`
+**Purpose:** Full recipe details for editing
+
+```typescript
+// Response
+{
+  "id": "recipe-uuid",
+  "nameOfTheRecipe": "Pizza Dough",
+  "generalDescriptionOfTheRecipe": "Classic pizza dough recipe",
+  "whenIsItConsumed": ["DINNER"], 
+  "version": 3,
+  "steps": [
+    {
+      "id": "step-uuid",
+      "instruction": "Mix flour and water", 
+      "stepNumber": 1
+    }
+  ],
+  "ingredients": [
+    {
+      "id": "ingredient-uuid",
+      "ingredientText": "2 cups all-purpose flour",
+      "sortOrder": 1
+    }
+  ],
+  "metadata": {
+    "stepCount": 5,
+    "ingredientCount": 4,
+    "estimatedTotalTime": 120  // minutes
+  }
+}
+```
+
+#### `POST /api/recipe`
+**Purpose:** Create new recipe template
+
+```typescript
+// Request
+{
+  "nameOfTheRecipe": "Pizza Dough",
+  "generalDescriptionOfTheRecipe": "Classic pizza dough recipe", 
+  "whenIsItConsumed": ["DINNER"]
+}
+```
+
+#### `POST /api/recipe/instructions`
+**Purpose:** Add cooking steps to recipe
+
+```typescript
+// Request
+{
+  "recipeId": "recipe-uuid",
+  "instructions": [
+    {
+      "instruction": "Mix flour and water",
+      "stepNumber": 1,
+      "estimatedDurationMinutes": 5
+    },
+    {
+      "instruction": "Knead dough",
+      "stepNumber": 2,
+      "estimatedDurationMinutes": 10
+    }
+  ]
+}
+```
+
+#### `POST /api/recipe/ingredients`
+**Purpose:** Add ingredient list to recipe
+
+```typescript
+// Request
+{
+  "recipeId": "recipe-uuid", 
+  "ingredients": [
+    {
+      "ingredientText": "2 cups all-purpose flour",
+      "sortOrder": 1
+    },
+    {
+      "ingredientText": "1 tsp salt",
+      "sortOrder": 2
+    }
+  ]
+}
+```
+
+### Food Database Management
+
+#### `GET /api/food-item`
+**Purpose:** Manage nutritional food database
+
+```typescript
+// Response
+[
+  {
+    "id": "food-uuid",
+    "name": "Medium Sized Apple",
+    "categoryHierarchy": ["Fruits", "Tree Fruits"],
+    "unitCount": 3,
+    "hasUnits": true
+  }
+]
+```
+
+#### `GET /api/food-item/{id}/units`
+**Purpose:** Nutritional units for specific food
+
+```typescript
+// Response
+[
+  {
+    "id": "unit-uuid",
+    "foodItemName": "Medium Sized Apple",
+    "unitOfMeasurement": "whole",
+    "unitDescription": "One whole medium apple",
+    "calories": 95,
+    "proteinInGrams": 0,
+    "carbohydratesInGrams": 25,
+    "fatInGrams": 0
+  },
+  {
+    "id": "unit-uuid2", 
+    "unitOfMeasurement": "slice",
+    "calories": 12
+    // ... more nutrition data
+  }
+]
+```
+
+#### `POST /api/food-item`
+**Purpose:** Add new food to database
+
+```typescript
+// Request
+{
+  "name": "Medium Sized Apple",
+  "categoryHierarchy": ["Fruits", "Tree Fruits"]
+}
+```
+
+### Todo Management
+
+#### `GET /api/todo`
+**Purpose:** Full todo management (configuration area)
+
+```typescript
+// Response
+[
+  {
+    "id": "todo-uuid",
+    "description": "Mix pizza dough",
+    "completed": false,
+    "scheduledFor": "2024-01-14T16:00:00Z",
+    "relations": [
+      {
+        "mealInstruction": {
+          "mealStepId": "step-uuid",
+          "mealId": "meal-uuid",
+          "recipeId": "recipe-uuid",
+          "stepNumber": 1
+        }
+      }
+    ]
+  }
+]
+```
+
+#### `POST /api/todo`
+**Purpose:** Create todos (standalone or from meal steps)
+
+```typescript
+// Standalone todo
+{
+  "description": "Take out trash",
+  "scheduledFor": "2024-01-14T17:00:00Z"
+}
+
+// Meal-related todo (when dragging step to todo list)
 {
   "description": "Mix pizza dough",
   "scheduledFor": "2024-01-14T16:00:00Z",
   "relations": [
     {
       "mealInstruction": {
-        "mealStepId": "meal-step-uuid",
-        "mealId": "meal-uuid",
+        "mealStepId": "step-uuid",
+        "mealId": "meal-uuid", 
         "recipeId": "recipe-uuid",
         "stepNumber": 1
       }
@@ -313,449 +552,181 @@ POST /api/todo
 
 ---
 
-## 🗄️ Database Schema
-
-### Food Domain Tables
-```sql
--- Core food database for nutritional tracking
-food_items (
-  id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,
-  name TEXT NOT NULL,
-  category_hierarchy TEXT[] NOT NULL
-);
-
--- Precise nutritional units (progressive accuracy)
-food_item_units (
-  id UUID PRIMARY KEY,
-  food_item_id UUID REFERENCES food_items(id),
-  unit_of_measurement TEXT NOT NULL,   -- "whole", "cup", "slice"
-  unit_description TEXT,               -- "One medium apple"
-  calories INTEGER NOT NULL,
-  protein_in_grams INTEGER,
-  carbohydrates_in_grams INTEGER,
-  fat_in_grams INTEGER,
-  fiber_in_grams INTEGER,
-  sugar_in_grams INTEGER
-);
-```
-
-### Recipe Domain Tables
-```sql
--- Recipe templates with versioning
-recipes (
-  id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,
-  name_of_the_recipe TEXT NOT NULL,
-  general_description_of_the_recipe TEXT,
-  when_is_it_consumed TEXT[],          -- ["BREAKFAST", "LUNCH", "DINNER"]
-  version INTEGER NOT NULL DEFAULT 1   -- Bumped on any change
-);
-
--- Step-by-step cooking instructions
-recipe_steps (
-  id UUID PRIMARY KEY,
-  recipe_id UUID REFERENCES recipes(id),
-  instruction TEXT NOT NULL,
-  step_number INTEGER NOT NULL
-);
-
--- Simple text ingredient list (human-readable)
-recipe_ingredients (
-  id UUID PRIMARY KEY, 
-  recipe_id UUID REFERENCES recipes(id),
-  ingredient_text TEXT NOT NULL,       -- "2 cups flour", "1 tsp salt"
-  sort_order INTEGER NOT NULL
-);
-```
-
-### Meal Domain Tables (Recipe Instances)
-```sql
--- Meal metadata with recipe snapshots
-meals (
-  id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,
-  meal_name TEXT NOT NULL,
-  scheduled_to_be_eaten_at TIMESTAMP,
-  has_meal_been_consumed BOOLEAN DEFAULT false,
-  recipes TEXT NOT NULL                -- JSON array of recipe instances
-);
-
--- Flattened cooking steps (from recipe snapshots)
-meal_steps (
-  id UUID PRIMARY KEY,
-  meal_id UUID REFERENCES meals(id) ON DELETE CASCADE,
-  recipe_id UUID NOT NULL,             -- Source recipe
-  original_recipe_step_id UUID NOT NULL, -- Links back to recipe template
-  instruction TEXT NOT NULL,
-  step_number INTEGER NOT NULL,        -- Global step order in meal
-  is_step_completed BOOLEAN DEFAULT false,
-  estimated_duration_minutes INTEGER,
-  assigned_to_date TEXT,               -- YYYY-MM-DD format
-  todo_id UUID,                        -- Links to todos table
-  ingredients_used_in_step TEXT        -- JSON array of food units
-);
-
--- Consolidated shopping list (from recipe snapshots)  
-meal_ingredients (
-  id UUID PRIMARY KEY,
-  meal_id UUID REFERENCES meals(id) ON DELETE CASCADE,
-  recipe_id UUID NOT NULL,             -- Source recipe
-  ingredient_text TEXT NOT NULL,       -- "2 cups flour"
-  sort_order INTEGER NOT NULL
-);
-```
-
-### Todo Domain Tables
-```sql
--- Actionable tasks with optional cross-domain relations
-todos (
-  id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,
-  description TEXT NOT NULL,
-  completed BOOLEAN DEFAULT false,
-  scheduled_for TIMESTAMP,
-  completed_at TIMESTAMP,
-  relations TEXT                       -- JSON array of domain relations
-);
-```
-
----
-
 ## 🔄 Complete User Journeys
 
-### Journey 1: Weekly Meal Planning
-```typescript
-// 1. User creates recipes
-POST /api/recipe { nameOfTheRecipe: "Pizza Dough", ... }
-POST /api/recipe/ingredients { recipeId, ingredients: ["2 cups flour", ...] }
-POST /api/recipe/instructions { recipeId, instructions: ["Mix ingredients", ...] }
+### Journey 1: Sunday Planning Session
 
-// 2. User plans meals for the week  
-POST /api/meal { 
-  mealName: "Sunday Pizza", 
+```typescript
+// 1. Review upcoming week
+GET /api/meal/week
+// Shows: This week has 3 meals planned, 4 days need meals
+
+// 2. Browse recipe library
+GET /api/recipe/search?timing=DINNER
+// Shows: Pizza, Pasta, Stir Fry recipes
+
+// 3. Plan Sunday dinner
+POST /api/meal {
+  mealName: "Sunday Pizza Night",
   scheduledToBeEatenAt: "2024-01-14T18:00:00Z",
   recipes: [{ recipeId: "pizza-uuid", scalingFactor: 1.0 }]
 }
+// System creates 8 cooking steps, shopping list
 
-// 3. System generates complete snapshot (3 events emitted):
-// - meal.created.v0 (metadata + recipe v3 snapshot)
-// - meal-instructions.created.v0 (8 flattened cooking steps)  
-// - meal-ingredients.created.v0 (shopping list)
-
-// 4. User views weekly plan
-GET /api/meal/week
-// Shows: Sunday Pizza (0/8 steps complete, can start prep at 4pm)
-```
-
-### Journey 2: Drag Step to Todo
-```typescript
-// 1. User views meal details
+// 4. Organize cooking timeline
 GET /api/meal/pizza-meal-uuid
-// Shows: Step 1 "Mix dough", Step 2 "Knead", etc.
+// Shows: 8 steps, drag "Mix dough" to 4pm, "Bake" to 6:30pm
 
-// 2. User drags "Mix dough" to todo list  
+// 5. Create specific todos
 POST /api/todo {
   description: "Mix pizza dough",
   scheduledFor: "2024-01-14T16:00:00Z",
-  relations: [{
-    mealInstruction: {
-      mealStepId: "meal-step-1-uuid",
-      mealId: "pizza-meal-uuid", 
-      recipeId: "pizza-recipe-uuid",
-      stepNumber: 1
-    }
-  }]
+  relations: [{ mealInstruction: { mealStepId: "step-1-uuid" }}]
 }
-
-// 3. Todo appears on landing page
-GET /api/todo/today
-// Shows: "Mix pizza dough" (urgency: "now", context: "Step 1")
 ```
 
-### Journey 3: Complete Todo with Cross-Domain Sync
+**Result:** Week is planned, landing page will show time-ordered cooking tasks
+
+### Journey 2: Monday Morning Execution
+
 ```typescript
-// 1. User marks todo complete on landing page
+// 1. Open landing page
+GET /api/todo/today
+// Shows: "Mix pizza dough" (4pm), "Take out trash" (5pm)
+
+// 2. 4pm - Complete cooking task
 PATCH /api/todo {
-  id: "todo-uuid",
+  id: "pizza-dough-todo-uuid",
   completed: true,
   completedAt: "2024-01-14T16:15:00Z"
 }
+// System automatically updates meal progress: 1/8 steps complete
 
-// 2. Single event emitted:
-// todo.v0/todo.updated.v0 { completed: true, relations: [...] }
-
-// 3. Multiple handlers respond:
-// - handleTodoUpdated() → Updates todos table
-// - handleTodoMealSync() → Updates meal_steps.is_step_completed = true
-
-// 4. Meal progress automatically updates
-GET /api/meal/pizza-meal-uuid  
-// Shows: Progress 1/8 complete, next step: "Knead dough"
+// 3. Check next task
+GET /api/todo/today  
+// Shows: "Prepare pizza sauce" is now the next cooking task
 ```
 
-### Journey 4: Landing Page Experience
-```typescript
-// Morning routine - zero decisions needed
-GET /api/todo/today
+**Result:** Zero decision-making, just follow the list
 
-// Response shows time-ordered, actionable list:
+### Journey 3: Meal Progress Tracking
+
+```typescript
+// Check cooking progress
+GET /api/meal/pizza-meal-uuid
+// Shows: Progress 3/8 complete (37%), next step: "Preheat oven"
+
+// Steps completed automatically sync when todos marked done
+// No manual tracking needed
+```
+
+### Journey 4: Recipe Building
+
+```typescript
+// 1. Create recipe template
+POST /api/recipe {
+  nameOfTheRecipe: "Homemade Pizza",
+  generalDescriptionOfTheRecipe: "Classic pizza from scratch",
+  whenIsItConsumed: ["DINNER"]
+}
+
+// 2. Add cooking steps
+POST /api/recipe/instructions {
+  recipeId: "new-recipe-uuid",
+  instructions: [
+    { instruction: "Mix flour and water", stepNumber: 1, estimatedDurationMinutes: 5 },
+    { instruction: "Knead dough", stepNumber: 2, estimatedDurationMinutes: 10 },
+    { instruction: "Let rise", stepNumber: 3, estimatedDurationMinutes: 60 },
+    { instruction: "Preheat oven", stepNumber: 4, estimatedDurationMinutes: 15 },
+    { instruction: "Shape and bake", stepNumber: 5, estimatedDurationMinutes: 20 }
+  ]
+}
+
+// 3. Add ingredient list
+POST /api/recipe/ingredients {
+  recipeId: "new-recipe-uuid",
+  ingredients: [
+    { ingredientText: "2 cups all-purpose flour", sortOrder: 1 },
+    { ingredientText: "1 tsp salt", sortOrder: 2 },
+    { ingredientText: "1 cup warm water", sortOrder: 3 }
+  ]
+}
+```
+
+**Result:** Recipe ready for meal planning, will generate proper cooking timeline
+
+---
+
+## 🔐 Authentication
+
+All API endpoints require authentication:
+
+```typescript
+// Headers for all requests
 {
-  "todos": [
-    { 
-      "description": "Mix pizza dough",
-      "urgency": "now",
-      "context": { "type": "meal", "stepNumber": 1 },
-      "canStartNow": true
-    },
-    {
-      "description": "Take out trash", 
-      "urgency": "upcoming",
-      "context": { "type": "standalone" },
-      "canStartNow": false
-    }
-  ],
-  "counts": { "remaining": 2, "overdue": 0 }
-}
-
-// User just follows the list - no planning needed
-```
-
----
-
-## 💻 Frontend Integration Guide
-
-### Core Frontend Architecture Needs
-
-#### 1. **Two-Tier UI Strategy**
-```typescript
-// Landing Page (Simple)
-- Time-ordered todo list
-- Check complete / Remove buttons
-- Urgency indicators (overdue = red, now = green)
-- Minimal context (just "Step 1 of Pizza")
-
-// Configuration Area (Complex)
-- Rich meal planning calendar
-- Recipe builder with drag-drop
-- Food database management
-- Progress tracking dashboards
-```
-
-#### 2. **State Management Patterns**
-```typescript
-// Landing page state (minimal)
-interface LandingState {
-  todos: TodoItem[];
-  counts: { total: number; remaining: number; overdue: number };
-  loading: boolean;
-}
-
-// Configuration state (complex)
-interface ConfigState {
-  meals: MealWithProgress[];
-  recipes: RecipeWithMetadata[];
-  foodItems: FoodItemWithUnits[];
-  weekPlan: WeeklyMealPlan;
+  "Authorization": "Bearer <jwt_token>",
+  "Content-Type": "application/json"
 }
 ```
 
-#### 3. **Critical API Integration Points**
-
-**Real-time Updates:**
-- Todo completion should immediately update meal progress
-- Meal changes should refresh todo lists
-- Consider WebSocket for live updates
-
-**Optimistic Updates:**
-- Mark todo complete immediately (rollback on failure)
-- Show meal progress changes instantly
-
-**Error Handling:**
-- Network failures during todo completion
-- Validation errors during meal creation
-- Conflict resolution for concurrent edits
-
-#### 4. **Key UI Components Needed**
-
-**Landing Page:**
-```typescript
-<TodoFeed />           // GET /api/todo/today
-<TodoItem />           // Complete/remove actions  
-<UrgencyIndicator />   // Visual priority system
-<ProgressSummary />    // Simple counts display
-```
-
-**Configuration Area:**
-```typescript
-<WeeklyMealPlan />     // GET /api/meal/week
-<MealBuilder />        // Recipe selection & scaling
-<RecipeLibrary />      // GET /api/recipe with search
-<FoodDatabase />       // GET /api/food-item management
-<ShoppingListGen />    // From meal ingredients
-<ProgressDashboard />  // Visual cooking progress
-```
-
-#### 5. **Data Flow Examples**
-
-**Meal Planning Flow:**
-```typescript
-// 1. User selects recipes
-const recipes = await searchRecipes({ timing: "DINNER" });
-
-// 2. User creates meal 
-const meal = await createMeal({
-  mealName: "Sunday Dinner",
-  recipes: [{ recipeId: "beef-stew-uuid", scalingFactor: 1.5 }]
-});
-
-// 3. UI shows immediate progress
-setMealProgress({ completed: 0, total: meal.instructions.length });
-
-// 4. User can drag steps to todo list
-const todoableSteps = meal.instructions.map(step => ({
-  ...step,
-  draggable: true,
-  onDrop: () => createTodoFromStep(step)
-}));
-```
-
-**Todo Completion Flow:**
-```typescript
-// 1. Optimistic update
-setTodoCompleted(todoId, true);
-
-// 2. API call
-try {
-  await updateTodo({ id: todoId, completed: true });
-  
-  // 3. Refresh related data
-  if (todo.relations?.mealInstruction) {
-    refreshMealProgress(todo.relations.mealInstruction.mealId);
-  }
-} catch (error) {
-  // 4. Rollback on failure
-  setTodoCompleted(todoId, false);
-  showError("Failed to complete todo");
-}
-```
-
-### 📱 Mobile Considerations
-- Landing page optimized for quick thumb interactions
-- Swipe gestures for complete/remove actions
-- Offline support for todo list (sync when online)
-- Push notifications for scheduled todos
-
-### 🎨 UX Principles
-- **Landing page:** Absolute simplicity - no cognitive load
-- **Configuration area:** Power user features with progressive disclosure
-- **Visual hierarchy:** Urgency → Context → Actions
-- **Feedback loops:** Immediate response to all user actions
+User data is completely isolated - each user only sees their own meals, recipes, todos, and food items.
 
 ---
 
-## 🧠 Key Design Decisions
+## 📚 API Reference Summary
 
-### 1. **Event Sourcing with Replay Safety**
-**Decision:** Handlers never emit new events  
-**Rationale:** Prevents infinite loops during event replay/debugging  
-**Pattern:** Single event → Multiple selective handlers
+### Landing Page (Execution Mode)
+- `GET /api/todo/today` - Main todo feed
+- `PATCH /api/todo` - Complete/reschedule todos  
+- `DELETE /api/todo` - Remove todos
 
-### 2. **Recipe Versioning & Meal Snapshots**  
-**Decision:** Meals preserve exact recipe state at creation time  
-**Rationale:** Historical integrity - meals don't change when recipes are updated  
-**Implementation:** JSON snapshot in `meals.recipes` field
+### Configuration (Planning Mode)
 
-### 3. **Progressive Food Accuracy**
-**Decision:** Start with simple ingredients, add nutritional precision over time  
-**Rationale:** Users shouldn't be blocked by missing nutrition data  
-**Pattern:** Text ingredients → Food units → Precise tracking
+**Meal Planning:**
+- `GET /api/meal/week` - Weekly meal calendar
+- `GET /api/meal/{id}` - Detailed meal view
+- `POST /api/meal` - Create meal plan
+- `PATCH /api/meal` - Modify meal  
 
-### 4. **Cross-Domain Relations via Events**
-**Decision:** Todo completion syncs meal progress through events, not direct calls  
-**Rationale:** Loose coupling - domains don't depend on each other  
-**Implementation:** Runtime validation in handlers
+**Recipe Management:**
+- `GET /api/recipe` - Recipe library
+- `GET /api/recipe/{id}` - Recipe details
+- `POST /api/recipe` - Create recipe
+- `POST /api/recipe/instructions` - Add cooking steps
+- `POST /api/recipe/ingredients` - Add ingredient list
 
-### 5. **Two-Tier API Strategy**
-**Decision:** Simple landing page APIs vs. complex configuration APIs  
-**Rationale:** Different use cases need different data shapes  
-**Example:** `GET /todo/today` (simple) vs `GET /meal/week` (complex)
+**Todo Management:**
+- `GET /api/todo` - All todos with relations
+- `POST /api/todo` - Create standalone or meal-related todos
 
-### 6. **User Data Isolation**
-**Decision:** All queries filtered by `userId` from JWT  
-**Rationale:** Complete data separation between users  
-**Implementation:** Every endpoint extracts `userId` from auth token
-
-### 7. **Optimistic UI with Event Consistency**
-**Decision:** Frontend can optimistically update, backend ensures consistency  
-**Rationale:** Responsive UX while maintaining data integrity  
-**Pattern:** Immediate UI update → API call → Event → Handler → DB
+**Food Database:**
+- `GET /api/food-item` - Food library
+- `GET /api/food-item/{id}/units` - Nutritional units
+- `POST /api/food-item` - Add food item
+- `POST /api/food-item/units` - Add nutritional data
 
 ---
 
-## 🚀 Getting Started (Development)
+## 🎯 Frontend Implementation Tips
 
-### Prerequisites
-```bash
-# Required tools
-- Node.js 18+
-- PostgreSQL 14+
-- Docker (optional)
-```
+### Landing Page
+- **Keep it simple:** Large buttons, clear urgency indicators
+- **Real-time feel:** Optimistic updates, immediate feedback
+- **Mobile-first:** Thumb-friendly tap targets
+- **Minimal cognitive load:** No decisions, just "do this next"
 
-### Environment Setup  
-```bash
-# Install dependencies
-bun install
+### Configuration Area  
+- **Progressive disclosure:** Advanced features hidden until needed
+- **Drag-and-drop:** Steps to calendar, recipes to meals
+- **Rich feedback:** Progress bars, completion states, error handling
+- **Desktop-optimized:** Multiple panels, detailed forms
 
-# Set up environment variables
-cp .env.example .env
-# Edit DATABASE_URL, JWT_SECRET, etc.
-
-# Run database migrations
-bun run db:migrate
-
-# Start development server
-bun run dev
-```
-
-### Testing the Full Flow
-```bash
-# 1. Create food item
-curl -X POST localhost:3000/api/food-item \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"name": "Apple", "categoryHierarchy": ["Fruits"]}'
-
-# 2. Add nutritional unit  
-curl -X POST localhost:3000/api/food-item/units \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"foodItemId": "uuid", "unitOfMeasurement": "whole", "calories": 95}'
-
-# 3. Create recipe
-curl -X POST localhost:3000/api/recipe \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"nameOfTheRecipe": "Apple Pie", "whenIsItConsumed": ["DESSERT"]}'
-
-# 4. Plan meal (creates complete snapshot)
-curl -X POST localhost:3000/api/meal \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"mealName": "Sunday Dessert", "recipes": [{"recipeId": "uuid"}]}'
-
-# 5. Check landing page
-curl localhost:3000/api/todo/today \
-  -H "Authorization: Bearer $TOKEN"
-```
+### Key Integrations
+- **Cross-domain updates:** Todo completion updates meal progress
+- **Smart scheduling:** Suggest prep times based on meal timing
+- **Contextual actions:** "Add to todo" buttons on meal steps
+- **Error resilience:** Graceful degradation, offline support
 
 ---
 
-## 📚 Additional Resources
-
-- **Flowcore Documentation:** [Event streaming patterns]
-- **Drizzle ORM:** [Database query patterns]  
-- **Hono Framework:** [API routing and middleware]
-- **Domain-Driven Design:** [Evans - Blue Book]
-- **Event Sourcing:** [Fowler - Event Sourcing patterns]
-
----
-
-**Built with ❤️ to reduce decision fatigue and streamline daily life.**
+**Built with ❤️ to eliminate daily decision fatigue through intelligent meal planning.**
