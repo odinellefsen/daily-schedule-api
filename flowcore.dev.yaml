@@ -1,17 +1,58 @@
 development:
   proxyEndpoints:
+    food-item:
+      description: "Food item proxy endpoint"
+      dataCore: daily-schedule
+      flowType: food-item.v0
+      events:
+        - food-item.created.v0
+        - food-item.updated.v0
+        - food-item.archived.v0
+        - food-item.units.created.v0
+        - food-item.units.updated.v0
+        - food-item.units.deleted.v0
+      endpoints:
+       - ""
     recipe:
       description: "Recipe proxy endpoint"
       dataCore: daily-schedule
       flowType: recipe.v0
       events:
         - recipe.created.v0
-        - recipe.metadata.updated.v0
-        - recipe.ingredients.created.v0
-        - recipe.ingredients.updated.v0
-        - recipe.instructions.created.v0
-        - recipe.instructions.updated.v0
+        - recipe.updated.v0
         - recipe.archived.v0
-        - recipe.deleted.v0
+        - recipe-instructions.created.v0
+        - recipe-instructions.updated.v0
+        - recipe-instructions.archived.v0
+        - recipe-ingredients.created.v0
+        - recipe-ingredients.updated.v0
+        - recipe-ingredients.archived.v0
+        - recipe-version.v0
+      endpoints:
+       - ""
+    meal:
+      description: "Meal proxy endpoint"
+      dataCore: daily-schedule
+      flowType: meal.v0
+      events:
+        - meal.created.v0
+        - meal.updated.v0
+        - meal.archived.v0
+        - meal-instructions.created.v0
+        - meal-instructions.updated.v0
+        - meal-instructions.archived.v0
+        - meal-ingredients.created.v0
+        - meal-ingredients.updated.v0
+        - meal-ingredients.archived.v0
+      endpoints:
+       - ""
+    todo:
+      description: "Todo proxy endpoint"
+      dataCore: daily-schedule
+      flowType: todo.v0
+      events:
+        - todo.created.v0
+        - todo.updated.v0
+        - todo.archived.v0
       endpoints:
        - ""

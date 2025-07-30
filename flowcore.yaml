@@ -6,31 +6,72 @@ dataCore:
   isPublic: false
   description: "Daily schedule data collection for daily scheduler"
   flowTypes:
+    food-item.v0:
+      description: "Food item data collection for daily scheduler"
+      eventTypes:
+        food-item.created.v0:
+          description: "Food item created event"
+        food-item.updated.v0:
+          description: "Food item metadata updated"
+        food-item.archived.v0:
+          description: "Food item archived event"
+        food-item.units.created.v0:
+          description: "Food item units created event"
+        food-item.units.updated.v0:
+          description: "Food item units updated event"
+        food-item.units.deleted.v0:
+          description: "Food item units deleted event"
     recipe.v0:
       description: "Recipe data collection for daily scheduler"
       eventTypes:
         recipe.created.v0:
-          description: "Recipe metadata created event"
-        recipe.metadata.updated.v0:
-          description: "Recipe basic info updated (name, description, timing)"
-        recipe.ingredients.created.v0:
-          description: "Recipe ingredients initially added"
-        recipe.ingredients.updated.v0:
-          description: "Recipe ingredients list updated"
-        recipe.instructions.created.v0:
-          description: "Recipe instructions initially added"
-        recipe.instructions.updated.v0:
-          description: "Recipe cooking instructions updated"
+          description: "Recipe created event"
+        recipe.updated.v0:
+          description: "Recipe metadata updated event"
         recipe.archived.v0:
           description: "Recipe archived event"
-        recipe.deleted.v0:
-          description: "Recipe permanently deleted event"
-    food-item.v0:
+        recipe-instructions.created.v0:
+          description: "Recipe instructions created event"
+        recipe-instructions.updated.v0:
+          description: "Recipe instructions updated event"
+        recipe-instructions.archived.v0:
+          description: "Recipe instructions archived event"
+        recipe-ingredients.created.v0:
+          description: "Recipe ingredients created event"
+        recipe-ingredients.updated.v0:
+          description: "Recipe ingredients updated event"
+        recipe-ingredients.archived.v0:
+          description: "Recipe ingredients archived event"
+        recipe-version.v0:
+          description: "Recipe version event"
+    meal.v0:
+      description: "Meal data collection for daily scheduler"
       eventTypes:
-        food-item.created.v0:
-          description: "main entry point for food item entity"
-        food-item.updated.v0:
-          description: "main entry point metadata updated"
-        food-item.archived.v0:
-          description: "main entry point for food item archived event"
+        meal.created.v0:
+          description: "Meal created event"
+        meal.updated.v0:
+          description: "Meal metadata updated event"
+        meal.archived.v0:
+          description: "Meal archived event"
+        meal-instructions.created.v0:
+          description: "Meal instructions created event"
+        meal-instructions.updated.v0:
+          description: "Meal instructions updated event"
+        meal-instructions.archived.v0:
+          description: "Meal instructions archived event"
+        meal-ingredients.created.v0:
+          description: "Meal ingredients created event"
+        meal-ingredients.updated.v0:
+          description: "Meal ingredients updated event"
+        meal-ingredients.archived.v0:
+          description: "Meal ingredients archived event"
+    todo.v0:
+      description: "Todo data collection for daily scheduler"
+      eventTypes:
+        todo.created.v0:
+          description: "Todo created event"
+        todo.updated.v0:
+          description: "Todo updated event"
+        todo.archived.v0:
+          description: "Todo archived event"
         
