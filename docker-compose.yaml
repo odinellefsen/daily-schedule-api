@@ -1,3 +1,4 @@
+# postgres connection string: postgres://postgres:postgres@localhost:5432/daily-schedule-db
 version: "3.8"
 
 services:
