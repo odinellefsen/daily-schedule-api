@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import type { Hono } from "hono";
 import z from "zod";
 import {
     MealTimingEnum,
@@ -13,7 +14,6 @@ import { db } from "../../../db";
 import { recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
-import recipe from ".";
 
 // client side request schema
 const updateRecipeRequestSchema = z.object({
@@ -25,109 +25,109 @@ const updateRecipeRequestSchema = z.object({
     whenIsItConsumed: z.array(z.nativeEnum(MealTimingEnum)).optional(),
 });
 
-recipe.patch("/", async (c) => {
-    const safeUserId = c.userId!;
+export function registerPatchRecipe(app: Hono) {
+    app.patch("/", async (c) => {
+        const safeUserId = c.userId!;
 
-    const rawRequestJsonBody = await c.req.json();
-    const parsedRequestJsonBody =
-        updateRecipeRequestSchema.safeParse(rawRequestJsonBody);
-    if (!parsedRequestJsonBody.success) {
-        return c.json(
-            ApiResponse.error(
-                "Invalid recipe data",
-                parsedRequestJsonBody.error.errors
+        const rawRequestJsonBody = await c.req.json();
+        const parsedRequestJsonBody =
+            updateRecipeRequestSchema.safeParse(rawRequestJsonBody);
+        if (!parsedRequestJsonBody.success) {
+            return c.json(
+                ApiResponse.error(
+                    "Invalid recipe data",
+                    parsedRequestJsonBody.error.errors
+                ),
+                StatusCodes.BAD_REQUEST
+            );
+        }
+        const safeUpdateRecipeRequestBody = parsedRequestJsonBody.data;
+
+        const recipeFromDb = await db.query.recipes.findFirst({
+            where: and(
+                eq(
+                    recipes.nameOfTheRecipe,
+                    safeUpdateRecipeRequestBody.nameOfTheRecipe
+                ),
+                eq(recipes.userId, safeUserId)
             ),
-            StatusCodes.BAD_REQUEST
-        );
-    }
-    const safeUpdateRecipeRequestBody = parsedRequestJsonBody.data;
+        });
+        if (!recipeFromDb) {
+            return c.json(
+                ApiResponse.error("Recipe not found"),
+                StatusCodes.NOT_FOUND
+            );
+        }
 
-    const recipeFromDb = await db.query.recipes.findFirst({
-        where: and(
-            eq(
-                recipes.nameOfTheRecipe,
-                safeUpdateRecipeRequestBody.nameOfTheRecipe
-            ),
-            eq(recipes.userId, safeUserId)
-        ),
-    });
-    if (!recipeFromDb) {
-        return c.json(
-            ApiResponse.error("Recipe not found"),
-            StatusCodes.NOT_FOUND
-        );
-    }
+        const recipeVersion = recipeFromDb.version;
+        const newRecipeVersion = recipeVersion + 1;
 
-    const recipeVersion = recipeFromDb.version;
-    const newRecipeVersion = recipeVersion + 1;
-
-    const updatedRecipe: RecipeUpdateType = {
-        id: recipeFromDb.id,
-        userId: safeUserId,
-        nameOfTheRecipe: safeUpdateRecipeRequestBody.nameOfTheRecipe,
-        generalDescriptionOfTheRecipe:
-            safeUpdateRecipeRequestBody.generalDescriptionOfTheRecipe,
-        whenIsItConsumed: safeUpdateRecipeRequestBody.whenIsItConsumed,
-        oldValues: {
+        const updatedRecipe: RecipeUpdateType = {
             id: recipeFromDb.id,
-            userId: recipeFromDb.userId,
-            nameOfTheRecipe: recipeFromDb.nameOfTheRecipe,
+            userId: safeUserId,
+            nameOfTheRecipe: safeUpdateRecipeRequestBody.nameOfTheRecipe,
             generalDescriptionOfTheRecipe:
-                recipeFromDb.generalDescriptionOfTheRecipe || undefined,
-            whenIsItConsumed: recipeFromDb.whenIsItConsumed
-                ? recipeFromDb.whenIsItConsumed.map(
-                      (val) => val as MealTimingEnum
-                  )
-                : undefined,
-        },
-    };
+                safeUpdateRecipeRequestBody.generalDescriptionOfTheRecipe,
+            whenIsItConsumed: safeUpdateRecipeRequestBody.whenIsItConsumed,
+            oldValues: {
+                id: recipeFromDb.id,
+                userId: recipeFromDb.userId,
+                nameOfTheRecipe: recipeFromDb.nameOfTheRecipe,
+                generalDescriptionOfTheRecipe:
+                    recipeFromDb.generalDescriptionOfTheRecipe || undefined,
+                whenIsItConsumed: recipeFromDb.whenIsItConsumed
+                    ? recipeFromDb.whenIsItConsumed.map(
+                          (val) => val as MealTimingEnum
+                      )
+                    : undefined,
+            },
+        };
 
-    const updateRecipeEvent = recipeUpdateSchema.safeParse(updatedRecipe);
-    if (!updateRecipeEvent.success) {
+        const updateRecipeEvent = recipeUpdateSchema.safeParse(updatedRecipe);
+        if (!updateRecipeEvent.success) {
+            return c.json(
+                ApiResponse.error(
+                    "Invalid recipe data",
+                    updateRecipeEvent.error.errors
+                ),
+                StatusCodes.BAD_REQUEST
+            );
+        }
+        const safeUpdateRecipeEvent = updateRecipeEvent.data;
+
+        try {
+            await FlowcorePathways.write("recipe.v0/recipe.updated.v0", {
+                data: safeUpdateRecipeEvent,
+            });
+        } catch (error) {
+            return c.json(
+                ApiResponse.error("Failed to update recipe", error),
+                StatusCodes.SERVER_ERROR
+            );
+        }
+
+        const recipeVersionEvent: RecipeVersionType = {
+            recipeId: recipeFromDb.id,
+            version: newRecipeVersion,
+            whatTriggeredUpdate: whatTriggeredVersionUpate.recipeBase,
+        };
+
+        try {
+            await FlowcorePathways.write("recipe.v0/recipe-version.v0", {
+                data: recipeVersionEvent,
+            });
+        } catch (error) {
+            return c.json(
+                ApiResponse.error("Failed to update recipe version", error),
+                StatusCodes.SERVER_ERROR
+            );
+        }
+
         return c.json(
-            ApiResponse.error(
-                "Invalid recipe data",
-                updateRecipeEvent.error.errors
-            ),
-            StatusCodes.BAD_REQUEST
+            ApiResponse.success(
+                "Recipe updated successfully",
+                safeUpdateRecipeEvent
+            )
         );
-    }
-    const safeUpdateRecipeEvent = updateRecipeEvent.data;
-
-    try {
-        await FlowcorePathways.write("recipe.v0/recipe.updated.v0", {
-            data: safeUpdateRecipeEvent,
-        });
-    } catch (error) {
-        return c.json(
-            ApiResponse.error("Failed to update recipe", error),
-            StatusCodes.SERVER_ERROR
-        );
-    }
-
-    const recipeVersionEvent: RecipeVersionType = {
-        recipeId: recipeFromDb.id,
-        version: newRecipeVersion,
-        whatTriggeredUpdate: whatTriggeredVersionUpate.recipeBase,
-    };
-
-    try {
-        await FlowcorePathways.write("recipe.v0/recipe-version.v0", {
-            data: recipeVersionEvent,
-        });
-    } catch (error) {
-        return c.json(
-            ApiResponse.error("Failed to update recipe version", error),
-            StatusCodes.SERVER_ERROR
-        );
-    }
-
-    return c.json(
-        ApiResponse.success(
-            "Recipe updated successfully",
-            safeUpdateRecipeEvent
-        )
-    );
-});
-
-export default recipe;
+    });
+}
