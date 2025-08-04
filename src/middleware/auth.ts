@@ -72,10 +72,6 @@ export const clerkAuth = () => {
     };
 };
 
-/**
- * Optional middleware to require authentication
- * Use this on routes that must have authenticated users
- */
 export const requireAuth = clerkAuth;
 
 /**
