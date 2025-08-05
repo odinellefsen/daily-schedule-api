@@ -9,7 +9,7 @@ import {
 
 export const recipes = pgTable("recipes", {
     id: uuid("id").primaryKey(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id").notNull(),
     nameOfTheRecipe: text("name_of_the_recipe").notNull(),
     generalDescriptionOfTheRecipe: text("general_description_of_the_recipe"),
     whenIsItConsumed: text("when_is_it_consumed").array(),
@@ -43,7 +43,7 @@ export const recipeIngredients = pgTable("recipe_ingredients", {
 
 export const meals = pgTable("meals", {
     id: uuid("id").primaryKey(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id").notNull(),
     mealName: text("meal_name").notNull(),
     scheduledToBeEatenAt: timestamp("scheduled_to_be_eaten_at"),
     hasMealBeenConsumed: boolean("has_meal_been_consumed")
@@ -80,7 +80,7 @@ export const mealSteps = pgTable("meal_steps", {
 
 export const todos = pgTable("todos", {
     id: uuid("id").primaryKey(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id").notNull(),
     description: text("description").notNull(),
     completed: boolean("completed").notNull().default(false),
     scheduledFor: timestamp("scheduled_for"),
@@ -92,7 +92,7 @@ export const foodItems = pgTable("food_items", {
     id: uuid("id").primaryKey(),
     name: text("name").notNull(),
     categoryHierarchy: text("category_hierarchy").notNull().array(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id").notNull(),
 });
 
 export const foodItemUnits = pgTable("food_item_units", {
