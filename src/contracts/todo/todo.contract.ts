@@ -60,6 +60,18 @@ export const todoCancelledSchema = z.object({
     reasonForCancelling: z.string().min(1).optional(),
 });
 
+export const todoRelationsUpdatedSchema = z.object({
+    id: z.string().uuid(),
+    userId: z.string(),
+    relations: z
+        .array(
+            z.object({
+                mealInstruction: mealInstructionRelationSchema.optional(),
+            })
+        )
+        .max(5, "you can only have up to 5 relations"),
+});
+
 export const todoCompletedSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),
@@ -71,6 +83,9 @@ export type TodoUpdateType = z.infer<typeof todoUpdateSchema>;
 export type TodoArchiveType = z.infer<typeof todoArchiveSchema>;
 export type TodoCompletedType = z.infer<typeof todoCompletedSchema>;
 export type TodoCancelledType = z.infer<typeof todoCancelledSchema>;
+export type TodoRelationsUpdatedType = z.infer<
+    typeof todoRelationsUpdatedSchema
+>;
 
 // Helper schemas for handlers to validate specific relations
 export const todoWithMealRelationSchema = todoSchema.extend({

@@ -5,6 +5,7 @@ import type {
     todoArchiveSchema,
     todoCancelledSchema,
     todoCompletedSchema,
+    todoRelationsUpdatedSchema,
     todoSchema,
 } from "../../contracts/todo";
 import { db } from "../../db";
@@ -81,4 +82,17 @@ export async function handleTodoCancelled(
         .update(mealSteps)
         .set({ isStepCompleted: false, todoId: null })
         .where(eq(mealSteps.todoId, payload.id));
+}
+
+export async function handleTodoRelationsUpdated(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: z.infer<typeof todoRelationsUpdatedSchema>;
+    }
+) {
+    const { payload } = event;
+
+    await db
+        .update(todos)
+        .set({ relations: JSON.stringify(payload.relations) })
+        .where(eq(todos.id, payload.id));
 }

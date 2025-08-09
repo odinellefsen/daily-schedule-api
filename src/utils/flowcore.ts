@@ -39,6 +39,7 @@ import {
     todoArchiveSchema,
     todoCancelledSchema,
     todoCompletedSchema,
+    todoRelationsUpdatedSchema,
     todoSchema,
     todoUpdateSchema,
 } from "../contracts/todo";
@@ -90,6 +91,7 @@ import {
     handleTodoCancelled,
     handleTodoCompleted,
     handleTodoCreated,
+    handleTodoRelationsUpdated,
 } from "../handlers/todo/todo.handler";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
@@ -276,6 +278,12 @@ export const FlowcorePathways = new PathwaysBuilder({
     })
     .register({
         flowType: "todo.v0",
+        eventType: "todo.relations.updated.v0",
+        retryDelayMs: 10000,
+        schema: todoRelationsUpdatedSchema,
+    })
+    .register({
+        flowType: "todo.v0",
         eventType: "todo.archived.v0",
         retryDelayMs: 10000,
         schema: todoArchiveSchema,
@@ -352,7 +360,8 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle("todo.v0/todo.created.v0", handleTodoCreated)
     .handle("todo.v0/todo.archived.v0", handleTodoArchived)
     .handle("todo.v0/todo.completed.v0", handleTodoCompleted)
-    .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled);
+    .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled)
+    .handle("todo.v0/todo.relations.updated.v0", handleTodoRelationsUpdated);
 
 // Combined handler for recipe version events
 FlowcorePathways.handle("recipe.v0/recipe-version.v0", async (event) => {
