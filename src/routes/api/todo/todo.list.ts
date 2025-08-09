@@ -2,7 +2,7 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
 import { todos } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
+import { ApiResponse } from "../../../utils/api-responses";
 
 export function registerListTodos(app: Hono) {
     app.get("/today", async (c) => {
