@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
 import { foodItems, foodItemUnits } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
+import { ApiResponse } from "../../../utils/api-responses";
 
 export function registerListFoodItems(app: Hono) {
     app.get("/", async (c) => {
@@ -43,7 +43,6 @@ export function registerListFoodItems(app: Hono) {
     app.get("/search", async (c) => {
         const safeUserId = c.userId!;
         const query = c.req.query("q") || "";
-        const category = c.req.query("category");
 
         const dbQuery = db
             .select()

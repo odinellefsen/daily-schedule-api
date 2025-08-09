@@ -1,8 +1,8 @@
 import { and, eq } from "drizzle-orm";
+import type { Hono } from "hono";
 import { db } from "../../../db";
 import { foodItems, foodItemUnits } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
-import { Hono } from "hono";
 
 export function registerListFoodItemUnits(app: Hono) {
     app.get("/:foodItemId/units", async (c) => {

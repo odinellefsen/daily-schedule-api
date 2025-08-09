@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import type { Hono } from "hono";
 import z from "zod";
 import {
     type FoodItemUnitType,
@@ -8,7 +9,6 @@ import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
-import { Hono } from "hono";
 
 // client side request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
