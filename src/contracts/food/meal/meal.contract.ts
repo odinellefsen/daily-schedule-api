@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const mealSchema = z.object({
     id: z.string().uuid(),
-    userId: z.string().uuid(),
+    userId: z.string(),
     mealName: z
         .string()
         .min(1, "Meal name is required")

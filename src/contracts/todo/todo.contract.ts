@@ -20,7 +20,7 @@ const mealInstructionRelationSchema = z.object({
 // Main todo schema
 export const todoSchema = z.object({
     id: z.string().uuid(),
-    userId: z.string().uuid(),
+    userId: z.string(),
     description: z
         .string()
         .min(1, "Description is required")

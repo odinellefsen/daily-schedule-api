@@ -3,7 +3,7 @@ import { z } from "zod";
 // Food item with multiple possible units, each with their own nutrition
 export const foodItemSchema = z.object({
     id: z.string().uuid(),
-    userId: z.string().uuid(),
+    userId: z.string(),
     name: z
         .string()
         .min(1, "The name of the food item is required")

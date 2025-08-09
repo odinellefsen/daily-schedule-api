@@ -3,7 +3,7 @@ import { MealTimingEnum } from "./recipe.shared_utils";
 
 export const recipeSchema = z.object({
     id: z.string().uuid(),
-    userId: z.string().uuid(),
+    userId: z.string(),
     whenIsItConsumed: z.array(z.nativeEnum(MealTimingEnum)).optional(),
     nameOfTheRecipe: z
         .string()
