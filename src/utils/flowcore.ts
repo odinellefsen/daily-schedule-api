@@ -37,6 +37,7 @@ import {
 import { recipeVersionSchema } from "../contracts/food/recipe/recipe-version.contract";
 import {
     todoArchiveSchema,
+    todoCompletedSchema,
     todoSchema,
     todoUpdateSchema,
 } from "../contracts/todo";
@@ -85,6 +86,7 @@ import {
 } from "../handlers/recipe/recipe-instructions.handler";
 import {
     handleTodoArchived,
+    handleTodoCompleted,
     handleTodoCreated,
     handleTodoMealSync,
     handleTodoUpdated,
@@ -262,6 +264,12 @@ export const FlowcorePathways = new PathwaysBuilder({
     })
     .register({
         flowType: "todo.v0",
+        eventType: "todo.completed.v0",
+        retryDelayMs: 10000,
+        schema: todoCompletedSchema,
+    })
+    .register({
+        flowType: "todo.v0",
         eventType: "todo.archived.v0",
         retryDelayMs: 10000,
         schema: todoArchiveSchema,
@@ -337,7 +345,8 @@ export const FlowcorePathways = new PathwaysBuilder({
     )
     .handle("todo.v0/todo.created.v0", handleTodoCreated)
 
-    .handle("todo.v0/todo.archived.v0", handleTodoArchived);
+    .handle("todo.v0/todo.archived.v0", handleTodoArchived)
+    .handle("todo.v0/todo.completed.v0", handleTodoCompleted);
 
 // Combined handler for recipe version events
 FlowcorePathways.handle("recipe.v0/recipe-version.v0", async (event) => {
@@ -347,7 +356,7 @@ FlowcorePathways.handle("recipe.v0/recipe-version.v0", async (event) => {
     await handleRecipeIngredientsVersionUpdated(event);
 });
 
-// Combined handler for todo updated events
+// Combined handler for todo updated events (description/scheduled/relations, etc.)
 FlowcorePathways.handle("todo.v0/todo.updated.v0", async (event) => {
     // Execute both handlers for todo updated events
     await handleTodoUpdated(event);

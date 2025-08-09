@@ -53,9 +53,16 @@ export const todoArchiveSchema = todoSchema.extend({
     reasonForArchiving: z.string().min(1, "Reason for archiving is required"),
 });
 
+export const todoCompletedSchema = z.object({
+    id: z.string().uuid(),
+    userId: z.string(),
+    completedAt: z.string().datetime(),
+});
+
 export type TodoType = z.infer<typeof todoSchema>;
 export type TodoUpdateType = z.infer<typeof todoUpdateSchema>;
 export type TodoArchiveType = z.infer<typeof todoArchiveSchema>;
+export type TodoCompletedType = z.infer<typeof todoCompletedSchema>;
 
 // Helper schemas for handlers to validate specific relations
 export const todoWithMealRelationSchema = todoSchema.extend({

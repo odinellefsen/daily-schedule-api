@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import type {
     todoArchiveSchema,
+    todoCompletedSchema,
     todoSchema,
     todoUpdateSchema,
 } from "../../contracts/todo";
@@ -62,6 +63,30 @@ export async function handleTodoArchived(
     const { payload } = event;
 
     await db.delete(todos).where(eq(todos.id, payload.id));
+}
+
+export async function handleTodoCompleted(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: z.infer<typeof todoCompletedSchema>;
+    }
+) {
+    const { payload } = event;
+
+    // Mark todo completed and set completedAt
+    await db
+        .update(todos)
+        .set({
+            completed: true,
+            completedAt: new Date(payload.completedAt),
+        })
+        .where(eq(todos.id, payload.id));
+
+    // Sync to meal step if present
+    // We need relations to map step; since completed event is minimal, we rely on existing linkage in mealSteps
+    await db
+        .update(mealSteps)
+        .set({ isStepCompleted: true })
+        .where(eq(mealSteps.todoId, payload.id));
 }
 
 // Handler for cross-domain coordination (meal step sync)

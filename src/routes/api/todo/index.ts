@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { requireAuth } from "../../../middleware/auth";
+import { registerCompleteTodo } from "./todo.complete";
 import { registerCreateTodo } from "./todo.create";
 import { registerDeleteTodo } from "./todo.delete";
 import { registerListTodos } from "./todo.list";
-import { registerPatchTodo } from "./todo.patch";
 
 export const todo = new Hono();
 
@@ -13,6 +13,6 @@ todo.use("/*", requireAuth());
 registerCreateTodo(todo);
 registerDeleteTodo(todo);
 registerListTodos(todo);
-registerPatchTodo(todo);
+registerCompleteTodo(todo);
 
 export default todo;
