@@ -70,8 +70,16 @@ dataCore:
       eventTypes:
         todo.created.v0:
           description: "Todo created event"
-        todo.updated.v0:
-          description: "Todo updated event"
+        todo.scheduled-for.updated.v0:
+          description: "Todo scheduled for updated"
+        todo.completed.v0:
+          description: "Todo completed event"
+        todo.cancelled.v0:
+          description: "Todo was cancelled"
+        todo.description.updated.v0:
+          description: "Todo description updated"
+        todo.relations.updated.v0:
+          description: "Todo relations updated"
         todo.archived.v0:
           description: "Todo archived event"
         
