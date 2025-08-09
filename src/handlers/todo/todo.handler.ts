@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import type {
     todoArchiveSchema,
+    todoCancelledSchema,
     todoCompletedSchema,
     todoSchema,
     todoUpdateSchema,
@@ -86,6 +87,25 @@ export async function handleTodoCompleted(
     await db
         .update(mealSteps)
         .set({ isStepCompleted: true })
+        .where(eq(mealSteps.todoId, payload.id));
+}
+
+export async function handleTodoCancelled(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: z.infer<typeof todoCancelledSchema>;
+    }
+) {
+    const { payload } = event;
+
+    // Mark todo not completed and clear any meal step linkage
+    await db
+        .update(todos)
+        .set({ completed: false, completedAt: null })
+        .where(eq(todos.id, payload.id));
+
+    await db
+        .update(mealSteps)
+        .set({ isStepCompleted: false, todoId: null })
         .where(eq(mealSteps.todoId, payload.id));
 }
 

@@ -37,6 +37,7 @@ import {
 import { recipeVersionSchema } from "../contracts/food/recipe/recipe-version.contract";
 import {
     todoArchiveSchema,
+    todoCancelledSchema,
     todoCompletedSchema,
     todoSchema,
     todoUpdateSchema,
@@ -86,6 +87,7 @@ import {
 } from "../handlers/recipe/recipe-instructions.handler";
 import {
     handleTodoArchived,
+    handleTodoCancelled,
     handleTodoCompleted,
     handleTodoCreated,
     handleTodoMealSync,
@@ -270,6 +272,12 @@ export const FlowcorePathways = new PathwaysBuilder({
     })
     .register({
         flowType: "todo.v0",
+        eventType: "todo.cancelled.v0",
+        retryDelayMs: 10000,
+        schema: todoCancelledSchema,
+    })
+    .register({
+        flowType: "todo.v0",
         eventType: "todo.archived.v0",
         retryDelayMs: 10000,
         schema: todoArchiveSchema,
@@ -346,7 +354,8 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle("todo.v0/todo.created.v0", handleTodoCreated)
 
     .handle("todo.v0/todo.archived.v0", handleTodoArchived)
-    .handle("todo.v0/todo.completed.v0", handleTodoCompleted);
+    .handle("todo.v0/todo.completed.v0", handleTodoCompleted)
+    .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled);
 
 // Combined handler for recipe version events
 FlowcorePathways.handle("recipe.v0/recipe-version.v0", async (event) => {
