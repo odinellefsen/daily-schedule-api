@@ -60,7 +60,6 @@ export function registerCancelTodo(app: Hono) {
         }
 
         try {
-            console.log("chumper");
             await FlowcorePathways.write("todo.v0/todo.cancelled.v0", {
                 data: eventParsed.data,
             });
