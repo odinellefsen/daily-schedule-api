@@ -72,16 +72,8 @@ export async function handleTodoCancelled(
 ) {
     const { payload } = event;
 
-    // Mark todo not completed and clear any meal step linkage
-    await db
-        .update(todos)
-        .set({ completed: false, completedAt: null })
-        .where(eq(todos.id, payload.id));
-
-    await db
-        .update(mealSteps)
-        .set({ isStepCompleted: false, todoId: null })
-        .where(eq(mealSteps.todoId, payload.id));
+    // Delete todo
+    await db.delete(todos).where(eq(todos.id, payload.id));
 }
 
 export async function handleTodoRelationsUpdated(
