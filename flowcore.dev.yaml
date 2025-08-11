@@ -52,7 +52,9 @@ development:
       flowType: todo.v0
       events:
         - todo.created.v0
-        - todo.updated.v0
+        - todo.completed.v0
+        - todo.cancelled.v0
+        - todo.relations.updated.v0
         - todo.archived.v0
       endpoints:
        - ""

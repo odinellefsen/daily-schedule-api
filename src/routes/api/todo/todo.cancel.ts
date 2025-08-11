@@ -17,7 +17,7 @@ const cancelTodoRequestSchema = z.object({
 });
 
 export function registerCancelTodo(app: Hono) {
-    app.delete("/:id/cancel", async (c) => {
+    app.patch("/cancel", async (c) => {
         const safeUserId = c.userId!;
 
         const rawJsonBody = await c.req.json();
@@ -60,6 +60,7 @@ export function registerCancelTodo(app: Hono) {
         }
 
         try {
+            console.log("chumper");
             await FlowcorePathways.write("todo.v0/todo.cancelled.v0", {
                 data: eventParsed.data,
             });
