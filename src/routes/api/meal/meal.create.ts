@@ -116,7 +116,7 @@ export function registerCreateMeal(app: Hono) {
                     estimatedDurationMinutes: undefined, // Will be set later when planning todos
                     assignedToDate: undefined,
                     todoId: undefined,
-                    ingredientsUsedInStep: undefined, // Basic recipe steps don't have attached ingredients yet
+                    foodItemUnitsUsedInStep: undefined, // Basic recipe steps don't have attached ingredients yet
                 });
             }
         }

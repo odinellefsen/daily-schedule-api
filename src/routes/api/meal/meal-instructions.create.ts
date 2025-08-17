@@ -26,9 +26,9 @@ export function registerCreateMealInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal instructions data",
-                    parsedJsonBody.error.errors
+                    parsedJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateMealInstructionsJsonBody = parsedJsonBody.data;
@@ -41,7 +41,7 @@ export function registerCreateMealInstructions(app: Hono) {
         if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Meal not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -50,13 +50,13 @@ export function registerCreateMealInstructions(app: Hono) {
             .select()
             .from(mealSteps)
             .where(
-                eq(mealSteps.mealId, safeCreateMealInstructionsJsonBody.mealId)
+                eq(mealSteps.mealId, safeCreateMealInstructionsJsonBody.mealId),
             );
 
         if (existingInstructions.length > 0) {
             return c.json(
                 ApiResponse.error("Meal instructions already exist"),
-                StatusCodes.CONFLICT
+                StatusCodes.CONFLICT,
             );
         }
 
@@ -84,7 +84,7 @@ export function registerCreateMealInstructions(app: Hono) {
                     estimatedDurationMinutes: undefined,
                     assignedToDate: undefined,
                     todoId: undefined,
-                    ingredientsUsedInStep: undefined,
+                    foodItemUnitsUsedInStep: undefined,
                 });
             }
         }
@@ -100,9 +100,9 @@ export function registerCreateMealInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal instructions data",
-                    createMealInstructionsEvent.error.errors
+                    createMealInstructionsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateMealInstructionsEvent =
@@ -113,20 +113,20 @@ export function registerCreateMealInstructions(app: Hono) {
                 "meal.v0/meal-instructions.created.v0",
                 {
                     data: safeCreateMealInstructionsEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to create meal instructions", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Meal instructions created successfully",
-                safeCreateMealInstructionsEvent
-            )
+                safeCreateMealInstructionsEvent,
+            ),
         );
     });
 }

@@ -17,11 +17,10 @@ const createRecipeInstructionsRequestSchema = z.object({
         .array(
             z.object({
                 stepInstruction: z.string().min(1).max(250),
-                ingredientsUsedInStep: z
+                foodItemUnitsUsedInStep: z
                     .array(
                         z.object({
                             foodItemUnitId: z.string().uuid(),
-                            foodItemId: z.string().uuid(),
                             quantityOfFoodItemUnit: z
                                 .number()
                                 .positive()
@@ -90,7 +89,7 @@ export function registerCreateRecipeInstructions(app: Hono) {
                         id: crypto.randomUUID(),
                         stepNumber: currentMaxStep + index + 1,
                         stepInstruction: step.stepInstruction,
-                        ingredientsUsedInStep: step.ingredientsUsedInStep,
+                        foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep,
                     }),
                 ),
         };

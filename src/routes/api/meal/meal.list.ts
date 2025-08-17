@@ -20,8 +20,8 @@ export function registerListMeals(app: Hono) {
                 and(
                     eq(meals.userId, safeUserId),
                     gte(meals.scheduledToBeEatenAt, today),
-                    lte(meals.scheduledToBeEatenAt, weekFromNow)
-                )
+                    lte(meals.scheduledToBeEatenAt, weekFromNow),
+                ),
             )
             .orderBy(meals.scheduledToBeEatenAt);
 
@@ -40,7 +40,7 @@ export function registerListMeals(app: Hono) {
                 .where(eq(mealSteps.mealId, mealData.id));
 
             const completedSteps = allSteps.filter(
-                (step) => step.isStepCompleted
+                (step) => step.isStepCompleted,
             );
             const recipes = JSON.parse(mealData.recipes);
 
@@ -61,7 +61,7 @@ export function registerListMeals(app: Hono) {
                         allSteps.length > 0
                             ? Math.round(
                                   (completedSteps.length / allSteps.length) *
-                                      100
+                                      100,
                               )
                             : 0,
                 },
@@ -71,7 +71,7 @@ export function registerListMeals(app: Hono) {
                 canStartPrep: mealData.scheduledToBeEatenAt
                     ? new Date(
                           mealData.scheduledToBeEatenAt.getTime() -
-                              2 * 60 * 60 * 1000
+                              2 * 60 * 60 * 1000,
                       ).toISOString()
                     : // 2 hours before
                       null,
@@ -99,11 +99,11 @@ export function registerListMeals(app: Hono) {
                     .length,
                 totalCookingSteps: meals.reduce(
                     (sum: number, m: any) => sum + m.progress.total,
-                    0
+                    0,
                 ),
                 completedCookingSteps: meals.reduce(
                     (sum: number, m: any) => sum + m.progress.completed,
-                    0
+                    0,
                 ),
             }))
             .sort((a, b) => a.date.localeCompare(b.date));
@@ -114,11 +114,11 @@ export function registerListMeals(app: Hono) {
                 summary: {
                     totalMeals: upcomingMeals.length,
                     completedMeals: upcomingMeals.filter(
-                        (m) => m.hasMealBeenConsumed
+                        (m) => m.hasMealBeenConsumed,
                     ).length,
                     daysWithMeals: Object.keys(mealsByDay).length,
                 },
-            })
+            }),
         );
     });
 
@@ -142,8 +142,8 @@ export function registerListMeals(app: Hono) {
         return c.json(
             ApiResponse.success(
                 "Meals retrieved successfully",
-                mealsWithRecipes
-            )
+                mealsWithRecipes,
+            ),
         );
     });
 
@@ -158,7 +158,7 @@ export function registerListMeals(app: Hono) {
         if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Meal not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -189,8 +189,8 @@ export function registerListMeals(app: Hono) {
                 estimatedDurationMinutes: step.estimatedDurationMinutes,
                 assignedToDate: step.assignedToDate,
                 todoId: step.todoId,
-                ingredientsUsedInStep: step.ingredientsUsedInStep
-                    ? JSON.parse(step.ingredientsUsedInStep)
+                foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
+                    ? JSON.parse(step.foodItemUnitsUsedInStep)
                     : null,
             })),
             progress: {
@@ -199,7 +199,7 @@ export function registerListMeals(app: Hono) {
                 percentage:
                     steps.length > 0
                         ? Math.round(
-                              (completedSteps.length / steps.length) * 100
+                              (completedSteps.length / steps.length) * 100,
                           )
                         : 0,
             },
@@ -209,16 +209,16 @@ export function registerListMeals(app: Hono) {
             estimatedTimeRemaining: steps
                 .filter(
                     (step) =>
-                        !step.isStepCompleted && step.estimatedDurationMinutes
+                        !step.isStepCompleted && step.estimatedDurationMinutes,
                 )
                 .reduce(
                     (sum, step) => sum + (step.estimatedDurationMinutes || 0),
-                    0
+                    0,
                 ),
         };
 
         return c.json(
-            ApiResponse.success("Meal retrieved successfully", fullMeal)
+            ApiResponse.success("Meal retrieved successfully", fullMeal),
         );
     });
 }

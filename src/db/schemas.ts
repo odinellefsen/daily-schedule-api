@@ -1,5 +1,6 @@
 import {
     boolean,
+    decimal,
     integer,
     pgTable,
     text,
@@ -23,13 +24,11 @@ export const recipeSteps = pgTable("recipe_steps", {
     stepNumber: integer("step_number").notNull(),
 });
 
-export const recipeStepIngredients = pgTable("recipe_steps_ingredients", {
+export const recipeStepFoodItemUnits = pgTable("recipe_steps_food_item_units", {
     id: uuid("id").primaryKey(),
     recipeStepId: uuid("recipe_step_id").references(() => recipeSteps.id),
-    ingredientName: text("ingredient_name").notNull(),
-    quantity: integer("quantity").notNull(),
-    unit: text("unit").notNull(),
-    notes: text("notes"),
+    foodItemUnitId: uuid("food_item_unit_id").notNull(),
+    quantity: decimal("quantity", { scale: 3 }).notNull(),
 });
 
 export const recipeIngredients = pgTable("recipe_ingredients", {
@@ -73,7 +72,7 @@ export const mealSteps = pgTable("meal_steps", {
     estimatedDurationMinutes: integer("estimated_duration_minutes"),
     assignedToDate: text("assigned_to_date"), // YYYY-MM-DD format
     todoId: uuid("todo_id"),
-    ingredientsUsedInStep: text("ingredients_used_in_step"), // JSON array
+    foodItemUnitsUsedInStep: text("ingredients_used_in_step"), // JSON array
 });
 
 export const todos = pgTable("todos", {

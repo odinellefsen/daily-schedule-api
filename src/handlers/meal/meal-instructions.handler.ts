@@ -12,7 +12,7 @@ import { mealSteps } from "../../db/schemas";
 export async function handleMealInstructionsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof mealStepByStepInstructionsSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -29,8 +29,8 @@ export async function handleMealInstructionsCreated(
             estimatedDurationMinutes: step.estimatedDurationMinutes,
             assignedToDate: step.assignedToDate,
             todoId: step.todoId,
-            ingredientsUsedInStep: step.ingredientsUsedInStep
-                ? JSON.stringify(step.ingredientsUsedInStep)
+            foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
+                ? JSON.stringify(step.foodItemUnitsUsedInStep)
                 : null,
         });
     }
@@ -39,7 +39,7 @@ export async function handleMealInstructionsCreated(
 export async function handleMealInstructionsUpdated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof mealInstructionsUpdateSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -59,8 +59,8 @@ export async function handleMealInstructionsUpdated(
             estimatedDurationMinutes: step.estimatedDurationMinutes,
             assignedToDate: step.assignedToDate,
             todoId: step.todoId,
-            ingredientsUsedInStep: step.ingredientsUsedInStep
-                ? JSON.stringify(step.ingredientsUsedInStep)
+            foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
+                ? JSON.stringify(step.foodItemUnitsUsedInStep)
                 : null,
         });
     }
@@ -69,7 +69,7 @@ export async function handleMealInstructionsUpdated(
 export async function handleMealInstructionsArchived(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof mealInstructionsArchiveSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 

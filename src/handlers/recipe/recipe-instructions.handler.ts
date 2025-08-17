@@ -8,12 +8,16 @@ import type {
 } from "../../contracts/food/recipe";
 import type { recipeVersionSchema } from "../../contracts/food/recipe/recipe-version.contract";
 import { db } from "../../db";
-import { recipes, recipeStepIngredients, recipeSteps } from "../../db/schemas";
+import {
+    recipeStepFoodItemUnits,
+    recipeSteps,
+    recipes,
+} from "../../db/schemas";
 
 export async function handleRecipeInstructionsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof recipeInstructionsSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -26,16 +30,14 @@ export async function handleRecipeInstructionsCreated(
             stepNumber: step.stepNumber,
         });
 
-        // Insert ingredients for this step if they exist
-        if (step.ingredientsUsedInStep) {
-            for (const ingredient of step.ingredientsUsedInStep) {
-                await db.insert(recipeStepIngredients).values({
+        // Insert food item units for this step if they exist
+        if (step.foodItemUnitsUsedInStep) {
+            for (const foodItemUnit of step.foodItemUnitsUsedInStep) {
+                await db.insert(recipeStepFoodItemUnits).values({
                     id: crypto.randomUUID(),
                     recipeStepId: step.id,
-                    ingredientName: `${ingredient.foodItemId}:${ingredient.foodItemUnitId}`, // Simplified mapping
-                    quantity: Math.floor(ingredient.quantityOfFoodItemUnit),
-                    unit: "unit", // Simplified
-                    notes: null,
+                    foodItemUnitId: foodItemUnit.foodItemUnitId,
+                    quantity: foodItemUnit.quantityOfFoodItemUnit,
                 });
             }
         }
@@ -45,7 +47,7 @@ export async function handleRecipeInstructionsCreated(
 export async function handleRecipeInstructionsUpdated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof recipeInstructionsUpdateSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -57,8 +59,8 @@ export async function handleRecipeInstructionsUpdated(
 
     for (const step of existingSteps) {
         await db
-            .delete(recipeStepIngredients)
-            .where(eq(recipeStepIngredients.recipeStepId, step.id));
+            .delete(recipeStepFoodItemUnits)
+            .where(eq(recipeStepFoodItemUnits.recipeStepId, step.id));
     }
     await db
         .delete(recipeSteps)
@@ -74,15 +76,13 @@ export async function handleRecipeInstructionsUpdated(
         });
 
         // Insert ingredients for this step if they exist
-        if (step.ingredientsUsedInStep) {
-            for (const ingredient of step.ingredientsUsedInStep) {
-                await db.insert(recipeStepIngredients).values({
+        if (step.foodItemUnitsUsedInStep) {
+            for (const foodItemUnit of step.foodItemUnitsUsedInStep) {
+                await db.insert(recipeStepFoodItemUnits).values({
                     id: crypto.randomUUID(),
                     recipeStepId: step.id,
-                    ingredientName: `${ingredient.foodItemId}:${ingredient.foodItemUnitId}`, // Simplified mapping
-                    quantity: Math.floor(ingredient.quantityOfFoodItemUnit),
-                    unit: "unit", // Simplified
-                    notes: null,
+                    foodItemUnitIds: [foodItemUnit.foodItemUnitId],
+                    quantity: foodItemUnit.quantityOfFoodItemUnit,
                 });
             }
         }
@@ -92,7 +92,7 @@ export async function handleRecipeInstructionsUpdated(
 export async function handleRecipeInstructionsArchived(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof recipeInstructionsArchiveSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -104,8 +104,8 @@ export async function handleRecipeInstructionsArchived(
 
     for (const step of existingSteps) {
         await db
-            .delete(recipeStepIngredients)
-            .where(eq(recipeStepIngredients.recipeStepId, step.id));
+            .delete(recipeStepFoodItemUnits)
+            .where(eq(recipeStepFoodItemUnits.recipeStepId, step.id));
     }
 
     // Delete recipe steps
@@ -117,7 +117,7 @@ export async function handleRecipeInstructionsArchived(
 export async function handleRecipeInstructionsVersionUpdated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof recipeVersionSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 

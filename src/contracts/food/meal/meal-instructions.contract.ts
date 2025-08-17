@@ -16,7 +16,7 @@ export const mealStepByStepInstructionsSchema = z.object({
             estimatedDurationMinutes: z.number().int().positive().optional(),
             assignedToDate: z.string().date().optional(),
             todoId: z.string().uuid().optional(),
-            ingredientsUsedInStep: z
+            foodItemUnitsUsedInStep: z
                 .array(
                     z.object({
                         foodItemUnitId: z.string().uuid(),
@@ -24,25 +24,25 @@ export const mealStepByStepInstructionsSchema = z.object({
                         quantityOfFoodItemUnit: z
                             .number()
                             .positive(
-                                "Quantity used in this step must be greater than 0"
+                                "Quantity used in this step must be greater than 0",
                             )
                             .max(1_000_000, "Quantity is unreasonably large")
                             .refine((n) => Math.floor(n * 1000) === n * 1000, {
                                 message: "Max 3 decimal places allowed",
                             })
                             .default(1),
-                    })
+                    }),
                 )
                 .min(
                     1,
-                    "If ingredientsUsedInThisStep is NOT undefined, you must have at least one ingredient"
+                    "If ingredientsUsedInThisStep is NOT undefined, you must have at least one ingredient",
                 )
                 .max(
                     50,
-                    "The number of ingredients used in this step must be less than 50"
+                    "The number of ingredients used in this step must be less than 50",
                 )
                 .optional(),
-        })
+        }),
     ),
 });
 

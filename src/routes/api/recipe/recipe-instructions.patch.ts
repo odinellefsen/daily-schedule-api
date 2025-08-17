@@ -22,7 +22,7 @@ const updateRecipeInstructionsRequestSchema = z.object({
             z.object({
                 stepNumber: z.number().positive().int(),
                 stepInstruction: z.string().min(1).max(250),
-                ingredientsUsedInStep: z
+                foodItemUnitsUsedInStep: z
                     .array(
                         z.object({
                             foodItemUnitId: z.string().uuid(),
@@ -32,10 +32,10 @@ const updateRecipeInstructionsRequestSchema = z.object({
                                 .positive()
                                 .max(1_000_000)
                                 .default(1),
-                        })
+                        }),
                     )
                     .optional(),
-            })
+            }),
         )
         .min(1)
         .max(30),
@@ -52,9 +52,9 @@ export function registerPatchRecipeInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe instructions data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateRecipeInstructionsRequestBody =
@@ -64,14 +64,14 @@ export function registerPatchRecipeInstructions(app: Hono) {
         const recipeFromDb = await db.query.recipes.findFirst({
             where: eq(
                 recipes.id,
-                safeUpdateRecipeInstructionsRequestBody.recipeId
+                safeUpdateRecipeInstructionsRequestBody.recipeId,
             ),
         });
 
         if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Recipe not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -85,14 +85,14 @@ export function registerPatchRecipeInstructions(app: Hono) {
             .where(
                 eq(
                     recipeSteps.recipeId,
-                    safeUpdateRecipeInstructionsRequestBody.recipeId
-                )
+                    safeUpdateRecipeInstructionsRequestBody.recipeId,
+                ),
             );
 
         if (existingInstructions.length === 0) {
             return c.json(
                 ApiResponse.error("Recipe instructions not found"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -103,7 +103,7 @@ export function registerPatchRecipeInstructions(app: Hono) {
                 id: step.id,
                 stepNumber: step.stepNumber,
                 stepInstruction: step.instruction,
-                ingredientsUsedInStep: [], // Simplified - would need to fetch from recipeStepIngredients
+                foodItemUnitsUsedInStep: [], // Simplified - would need to fetch from recipeStepIngredients
             })),
         };
 
@@ -115,8 +115,8 @@ export function registerPatchRecipeInstructions(app: Hono) {
                         id: crypto.randomUUID(),
                         stepNumber: step.stepNumber,
                         stepInstruction: step.stepInstruction,
-                        ingredientsUsedInStep: step.ingredientsUsedInStep,
-                    })
+                        foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep,
+                    }),
                 ),
             oldValues: oldInstructions,
         };
@@ -127,9 +127,9 @@ export function registerPatchRecipeInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe instructions data",
-                    updateRecipeInstructionsEvent.error.errors
+                    updateRecipeInstructionsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateRecipeInstructionsEvent =
@@ -140,15 +140,15 @@ export function registerPatchRecipeInstructions(app: Hono) {
                 "recipe.v0/recipe-instructions.updated.v0",
                 {
                     data: safeUpdateRecipeInstructionsEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error(
                     "Failed to update recipe instructions",
-                    error
+                    error,
                 ),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
@@ -165,15 +165,15 @@ export function registerPatchRecipeInstructions(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update recipe version", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Recipe instructions updated successfully",
-                safeUpdateRecipeInstructionsEvent
-            )
+                safeUpdateRecipeInstructionsEvent,
+            ),
         );
     });
 }

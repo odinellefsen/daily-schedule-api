@@ -22,7 +22,7 @@ const updateMealInstructionsRequestSchema = z.object({
             estimatedDurationMinutes: z.number().int().positive().optional(),
             assignedToDate: z.string().date().optional(),
             todoId: z.string().uuid().optional(),
-        })
+        }),
     ),
 });
 
@@ -37,9 +37,9 @@ export function registerPatchMealInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal instructions data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateMealInstructionsRequestBody =
@@ -53,7 +53,7 @@ export function registerPatchMealInstructions(app: Hono) {
         if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Meal not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -64,14 +64,14 @@ export function registerPatchMealInstructions(app: Hono) {
             .where(
                 eq(
                     mealSteps.mealId,
-                    safeUpdateMealInstructionsRequestBody.mealId
-                )
+                    safeUpdateMealInstructionsRequestBody.mealId,
+                ),
             );
 
         if (existingInstructions.length === 0) {
             return c.json(
                 ApiResponse.error("Meal instructions not found"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -89,8 +89,8 @@ export function registerPatchMealInstructions(app: Hono) {
                     step.estimatedDurationMinutes || undefined,
                 assignedToDate: step.assignedToDate || undefined,
                 todoId: step.todoId || undefined,
-                ingredientsUsedInStep: step.ingredientsUsedInStep
-                    ? JSON.parse(step.ingredientsUsedInStep)
+                foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
+                    ? JSON.parse(step.foodItemUnitsUsedInStep)
                     : undefined,
             })),
         };
@@ -101,7 +101,7 @@ export function registerPatchMealInstructions(app: Hono) {
                 safeUpdateMealInstructionsRequestBody.stepByStepInstructions.map(
                     (step) => {
                         const existingStep = existingInstructions.find(
-                            (existing) => existing.id === step.id
+                            (existing) => existing.id === step.id,
                         );
                         return {
                             id: step.id,
@@ -115,9 +115,9 @@ export function registerPatchMealInstructions(app: Hono) {
                                 step.estimatedDurationMinutes,
                             assignedToDate: step.assignedToDate,
                             todoId: step.todoId,
-                            ingredientsUsedInStep: undefined,
+                            foodItemUnitsUsedInStep: undefined,
                         };
-                    }
+                    },
                 ),
             oldValues: oldInstructions,
         };
@@ -128,9 +128,9 @@ export function registerPatchMealInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal instructions data",
-                    updateMealInstructionsEvent.error.errors
+                    updateMealInstructionsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateMealInstructionsEvent =
@@ -141,20 +141,20 @@ export function registerPatchMealInstructions(app: Hono) {
                 "meal.v0/meal-instructions.updated.v0",
                 {
                     data: safeUpdateMealInstructionsEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update meal instructions", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Meal instructions updated successfully",
-                safeUpdateMealInstructionsEvent
-            )
+                safeUpdateMealInstructionsEvent,
+            ),
         );
     });
 }

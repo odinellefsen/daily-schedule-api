@@ -26,9 +26,9 @@ export function registerDeleteMealInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal instructions data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeDeleteMealInstructionsRequestBody =
@@ -42,7 +42,7 @@ export function registerDeleteMealInstructions(app: Hono) {
         if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Meal not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -53,14 +53,14 @@ export function registerDeleteMealInstructions(app: Hono) {
             .where(
                 eq(
                     mealSteps.mealId,
-                    safeDeleteMealInstructionsRequestBody.mealId
-                )
+                    safeDeleteMealInstructionsRequestBody.mealId,
+                ),
             );
 
         if (existingInstructions.length === 0) {
             return c.json(
                 ApiResponse.error("Meal instructions not found"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -77,8 +77,8 @@ export function registerDeleteMealInstructions(app: Hono) {
                     step.estimatedDurationMinutes || undefined,
                 assignedToDate: step.assignedToDate || undefined,
                 todoId: step.todoId || undefined,
-                ingredientsUsedInStep: step.ingredientsUsedInStep
-                    ? JSON.parse(step.ingredientsUsedInStep)
+                foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
+                    ? JSON.parse(step.foodItemUnitsUsedInStep)
                     : undefined,
             })),
             reasonForArchiving: "User requested deletion",
@@ -90,9 +90,9 @@ export function registerDeleteMealInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal instructions archived data",
-                    mealInstructionsArchivedEvent.error.errors
+                    mealInstructionsArchivedEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeMealInstructionsArchivedEvent =
@@ -103,20 +103,20 @@ export function registerDeleteMealInstructions(app: Hono) {
                 "meal.v0/meal-instructions.archived.v0",
                 {
                     data: safeMealInstructionsArchivedEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to archive meal instructions", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Meal instructions archived successfully",
-                safeMealInstructionsArchivedEvent
-            )
+                safeMealInstructionsArchivedEvent,
+            ),
         );
     });
 }

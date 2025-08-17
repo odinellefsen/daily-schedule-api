@@ -162,7 +162,7 @@ export function registerPatchMeal(app: Hono) {
                     estimatedDurationMinutes: undefined,
                     assignedToDate: undefined,
                     todoId: undefined,
-                    ingredientsUsedInStep: undefined,
+                    foodItemUnitsUsedInStep: undefined,
                 });
             }
         }
@@ -201,8 +201,8 @@ export function registerPatchMeal(app: Hono) {
                         step.estimatedDurationMinutes || undefined,
                     assignedToDate: step.assignedToDate || undefined,
                     todoId: step.todoId || undefined,
-                    ingredientsUsedInStep: step.ingredientsUsedInStep
-                        ? JSON.parse(step.ingredientsUsedInStep)
+                    foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
+                        ? JSON.parse(step.foodItemUnitsUsedInStep)
                         : undefined,
                 })),
             },

@@ -339,7 +339,7 @@ generates shopping list, flattens all steps into sequential order.
       "estimatedDurationMinutes": 10,
       "assignedToDate": null,  // Can be assigned to specific day
       "todoId": null,          // Set when dragged to todo list
-      "ingredientsUsedInStep": [
+      "foodItemUnitsUsedInStep": [
         {
           "foodItemId": "flour-uuid",
           "quantity": 2,
