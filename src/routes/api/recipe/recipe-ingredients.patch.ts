@@ -22,7 +22,7 @@ const updateRecipeIngredientsRequestSchema = z.object({
             z.object({
                 ingredientText: z.string().min(1).max(150),
                 sortOrder: z.number().positive().int(),
-            })
+            }),
         )
         .min(1)
         .max(50),
@@ -39,9 +39,9 @@ export function registerPatchRecipeIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe ingredients data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateRecipeIngredientsRequestBody =
@@ -51,14 +51,14 @@ export function registerPatchRecipeIngredients(app: Hono) {
         const recipeFromDb = await db.query.recipes.findFirst({
             where: eq(
                 recipes.id,
-                safeUpdateRecipeIngredientsRequestBody.recipeId
+                safeUpdateRecipeIngredientsRequestBody.recipeId,
             ),
         });
 
         if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Recipe not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -72,14 +72,14 @@ export function registerPatchRecipeIngredients(app: Hono) {
             .where(
                 eq(
                     recipeIngredients.recipeId,
-                    safeUpdateRecipeIngredientsRequestBody.recipeId
-                )
+                    safeUpdateRecipeIngredientsRequestBody.recipeId,
+                ),
             );
 
         if (existingIngredients.length === 0) {
             return c.json(
                 ApiResponse.error("Recipe ingredients not found"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -89,7 +89,6 @@ export function registerPatchRecipeIngredients(app: Hono) {
             ingredients: existingIngredients.map((ingredient) => ({
                 id: ingredient.id,
                 ingredientText: ingredient.ingredientText,
-                sortOrder: ingredient.sortOrder,
             })),
         };
 
@@ -100,7 +99,7 @@ export function registerPatchRecipeIngredients(app: Hono) {
                     id: crypto.randomUUID(),
                     ingredientText: ingredient.ingredientText,
                     sortOrder: ingredient.sortOrder,
-                })
+                }),
             ),
             oldValues: oldIngredients,
         };
@@ -111,9 +110,9 @@ export function registerPatchRecipeIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe ingredients data",
-                    updateRecipeIngredientsEvent.error.errors
+                    updateRecipeIngredientsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateRecipeIngredientsEvent =
@@ -124,12 +123,12 @@ export function registerPatchRecipeIngredients(app: Hono) {
                 "recipe.v0/recipe-ingredients.updated.v0",
                 {
                     data: safeUpdateRecipeIngredientsEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update recipe ingredients", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
@@ -146,15 +145,15 @@ export function registerPatchRecipeIngredients(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update recipe version", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Recipe ingredients updated successfully",
-                safeUpdateRecipeIngredientsEvent
-            )
+                safeUpdateRecipeIngredientsEvent,
+            ),
         );
     });
 }

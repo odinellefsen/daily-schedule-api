@@ -26,9 +26,9 @@ export function registerDeleteRecipeIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe ingredients data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeDeleteRecipeIngredientsRequestBody =
@@ -38,14 +38,14 @@ export function registerDeleteRecipeIngredients(app: Hono) {
         const recipeFromDb = await db.query.recipes.findFirst({
             where: eq(
                 recipes.id,
-                safeDeleteRecipeIngredientsRequestBody.recipeId
+                safeDeleteRecipeIngredientsRequestBody.recipeId,
             ),
         });
 
         if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Recipe not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -56,14 +56,14 @@ export function registerDeleteRecipeIngredients(app: Hono) {
             .where(
                 eq(
                     recipeIngredients.recipeId,
-                    safeDeleteRecipeIngredientsRequestBody.recipeId
-                )
+                    safeDeleteRecipeIngredientsRequestBody.recipeId,
+                ),
             );
 
         if (existingIngredients.length === 0) {
             return c.json(
                 ApiResponse.error("Recipe ingredients not found"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -72,7 +72,6 @@ export function registerDeleteRecipeIngredients(app: Hono) {
             ingredients: existingIngredients.map((ingredient) => ({
                 id: ingredient.id,
                 ingredientText: ingredient.ingredientText,
-                sortOrder: ingredient.sortOrder,
             })),
             reasonForArchiving: "User requested deletion",
         };
@@ -83,9 +82,9 @@ export function registerDeleteRecipeIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe ingredients archived data",
-                    recipeIngredientsArchivedEvent.error.errors
+                    recipeIngredientsArchivedEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeRecipeIngredientsArchivedEvent =
@@ -96,23 +95,23 @@ export function registerDeleteRecipeIngredients(app: Hono) {
                 "recipe.v0/recipe-ingredients.archived.v0",
                 {
                     data: safeRecipeIngredientsArchivedEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error(
                     "Failed to archive recipe ingredients",
-                    error
+                    error,
                 ),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Recipe ingredients archived successfully",
-                safeRecipeIngredientsArchivedEvent
-            )
+                safeRecipeIngredientsArchivedEvent,
+            ),
         );
     });
 }

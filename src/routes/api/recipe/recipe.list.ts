@@ -43,14 +43,14 @@ export function registerListRecipes(app: Hono) {
                             ? "complete"
                             : "incomplete",
                 };
-            })
+            }),
         );
 
         return c.json(
             ApiResponse.success(
                 "Recipes retrieved successfully",
-                recipesWithMetadata
-            )
+                recipesWithMetadata,
+            ),
         );
     });
 
@@ -65,7 +65,7 @@ export function registerListRecipes(app: Hono) {
         if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Recipe not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -80,8 +80,7 @@ export function registerListRecipes(app: Hono) {
         const ingredients = await db
             .select()
             .from(recipeIngredients)
-            .where(eq(recipeIngredients.recipeId, recipeId))
-            .orderBy(recipeIngredients.sortOrder);
+            .where(eq(recipeIngredients.recipeId, recipeId));
 
         const fullRecipe = {
             id: recipeFromDb.id,
@@ -98,7 +97,6 @@ export function registerListRecipes(app: Hono) {
             ingredients: ingredients.map((ingredient) => ({
                 id: ingredient.id,
                 ingredientText: ingredient.ingredientText,
-                sortOrder: ingredient.sortOrder,
             })),
             metadata: {
                 stepCount: steps.length,
@@ -108,7 +106,7 @@ export function registerListRecipes(app: Hono) {
         };
 
         return c.json(
-            ApiResponse.success("Recipe retrieved successfully", fullRecipe)
+            ApiResponse.success("Recipe retrieved successfully", fullRecipe),
         );
     });
 
@@ -133,7 +131,7 @@ export function registerListRecipes(app: Hono) {
                     (recipe.generalDescriptionOfTheRecipe &&
                         recipe.generalDescriptionOfTheRecipe
                             .toLowerCase()
-                            .includes(query.toLowerCase()))
+                            .includes(query.toLowerCase())),
             );
         }
 
@@ -142,12 +140,12 @@ export function registerListRecipes(app: Hono) {
             userRecipes = userRecipes.filter(
                 (recipe) =>
                     recipe.whenIsItConsumed &&
-                    recipe.whenIsItConsumed.includes(mealTiming)
+                    recipe.whenIsItConsumed.includes(mealTiming),
             );
         }
 
         return c.json(
-            ApiResponse.success("Recipe search results", userRecipes)
+            ApiResponse.success("Recipe search results", userRecipes),
         );
     });
 }

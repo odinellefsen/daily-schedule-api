@@ -38,7 +38,6 @@ export const recipeIngredients = pgTable("recipe_ingredients", {
         .references(() => recipes.id)
         .notNull(),
     ingredientText: text("ingredient_text").notNull(),
-    sortOrder: integer("sort_order").notNull(),
 });
 
 export const meals = pgTable("meals", {

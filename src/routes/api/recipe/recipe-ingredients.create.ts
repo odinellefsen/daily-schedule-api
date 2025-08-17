@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, max } from "drizzle-orm";
 import type { Hono } from "hono";
 import z from "zod";
 import {
@@ -18,7 +18,7 @@ const createRecipeIngredientsRequestSchema = z.object({
             z.object({
                 ingredientText: z.string().min(1).max(150),
                 sortOrder: z.number().positive().int(),
-            })
+            }),
         )
         .min(1)
         .max(50),
@@ -35,9 +35,9 @@ export function registerCreateRecipeIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe ingredients data",
-                    parsedJsonBody.error.errors
+                    parsedJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateRecipeIngredientsJsonBody = parsedJsonBody.data;
@@ -50,25 +50,7 @@ export function registerCreateRecipeIngredients(app: Hono) {
         if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Recipe not found or access denied"),
-                StatusCodes.NOT_FOUND
-            );
-        }
-
-        // Check if ingredients already exist
-        const existingIngredients = await db
-            .select()
-            .from(recipeIngredients)
-            .where(
-                eq(
-                    recipeIngredients.recipeId,
-                    safeCreateRecipeIngredientsJsonBody.recipeId
-                )
-            );
-
-        if (existingIngredients.length > 0) {
-            return c.json(
-                ApiResponse.error("Recipe ingredients already exist"),
-                StatusCodes.CONFLICT
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -78,8 +60,7 @@ export function registerCreateRecipeIngredients(app: Hono) {
                 (ingredient) => ({
                     id: crypto.randomUUID(),
                     ingredientText: ingredient.ingredientText,
-                    sortOrder: ingredient.sortOrder,
-                })
+                }),
             ),
         };
 
@@ -89,9 +70,9 @@ export function registerCreateRecipeIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe ingredients data",
-                    createRecipeIngredientsEvent.error.errors
+                    createRecipeIngredientsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateRecipeIngredientsEvent =
@@ -102,20 +83,20 @@ export function registerCreateRecipeIngredients(app: Hono) {
                 "recipe.v0/recipe-ingredients.created.v0",
                 {
                     data: safeCreateRecipeIngredientsEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to create recipe ingredients", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Recipe ingredients created successfully",
-                safeCreateRecipeIngredientsEvent
-            )
+                safeCreateRecipeIngredientsEvent,
+            ),
         );
     });
 }
