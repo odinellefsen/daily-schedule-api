@@ -1,6 +1,7 @@
 # Daily Scheduler API - Client Integration Guide
 
-> **"Daily schedule planner to lessen decision fatigue and streamline your day"**
+> **"Daily schedule planner to lessen decision fatigue and streamline your
+> day"**
 
 ## 📋 Table of Contents
 
@@ -18,33 +19,44 @@
 ## 🎯 Application Philosophy
 
 ### The Core Problem
-**Decision fatigue** - The mental exhaustion from making countless daily decisions about what to cook, when to cook it, what ingredients to buy, and how to organize meal preparation.
+
+**Decision fatigue** - The mental exhaustion from making countless daily
+decisions about what to cook, when to cook it, what ingredients to buy, and how
+to organize meal preparation.
 
 ### The Solution
+
 A **two-tier application** designed to eliminate daily decision-making:
 
 #### 🎯 **Landing Page (Execution Mode)**
+
 - **Purpose:** Zero-friction todo execution
 - **Experience:** "Just tell me what to do right now"
 - **Design:** Dead simple list - complete tasks, no decisions needed
 - **Usage:** Monday-Friday morning routine
 
-#### ⚙️ **Configuration Area (Planning Mode)** 
+#### ⚙️ **Configuration Area (Planning Mode)**
+
 - **Purpose:** Deep meal planning and recipe management
 - **Experience:** "Set up everything so the landing page is perfect"
 - **Design:** Rich interfaces for meal planning, recipe building, food tracking
 - **Usage:** Sunday planning session (20 minutes weekly)
 
 ### Key Philosophy
-> **"Spend 20 minutes on Sunday planning, then have zero decisions Monday-Friday"**
 
-The complexity of meal planning, recipe management, and nutritional tracking happens in the configuration area so that the landing page can be absolutely frictionless.
+> **"Spend 20 minutes on Sunday planning, then have zero decisions
+> Monday-Friday"**
+
+The complexity of meal planning, recipe management, and nutritional tracking
+happens in the configuration area so that the landing page can be absolutely
+frictionless.
 
 ---
 
 ## 🔄 User Experience Flow
 
 ### Weekly Cycle
+
 ```
 Sunday (Planning):
 - Review upcoming week in meal planner
@@ -62,8 +74,11 @@ Monday-Friday (Execution):
 ```
 
 ### The Magic
-**Complex meal preparation becomes simple, time-ordered tasks.** Instead of "make pizza tonight," you get:
-1. 2:00pm - Shop for ingredients 
+
+**Complex meal preparation becomes simple, time-ordered tasks.** Instead of
+"make pizza tonight," you get:
+
+1. 2:00pm - Shop for ingredients
 2. 4:00pm - Mix pizza dough
 3. 5:00pm - Prepare pizza sauce
 4. 6:00pm - Preheat oven
@@ -76,12 +91,14 @@ Monday-Friday (Execution):
 ### Two-Tier API Design
 
 #### **Landing Page APIs** (Simple & Fast)
+
 - Designed for immediate consumption
 - Minimal data, maximum actionability
 - Time-ordered, priority-aware
 - Mobile-optimized responses
 
 #### **Configuration APIs** (Rich & Detailed)
+
 - Designed for deep management
 - Complete datasets with metadata
 - Search, filtering, relationships
@@ -89,27 +106,35 @@ Monday-Friday (Execution):
 
 ### Core Domains
 
-#### 🥘 **Food Items** 
+#### 🥘 **Food Items**
+
 Nutritional building blocks with progressive accuracy
+
 - Create food database (apples, flour, etc.)
 - Add nutritional units (whole apple = 95 calories)
 - Search and manage food library
 
 #### 📜 **Recipes**
+
 Template instructions with versioning
-- Create step-by-step cooking instructions  
+
+- Create step-by-step cooking instructions
 - Manage ingredient lists
 - Version tracking for historical integrity
 
-#### 🍽️ **Meals** 
+#### 🍽️ **Meals**
+
 Recipe instances for specific dates
+
 - Combine multiple recipes into planned meals
 - Generate shopping lists and cooking timelines
 - Track preparation progress
 
 #### ✅ **Todos**
+
 Actionable tasks (standalone or meal-related)
-- Simple tasks ("take out trash") 
+
+- Simple tasks ("take out trash")
 - Meal-derived tasks ("mix pizza dough")
 - Time-based scheduling and completion tracking
 
@@ -120,6 +145,7 @@ Actionable tasks (standalone or meal-related)
 ### Primary Endpoint: Today's Todo Feed
 
 #### `GET /api/todo/today`
+
 **Purpose:** The main landing page feed - shows exactly what to do right now
 
 ```typescript
@@ -164,7 +190,9 @@ Actionable tasks (standalone or meal-related)
 ```
 
 **UI Implementation:**
-- Sort by urgency: overdue (red) → now (green) → upcoming (yellow) → later (gray)
+
+- Sort by urgency: overdue (red) → now (green) → upcoming (yellow) → later
+  (gray)
 - Show meal context as badge: "Step 1 of Sunday Pizza"
 - Disable actions for `canStartNow: false`
 - Simple complete/remove buttons
@@ -172,6 +200,7 @@ Actionable tasks (standalone or meal-related)
 ### Todo Actions
 
 #### `PATCH /api/todo`
+
 **Purpose:** Mark todos complete or update scheduling
 
 ```typescript
@@ -190,6 +219,7 @@ Actionable tasks (standalone or meal-related)
 ```
 
 #### `DELETE /api/todo`
+
 **Purpose:** Remove todos
 
 ```typescript
@@ -206,7 +236,9 @@ Actionable tasks (standalone or meal-related)
 ### Meal Planning (Core Workflow)
 
 #### `GET /api/meal/week`
-**Purpose:** Weekly meal planning interface - the heart of the configuration area
+
+**Purpose:** Weekly meal planning interface - the heart of the configuration
+area
 
 ```typescript
 // Response
@@ -250,12 +282,14 @@ Actionable tasks (standalone or meal-related)
 ```
 
 **UI Implementation:**
+
 - Calendar view with meal cards
 - Progress bars for cooking status
 - Drag-and-drop for rescheduling
 - "Start Prep" buttons based on `canStartPrep`
 
-#### `POST /api/meal` 
+#### `POST /api/meal`
+
 **Purpose:** Create new meal plan - this generates the entire cooking workflow
 
 ```typescript
@@ -281,9 +315,11 @@ Actionable tasks (standalone or meal-related)
 }
 ```
 
-**What Happens:** System creates complete cooking timeline from recipes, generates shopping list, flattens all steps into sequential order.
+**What Happens:** System creates complete cooking timeline from recipes,
+generates shopping list, flattens all steps into sequential order.
 
 #### `GET /api/meal/{id}`
+
 **Purpose:** Detailed meal view for step management
 
 ```typescript
@@ -324,6 +360,7 @@ Actionable tasks (standalone or meal-related)
 ```
 
 **UI Implementation:**
+
 - Step-by-step checklist
 - Drag steps to calendar/todo list
 - Progress visualization
@@ -332,6 +369,7 @@ Actionable tasks (standalone or meal-related)
 ### Recipe Management
 
 #### `GET /api/recipe`
+
 **Purpose:** Recipe library management
 
 ```typescript
@@ -347,12 +385,13 @@ Actionable tasks (standalone or meal-related)
     "ingredientCount": 4,
     "hasSteps": true,
     "hasIngredients": true,
-    "completeness": "complete"  // "complete" | "incomplete"
-  }
-]
+    "completeness": "complete", // "complete" | "incomplete"
+  },
+];
 ```
 
 #### `GET /api/recipe/{id}`
+
 **Purpose:** Full recipe details for editing
 
 ```typescript
@@ -374,7 +413,6 @@ Actionable tasks (standalone or meal-related)
     {
       "id": "ingredient-uuid",
       "ingredientText": "2 cups all-purpose flour",
-      "sortOrder": 1
     }
   ],
   "metadata": {
@@ -386,6 +424,7 @@ Actionable tasks (standalone or meal-related)
 ```
 
 #### `POST /api/recipe`
+
 **Purpose:** Create new recipe template
 
 ```typescript
@@ -398,6 +437,7 @@ Actionable tasks (standalone or meal-related)
 ```
 
 #### `POST /api/recipe/instructions`
+
 **Purpose:** Add cooking steps to recipe
 
 ```typescript
@@ -420,6 +460,7 @@ Actionable tasks (standalone or meal-related)
 ```
 
 #### `POST /api/recipe/ingredients`
+
 **Purpose:** Add ingredient list to recipe
 
 ```typescript
@@ -429,11 +470,9 @@ Actionable tasks (standalone or meal-related)
   "ingredients": [
     {
       "ingredientText": "2 cups all-purpose flour",
-      "sortOrder": 1
     },
     {
       "ingredientText": "1 tsp salt",
-      "sortOrder": 2
     }
   ]
 }
@@ -442,6 +481,7 @@ Actionable tasks (standalone or meal-related)
 ### Food Database Management
 
 #### `GET /api/food-item`
+
 **Purpose:** Manage nutritional food database
 
 ```typescript
@@ -452,12 +492,13 @@ Actionable tasks (standalone or meal-related)
     "name": "Medium Sized Apple",
     "categoryHierarchy": ["Fruits", "Tree Fruits"],
     "unitCount": 3,
-    "hasUnits": true
-  }
-]
+    "hasUnits": true,
+  },
+];
 ```
 
 #### `GET /api/food-item/{id}/units`
+
 **Purpose:** Nutritional units for specific food
 
 ```typescript
@@ -471,18 +512,19 @@ Actionable tasks (standalone or meal-related)
     "calories": 95,
     "proteinInGrams": 0,
     "carbohydratesInGrams": 25,
-    "fatInGrams": 0
+    "fatInGrams": 0,
   },
   {
-    "id": "unit-uuid2", 
+    "id": "unit-uuid2",
     "unitOfMeasurement": "slice",
-    "calories": 12
+    "calories": 12,
     // ... more nutrition data
-  }
-]
+  },
+];
 ```
 
 #### `POST /api/food-item`
+
 **Purpose:** Add new food to database
 
 ```typescript
@@ -496,6 +538,7 @@ Actionable tasks (standalone or meal-related)
 ### Todo Management
 
 #### `GET /api/todo`
+
 **Purpose:** Full todo management (configuration area)
 
 ```typescript
@@ -512,15 +555,16 @@ Actionable tasks (standalone or meal-related)
           "mealStepId": "step-uuid",
           "mealId": "meal-uuid",
           "recipeId": "recipe-uuid",
-          "stepNumber": 1
-        }
-      }
-    ]
-  }
-]
+          "stepNumber": 1,
+        },
+      },
+    ],
+  },
+];
 ```
 
 #### `POST /api/todo`
+
 **Purpose:** Create todos (standalone or from meal steps)
 
 ```typescript
@@ -609,7 +653,7 @@ GET /api/todo/today
 
 ```typescript
 // Check cooking progress
-GET /api/meal/pizza-meal-uuid
+GET / api / meal / pizza - meal - uuid;
 // Shows: Progress 3/8 complete (37%), next step: "Preheat oven"
 
 // Steps completed automatically sync when todos marked done
@@ -642,14 +686,15 @@ POST /api/recipe/instructions {
 POST /api/recipe/ingredients {
   recipeId: "new-recipe-uuid",
   ingredients: [
-    { ingredientText: "2 cups all-purpose flour", sortOrder: 1 },
-    { ingredientText: "1 tsp salt", sortOrder: 2 },
-    { ingredientText: "1 cup warm water", sortOrder: 3 }
+    { ingredientText: "2 cups all-purpose flour" },
+    { ingredientText: "1 tsp salt" },
+    { ingredientText: "1 cup warm water" }
   ]
 }
 ```
 
-**Result:** Recipe ready for meal planning, will generate proper cooking timeline
+**Result:** Recipe ready for meal planning, will generate proper cooking
+timeline
 
 ---
 
@@ -665,26 +710,30 @@ All API endpoints require authentication:
 }
 ```
 
-User data is completely isolated - each user only sees their own meals, recipes, todos, and food items.
+User data is completely isolated - each user only sees their own meals, recipes,
+todos, and food items.
 
 ---
 
 ## 📚 API Reference Summary
 
 ### Landing Page (Execution Mode)
+
 - `GET /api/todo/today` - Main todo feed
-- `PATCH /api/todo` - Complete/reschedule todos  
+- `PATCH /api/todo` - Complete/reschedule todos
 - `DELETE /api/todo` - Remove todos
 
 ### Configuration (Planning Mode)
 
 **Meal Planning:**
+
 - `GET /api/meal/week` - Weekly meal calendar
 - `GET /api/meal/{id}` - Detailed meal view
 - `POST /api/meal` - Create meal plan
-- `PATCH /api/meal` - Modify meal  
+- `PATCH /api/meal` - Modify meal
 
 **Recipe Management:**
+
 - `GET /api/recipe` - Recipe library
 - `GET /api/recipe/{id}` - Recipe details
 - `POST /api/recipe` - Create recipe
@@ -692,10 +741,12 @@ User data is completely isolated - each user only sees their own meals, recipes,
 - `POST /api/recipe/ingredients` - Add ingredient list
 
 **Todo Management:**
+
 - `GET /api/todo` - All todos with relations
 - `POST /api/todo` - Create standalone or meal-related todos
 
 **Food Database:**
+
 - `GET /api/food-item` - Food library
 - `GET /api/food-item/{id}/units` - Nutritional units
 - `POST /api/food-item` - Add food item
@@ -706,18 +757,21 @@ User data is completely isolated - each user only sees their own meals, recipes,
 ## 🎯 Frontend Implementation Tips
 
 ### Landing Page
+
 - **Keep it simple:** Large buttons, clear urgency indicators
 - **Real-time feel:** Optimistic updates, immediate feedback
 - **Mobile-first:** Thumb-friendly tap targets
 - **Minimal cognitive load:** No decisions, just "do this next"
 
-### Configuration Area  
+### Configuration Area
+
 - **Progressive disclosure:** Advanced features hidden until needed
 - **Drag-and-drop:** Steps to calendar, recipes to meals
 - **Rich feedback:** Progress bars, completion states, error handling
 - **Desktop-optimized:** Multiple panels, detailed forms
 
 ### Key Integrations
+
 - **Cross-domain updates:** Todo completion updates meal progress
 - **Smart scheduling:** Suggest prep times based on meal timing
 - **Contextual actions:** "Add to todo" buttons on meal steps
@@ -725,4 +779,5 @@ User data is completely isolated - each user only sees their own meals, recipes,
 
 ---
 
-**Built with ❤️ to eliminate daily decision fatigue through intelligent meal planning.**
+**Built with ❤️ to eliminate daily decision fatigue through intelligent meal
+planning.**

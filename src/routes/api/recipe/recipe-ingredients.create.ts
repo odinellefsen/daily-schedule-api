@@ -1,4 +1,4 @@
-import { eq, max } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import z from "zod";
 import {
@@ -6,7 +6,7 @@ import {
     recipeIngredientsSchema,
 } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
-import { recipeIngredients, recipes } from "../../../db/schemas";
+import { recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -17,7 +17,6 @@ const createRecipeIngredientsRequestSchema = z.object({
         .array(
             z.object({
                 ingredientText: z.string().min(1).max(150),
-                sortOrder: z.number().positive().int(),
             }),
         )
         .min(1)

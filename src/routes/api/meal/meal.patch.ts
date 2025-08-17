@@ -169,7 +169,6 @@ export function registerPatchMeal(app: Hono) {
 
         // Generate new ingredients from updated recipe list
         const allMealIngredients = [];
-        const globalSortOrder = 1;
 
         for (const recipeInstance of recipeInstances) {
             const ingredients = await db

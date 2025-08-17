@@ -128,7 +128,6 @@ export function registerCreateMeal(app: Hono) {
 
         // Fetch and flatten recipe ingredients for snapshot
         const allMealIngredients = [];
-        let globalSortOrder = 1;
 
         for (const recipeInstance of recipeInstances) {
             const ingredients = await db
@@ -141,7 +140,6 @@ export function registerCreateMeal(app: Hono) {
                     id: crypto.randomUUID(),
                     recipeId: recipeInstance.recipeId,
                     ingredientText: ingredient.ingredientText,
-                    sortOrder: globalSortOrder++,
                 });
             }
         }

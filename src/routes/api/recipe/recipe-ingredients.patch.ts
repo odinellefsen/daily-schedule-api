@@ -21,7 +21,6 @@ const updateRecipeIngredientsRequestSchema = z.object({
         .array(
             z.object({
                 ingredientText: z.string().min(1).max(150),
-                sortOrder: z.number().positive().int(),
             }),
         )
         .min(1)
@@ -98,7 +97,6 @@ export function registerPatchRecipeIngredients(app: Hono) {
                 (ingredient) => ({
                     id: crypto.randomUUID(),
                     ingredientText: ingredient.ingredientText,
-                    sortOrder: ingredient.sortOrder,
                 }),
             ),
             oldValues: oldIngredients,

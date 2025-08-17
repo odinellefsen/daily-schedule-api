@@ -6,7 +6,7 @@ import {
     mealIngredientsUpdateSchema,
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
-import { mealIngredients, meals } from "../../../db/schemas";
+import { meals } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -18,8 +18,7 @@ const updateMealIngredientsRequestSchema = z.object({
             z.object({
                 id: z.string().uuid(),
                 ingredientText: z.string().min(1).max(150),
-                sortOrder: z.number().positive().int(),
-            })
+            }),
         )
         .min(1)
         .max(100),
@@ -36,9 +35,9 @@ export function registerPatchMealIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal ingredients data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateMealIngredientsRequestBody = parsedRequestJsonBody.data;
@@ -51,7 +50,7 @@ export function registerPatchMealIngredients(app: Hono) {
         if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Meal not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -69,8 +68,7 @@ export function registerPatchMealIngredients(app: Hono) {
                     id: ingredient.id,
                     recipeId: "", // Would need to preserve from existing data
                     ingredientText: ingredient.ingredientText,
-                    sortOrder: ingredient.sortOrder,
-                })
+                }),
             ),
             oldValues: oldIngredients,
         };
@@ -81,9 +79,9 @@ export function registerPatchMealIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal ingredients data",
-                    updateMealIngredientsEvent.error.errors
+                    updateMealIngredientsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateMealIngredientsEvent = updateMealIngredientsEvent.data;
@@ -93,20 +91,20 @@ export function registerPatchMealIngredients(app: Hono) {
                 "meal.v0/meal-ingredients.updated.v0",
                 {
                     data: safeUpdateMealIngredientsEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update meal ingredients", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Meal ingredients updated successfully",
-                safeUpdateMealIngredientsEvent
-            )
+                safeUpdateMealIngredientsEvent,
+            ),
         );
     });
 }

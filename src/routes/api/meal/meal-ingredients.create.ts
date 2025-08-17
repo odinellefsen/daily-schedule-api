@@ -48,7 +48,6 @@ export function registerCreateMealIngredients(app: Hono) {
         // Generate meal ingredients from recipe instances
         const recipes = JSON.parse(mealFromDb.recipes);
         const allIngredients = [];
-        let globalSortOrder = 1;
 
         for (const recipeInstance of recipes) {
             // Get recipe ingredients for this recipe
@@ -62,7 +61,6 @@ export function registerCreateMealIngredients(app: Hono) {
                     id: crypto.randomUUID(),
                     recipeId: recipeInstance.recipeId,
                     ingredientText: ingredient.ingredientText,
-                    sortOrder: globalSortOrder++,
                 });
             }
         }
