@@ -12,7 +12,7 @@ import { mealIngredients } from "../../db/schemas";
 export async function handleMealIngredientsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof mealIngredientsSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -23,7 +23,6 @@ export async function handleMealIngredientsCreated(
             mealId: payload.mealId,
             recipeId: ingredient.recipeId,
             ingredientText: ingredient.ingredientText,
-            sortOrder: ingredient.sortOrder,
         });
     }
 }
@@ -31,7 +30,7 @@ export async function handleMealIngredientsCreated(
 export async function handleMealIngredientsUpdated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof mealIngredientsUpdateSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -47,7 +46,6 @@ export async function handleMealIngredientsUpdated(
             mealId: payload.mealId,
             recipeId: ingredient.recipeId,
             ingredientText: ingredient.ingredientText,
-            sortOrder: ingredient.sortOrder,
         });
     }
 }
@@ -55,7 +53,7 @@ export async function handleMealIngredientsUpdated(
 export async function handleMealIngredientsArchived(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof mealIngredientsArchiveSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 

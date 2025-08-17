@@ -32,7 +32,7 @@ const updateMealRequestSchema = z.object({
         .array(
             z.object({
                 recipeId: z.string().uuid(),
-            })
+            }),
         )
         .min(1)
         .max(20),
@@ -49,9 +49,9 @@ export function registerPatchMeal(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateMealRequestBody = parsedRequestJsonBody.data;
@@ -59,13 +59,13 @@ export function registerPatchMeal(app: Hono) {
         const mealFromDb = await db.query.meals.findFirst({
             where: and(
                 eq(meals.mealName, safeUpdateMealRequestBody.mealName),
-                eq(meals.userId, safeUserId)
+                eq(meals.userId, safeUserId),
             ),
         });
         if (!mealFromDb) {
             return c.json(
                 ApiResponse.error("Meal not found"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -79,9 +79,9 @@ export function registerPatchMeal(app: Hono) {
             if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
                 return c.json(
                     ApiResponse.error(
-                        `Recipe ${recipeRef.recipeId} not found or access denied`
+                        `Recipe ${recipeRef.recipeId} not found or access denied`,
                     ),
-                    StatusCodes.NOT_FOUND
+                    StatusCodes.NOT_FOUND,
                 );
             }
 
@@ -121,9 +121,9 @@ export function registerPatchMeal(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal data",
-                    updateMealEvent.error.errors
+                    updateMealEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateMealEvent = updateMealEvent.data;
@@ -138,8 +138,7 @@ export function registerPatchMeal(app: Hono) {
         const existingMealIngredients = await db
             .select()
             .from(mealIngredients)
-            .where(eq(mealIngredients.mealId, mealFromDb.id))
-            .orderBy(mealIngredients.sortOrder);
+            .where(eq(mealIngredients.mealId, mealFromDb.id));
 
         // Generate new instructions from updated recipe list
         const allMealSteps = [];
@@ -170,21 +169,19 @@ export function registerPatchMeal(app: Hono) {
 
         // Generate new ingredients from updated recipe list
         const allMealIngredients = [];
-        let globalSortOrder = 1;
+        const globalSortOrder = 1;
 
         for (const recipeInstance of recipeInstances) {
             const ingredients = await db
                 .select()
                 .from(recipeIngredients)
-                .where(eq(recipeIngredients.recipeId, recipeInstance.recipeId))
-                .orderBy(recipeIngredients.sortOrder);
+                .where(eq(recipeIngredients.recipeId, recipeInstance.recipeId));
 
             for (const ingredient of ingredients) {
                 allMealIngredients.push({
                     id: crypto.randomUUID(),
                     recipeId: recipeInstance.recipeId,
                     ingredientText: ingredient.ingredientText,
-                    sortOrder: globalSortOrder++,
                 });
             }
         }
@@ -221,26 +218,25 @@ export function registerPatchMeal(app: Hono) {
                     id: ingredient.id,
                     recipeId: ingredient.recipeId,
                     ingredientText: ingredient.ingredientText,
-                    sortOrder: ingredient.sortOrder,
                 })),
             },
         };
 
         // Validate the events
         const instructionsUpdateEvent = mealInstructionsUpdateSchema.safeParse(
-            updatedMealInstructions
+            updatedMealInstructions,
         );
         const ingredientsUpdateEvent = mealIngredientsUpdateSchema.safeParse(
-            updatedMealIngredients
+            updatedMealIngredients,
         );
 
         if (!instructionsUpdateEvent.success) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal instructions data",
-                    instructionsUpdateEvent.error.errors
+                    instructionsUpdateEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
 
@@ -248,9 +244,9 @@ export function registerPatchMeal(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal ingredients data",
-                    ingredientsUpdateEvent.error.errors
+                    ingredientsUpdateEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
 
@@ -264,19 +260,19 @@ export function registerPatchMeal(app: Hono) {
                 "meal.v0/meal-instructions.updated.v0",
                 {
                     data: instructionsUpdateEvent.data,
-                }
+                },
             );
 
             await FlowcorePathways.write(
                 "meal.v0/meal-ingredients.updated.v0",
                 {
                     data: ingredientsUpdateEvent.data,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update meal", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
@@ -285,7 +281,7 @@ export function registerPatchMeal(app: Hono) {
                 meal: safeUpdateMealEvent,
                 instructions: instructionsUpdateEvent.data,
                 ingredients: ingredientsUpdateEvent.data,
-            })
+            }),
         );
     });
 }

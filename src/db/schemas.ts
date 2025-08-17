@@ -58,7 +58,6 @@ export const mealIngredients = pgTable("meal_ingredients", {
         .references(() => meals.id, { onDelete: "cascade" }),
     recipeId: uuid("recipe_id").notNull(),
     ingredientText: text("ingredient_text").notNull(),
-    sortOrder: integer("sort_order").notNull(),
 });
 
 export const mealSteps = pgTable("meal_steps", {

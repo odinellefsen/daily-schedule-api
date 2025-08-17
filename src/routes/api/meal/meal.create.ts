@@ -25,7 +25,7 @@ const createMealRequestSchema = z.object({
         .array(
             z.object({
                 recipeId: z.string().uuid(),
-            })
+            }),
         )
         .min(1)
         .max(20),
@@ -41,9 +41,9 @@ export function registerCreateMeal(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal data",
-                    parsedJsonBody.error.errors
+                    parsedJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateMealJsonBody = parsedJsonBody.data;
@@ -58,9 +58,9 @@ export function registerCreateMeal(app: Hono) {
             if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
                 return c.json(
                     ApiResponse.error(
-                        `Recipe ${recipeRef.recipeId} not found or access denied`
+                        `Recipe ${recipeRef.recipeId} not found or access denied`,
                     ),
-                    StatusCodes.NOT_FOUND
+                    StatusCodes.NOT_FOUND,
                 );
             }
 
@@ -87,9 +87,9 @@ export function registerCreateMeal(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal data",
-                    createMealEvent.error.errors
+                    createMealEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateMealEvent = createMealEvent.data;
@@ -134,8 +134,7 @@ export function registerCreateMeal(app: Hono) {
             const ingredients = await db
                 .select()
                 .from(recipeIngredients)
-                .where(eq(recipeIngredients.recipeId, recipeInstance.recipeId))
-                .orderBy(recipeIngredients.sortOrder);
+                .where(eq(recipeIngredients.recipeId, recipeInstance.recipeId));
 
             for (const ingredient of ingredients) {
                 allMealIngredients.push({
@@ -162,9 +161,9 @@ export function registerCreateMeal(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal instructions data",
-                    instructionsEvent.error.errors
+                    instructionsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
 
@@ -172,9 +171,9 @@ export function registerCreateMeal(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal ingredients data",
-                    ingredientsEvent.error.errors
+                    ingredientsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
 
@@ -188,19 +187,19 @@ export function registerCreateMeal(app: Hono) {
                 "meal.v0/meal-instructions.created.v0",
                 {
                     data: instructionsEvent.data,
-                }
+                },
             );
 
             await FlowcorePathways.write(
                 "meal.v0/meal-ingredients.created.v0",
                 {
                     data: ingredientsEvent.data,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to create meal", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
@@ -209,7 +208,7 @@ export function registerCreateMeal(app: Hono) {
                 meal: safeCreateMealEvent,
                 instructions: instructionsEvent.data,
                 ingredients: ingredientsEvent.data,
-            })
+            }),
         );
     });
 }

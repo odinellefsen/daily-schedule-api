@@ -26,9 +26,9 @@ export function registerCreateMealIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal ingredients data",
-                    parsedJsonBody.error.errors
+                    parsedJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateMealIngredientsJsonBody = parsedJsonBody.data;
@@ -41,7 +41,7 @@ export function registerCreateMealIngredients(app: Hono) {
         if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Meal not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -55,8 +55,7 @@ export function registerCreateMealIngredients(app: Hono) {
             const ingredients = await db
                 .select()
                 .from(recipeIngredients)
-                .where(eq(recipeIngredients.recipeId, recipeInstance.recipeId))
-                .orderBy(recipeIngredients.sortOrder);
+                .where(eq(recipeIngredients.recipeId, recipeInstance.recipeId));
 
             for (const ingredient of ingredients) {
                 allIngredients.push({
@@ -79,9 +78,9 @@ export function registerCreateMealIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal ingredients data",
-                    createMealIngredientsEvent.error.errors
+                    createMealIngredientsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateMealIngredientsEvent = createMealIngredientsEvent.data;
@@ -91,20 +90,20 @@ export function registerCreateMealIngredients(app: Hono) {
                 "meal.v0/meal-ingredients.created.v0",
                 {
                     data: safeCreateMealIngredientsEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to create meal ingredients", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Meal ingredients created successfully",
-                safeCreateMealIngredientsEvent
-            )
+                safeCreateMealIngredientsEvent,
+            ),
         );
     });
 }
