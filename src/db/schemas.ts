@@ -1,6 +1,6 @@
 import {
     boolean,
-    decimal,
+    doublePrecision,
     integer,
     pgTable,
     text,
@@ -28,7 +28,7 @@ export const recipeStepFoodItemUnits = pgTable("recipe_steps_food_item_units", {
     id: uuid("id").primaryKey(),
     recipeStepId: uuid("recipe_step_id").references(() => recipeSteps.id),
     foodItemUnitId: uuid("food_item_unit_id").notNull(),
-    quantity: decimal("quantity", { scale: 3 }).notNull(),
+    quantity: doublePrecision("quantity").notNull(),
 });
 
 export const recipeIngredients = pgTable("recipe_ingredients", {

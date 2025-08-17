@@ -75,13 +75,13 @@ export async function handleRecipeInstructionsUpdated(
             stepNumber: step.stepNumber,
         });
 
-        // Insert ingredients for this step if they exist
+        // Insert food item units for this step if they exist
         if (step.foodItemUnitsUsedInStep) {
             for (const foodItemUnit of step.foodItemUnitsUsedInStep) {
                 await db.insert(recipeStepFoodItemUnits).values({
                     id: crypto.randomUUID(),
                     recipeStepId: step.id,
-                    foodItemUnitIds: [foodItemUnit.foodItemUnitId],
+                    foodItemUnitId: foodItemUnit.foodItemUnitId,
                     quantity: foodItemUnit.quantityOfFoodItemUnit,
                 });
             }
