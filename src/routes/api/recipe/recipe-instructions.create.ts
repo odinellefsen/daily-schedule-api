@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, max } from "drizzle-orm";
 import type { Hono } from "hono";
 import z from "zod";
 import {
@@ -16,7 +16,6 @@ const createRecipeInstructionsRequestSchema = z.object({
     stepByStepInstructions: z
         .array(
             z.object({
-                stepNumber: z.number().positive().int(),
                 stepInstruction: z.string().min(1).max(250),
                 ingredientsUsedInStep: z
                     .array(
@@ -28,10 +27,10 @@ const createRecipeInstructionsRequestSchema = z.object({
                                 .positive()
                                 .max(1_000_000)
                                 .default(1),
-                        })
+                        }),
                     )
                     .optional(),
-            })
+            }),
         )
         .min(1)
         .max(30),
@@ -48,9 +47,9 @@ export function registerCreateRecipeInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe instructions data",
-                    parsedJsonBody.error.errors
+                    parsedJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateRecipeInstructionsJsonBody = parsedJsonBody.data;
@@ -59,45 +58,40 @@ export function registerCreateRecipeInstructions(app: Hono) {
         const recipeFromDb = await db.query.recipes.findFirst({
             where: eq(
                 recipes.id,
-                safeCreateRecipeInstructionsJsonBody.recipeId
+                safeCreateRecipeInstructionsJsonBody.recipeId,
             ),
         });
 
         if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
             return c.json(
-                ApiResponse.error("Recipe not found or access denied"),
-                StatusCodes.NOT_FOUND
+                ApiResponse.error("Recipe not found"),
+                StatusCodes.NOT_FOUND,
             );
         }
 
-        // Check if instructions already exist
-        const existingInstructions = await db
-            .select()
+        // Get the current maximum step number for this recipe
+        const maxStepResult = await db
+            .select({ maxStep: max(recipeSteps.stepNumber) })
             .from(recipeSteps)
             .where(
                 eq(
                     recipeSteps.recipeId,
-                    safeCreateRecipeInstructionsJsonBody.recipeId
-                )
+                    safeCreateRecipeInstructionsJsonBody.recipeId,
+                ),
             );
 
-        if (existingInstructions.length > 0) {
-            return c.json(
-                ApiResponse.error("Recipe instructions already exist"),
-                StatusCodes.CONFLICT
-            );
-        }
+        const currentMaxStep = maxStepResult[0]?.maxStep ?? 0;
 
         const newRecipeInstructions: RecipeInstructionsType = {
             recipeId: safeCreateRecipeInstructionsJsonBody.recipeId,
             stepByStepInstructions:
                 safeCreateRecipeInstructionsJsonBody.stepByStepInstructions.map(
-                    (step) => ({
+                    (step, index) => ({
                         id: crypto.randomUUID(),
-                        stepNumber: step.stepNumber,
+                        stepNumber: currentMaxStep + index + 1,
                         stepInstruction: step.stepInstruction,
                         ingredientsUsedInStep: step.ingredientsUsedInStep,
-                    })
+                    }),
                 ),
         };
 
@@ -107,9 +101,9 @@ export function registerCreateRecipeInstructions(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe instructions data",
-                    createRecipeInstructionsEvent.error.errors
+                    createRecipeInstructionsEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateRecipeInstructionsEvent =
@@ -120,23 +114,23 @@ export function registerCreateRecipeInstructions(app: Hono) {
                 "recipe.v0/recipe-instructions.created.v0",
                 {
                     data: safeCreateRecipeInstructionsEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error(
                     "Failed to create recipe instructions",
-                    error
+                    error,
                 ),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Recipe instructions created successfully",
-                safeCreateRecipeInstructionsEvent
-            )
+                safeCreateRecipeInstructionsEvent,
+            ),
         );
     });
 }
