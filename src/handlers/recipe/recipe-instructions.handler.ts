@@ -30,7 +30,6 @@ export async function handleRecipeInstructionsCreated(
             stepNumber: step.stepNumber,
         });
 
-        // Insert food item units for this step if they exist
         if (step.foodItemUnitsUsedInStep) {
             for (const foodItemUnit of step.foodItemUnitsUsedInStep) {
                 await db.insert(recipeStepFoodItemUnits).values({
