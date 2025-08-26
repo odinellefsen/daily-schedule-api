@@ -14,19 +14,17 @@ const createTodoRequestSchema = z.object({
     relations: z
         .array(
             z.object({
-                mealInstruction: z
-                    .object({
-                        mealStepId: z.string().uuid(),
-                        mealId: z.string().uuid(),
-                        recipeId: z.string().uuid(),
-                        stepNumber: z.number().int().positive(),
-                    })
-                    .optional(),
-            })
+                mealInstruction: z.object({
+                    mealStepId: z.string().uuid(),
+                    mealId: z.string().uuid(),
+                    recipeId: z.string().uuid(),
+                    stepNumber: z.number().int().positive(),
+                }),
+            }),
         )
         .min(
             1,
-            "if relations is NOT undefined, you must have at least one relation"
+            "if relations is NOT undefined, you must have at least one relation",
         )
         .max(5, "you can only have up to 5 relations")
         .optional(),
@@ -42,9 +40,9 @@ export function registerCreateTodo(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid todo data",
-                    parsedJsonBody.error.errors
+                    parsedJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateTodoJsonBody = parsedJsonBody.data;
@@ -64,9 +62,9 @@ export function registerCreateTodo(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid todo data",
-                    createTodoEvent.error.errors
+                    createTodoEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateTodoEvent = createTodoEvent.data;
@@ -78,15 +76,15 @@ export function registerCreateTodo(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to create todo", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Todo created successfully",
-                safeCreateTodoEvent
-            )
+                safeCreateTodoEvent,
+            ),
         );
     });
 }

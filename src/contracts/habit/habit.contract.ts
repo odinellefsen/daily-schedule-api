@@ -1,6 +1,5 @@
 import z from "zod";
 
-// habit.contract.ts
 export const habitSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),

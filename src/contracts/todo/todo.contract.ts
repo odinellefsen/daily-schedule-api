@@ -34,12 +34,12 @@ export const todoSchema = z.object({
     relations: z
         .array(
             z.object({
-                mealInstruction: mealInstructionRelationSchema.optional(),
-            })
+                mealInstruction: mealInstructionRelationSchema,
+            }),
         )
         .min(
             1,
-            "if relations is NOT undefined, you must have at least one relation"
+            "if relations is NOT undefined, you must have at least one relation",
         )
         .max(5, "you can only have up to 5 relations")
         .optional(),
@@ -67,7 +67,7 @@ export const todoRelationsUpdatedSchema = z.object({
         .array(
             z.object({
                 mealInstruction: mealInstructionRelationSchema.optional(),
-            })
+            }),
         )
         .max(5, "you can only have up to 5 relations"),
 });
