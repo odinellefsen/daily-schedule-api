@@ -164,6 +164,7 @@ export function registerCreateMeal(app: Hono) {
                 StatusCodes.BAD_REQUEST,
             );
         }
+        const safeInstructionsEvent = instructionsEvent.data;
 
         if (!ingredientsEvent.success) {
             return c.json(
@@ -174,6 +175,7 @@ export function registerCreateMeal(app: Hono) {
                 StatusCodes.BAD_REQUEST,
             );
         }
+        const safeIngredientsEvent = ingredientsEvent.data;
 
         try {
             // Emit all 3 events for complete snapshot
@@ -184,14 +186,14 @@ export function registerCreateMeal(app: Hono) {
             await FlowcorePathways.write(
                 "meal.v0/meal-instructions.created.v0",
                 {
-                    data: instructionsEvent.data,
+                    data: safeInstructionsEvent,
                 },
             );
 
             await FlowcorePathways.write(
                 "meal.v0/meal-ingredients.created.v0",
                 {
-                    data: ingredientsEvent.data,
+                    data: safeIngredientsEvent,
                 },
             );
         } catch (error) {
@@ -204,8 +206,8 @@ export function registerCreateMeal(app: Hono) {
         return c.json(
             ApiResponse.success("Meal created successfully", {
                 meal: safeCreateMealEvent,
-                instructions: instructionsEvent.data,
-                ingredients: ingredientsEvent.data,
+                instructions: safeInstructionsEvent,
+                ingredients: safeIngredientsEvent,
             }),
         );
     });
