@@ -12,7 +12,7 @@ const createHabitRequestSchema = z.object({
     description: z.string().optional(),
     recurrenceType: z.enum(["daily", "weekly"]),
     recurrenceInterval: z.number().int().positive(),
-    // if recurrenceType is weekly, then weekDays is required
+    // if recurrenceType is weekly, then weekDays is needed
     weekDays: z
         .array(
             z.enum([

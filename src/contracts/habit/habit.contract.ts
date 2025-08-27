@@ -6,7 +6,7 @@ export const habitSchema = z.object({
     title: z.string().min(1).max(100),
     description: z.string().min(1).max(250),
     isActive: z.boolean(),
-    recurrenceType: z.enum(["daily", "weekly", "monthly"]),
+    recurrenceType: z.enum(["daily", "weekly"]),
     recurrenceInterval: z.number().int().positive(),
     weekDays: z
         .array(
@@ -21,8 +21,7 @@ export const habitSchema = z.object({
             ]),
         )
         .optional(),
-    monthlyDay: z.number().int().min(1).max(31).optional(),
-    preferredTime: z
+    whatTimeToStart: z
         .string()
         .regex(/^\d{2}:\d{2}$/)
         .optional(), // HH:MM format
