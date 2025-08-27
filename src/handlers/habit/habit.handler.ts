@@ -20,7 +20,7 @@ export async function handleHabitCreated(
         recurrenceType: payload.recurrenceType,
         recurrenceInterval: payload.recurrenceInterval,
         weekDays: payload.weekDays,
-        monthlyDay: payload.monthlyDay,
-        preferredTime: payload.preferredTime,
+        preferredTime: payload.whatTimeToStart,
+        relationTemplate: payload.relationTemplate,
     });
 }

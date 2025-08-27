@@ -3,23 +3,20 @@ import type { Hono } from "hono";
 import { db } from "../../../db";
 import { todos } from "../../../db/schemas";
 import { ApiResponse } from "../../../utils/api-responses";
+import { getDayBoundsInTimezone } from "../../../utils/timezone";
 
 export function registerListTodos(app: Hono) {
     app.get("/today", async (c) => {
         const safeUserId = c.userId!;
 
-        // Get today's date range
-        const today = new Date();
-        const startOfDay = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate()
-        );
-        const endOfDay = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate() + 1
-        );
+        // Get user's timezone from header, default to UTC
+        const userTimezone = c.req.header("X-Timezone") || "UTC";
+
+        // Get today's date bounds in user's timezone, converted to UTC for database query
+        const { startOfDay: startOfDayUTC, endOfDay: endOfDayUTC } =
+            getDayBoundsInTimezone(userTimezone);
+
+        const now = new Date();
 
         const todaysTodos = await db
             .select()
@@ -27,9 +24,9 @@ export function registerListTodos(app: Hono) {
             .where(
                 and(
                     eq(todos.userId, safeUserId),
-                    gte(todos.scheduledFor, startOfDay),
-                    lte(todos.scheduledFor, endOfDay)
-                )
+                    gte(todos.scheduledFor, startOfDayUTC),
+                    lte(todos.scheduledFor, endOfDayUTC),
+                ),
             )
             .orderBy(todos.scheduledFor);
 
@@ -40,7 +37,7 @@ export function registerListTodos(app: Hono) {
                 : null;
             const mealRelation = relations?.[0]?.mealInstruction;
 
-            const now = new Date();
+            // For time comparisons, we can work directly with UTC times since DB stores UTC
             const scheduledTime = todo.scheduledFor
                 ? new Date(todo.scheduledFor)
                 : null;
@@ -90,7 +87,7 @@ export function registerListTodos(app: Hono) {
             ApiResponse.success("Today's todos retrieved successfully", {
                 todos: transformedTodos,
                 counts,
-            })
+            }),
         );
     });
 
@@ -115,8 +112,8 @@ export function registerListTodos(app: Hono) {
         return c.json(
             ApiResponse.success(
                 "Todos retrieved successfully",
-                transformedTodos
-            )
+                transformedTodos,
+            ),
         );
     });
 }
