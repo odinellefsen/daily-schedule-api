@@ -26,7 +26,6 @@ const createHabitRequestSchema = z.object({
             ]),
         )
         .optional(),
-    // if recurrenceType is monthly, then monthlyDay is required
     whatTimeToStart: z
         .string()
         .regex(/^\d{2}:\d{2}$/)
