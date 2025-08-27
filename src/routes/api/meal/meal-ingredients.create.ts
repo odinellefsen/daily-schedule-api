@@ -13,6 +13,15 @@ import { FlowcorePathways } from "../../../utils/flowcore";
 // client side request schema
 const createMealIngredientsRequestSchema = z.object({
     mealId: z.string().uuid(),
+    ingredients: z.array(
+        z.object({
+            id: z.string().uuid(),
+            ingredientText: z
+                .string()
+                .min(1, "Ingredient text is required")
+                .max(150, "Ingredient text must be less than 150 characters"),
+        }),
+    ),
 });
 
 export function registerCreateMealIngredients(app: Hono) {
