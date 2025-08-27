@@ -54,29 +54,9 @@ export function registerCreateMealIngredients(app: Hono) {
             );
         }
 
-        // Generate meal ingredients from recipe instances
-        const recipes = JSON.parse(mealFromDb.recipes);
-        const allIngredients = [];
-
-        for (const recipeInstance of recipes) {
-            // Get recipe ingredients for this recipe
-            const ingredients = await db
-                .select()
-                .from(recipeIngredients)
-                .where(eq(recipeIngredients.recipeId, recipeInstance.recipeId));
-
-            for (const ingredient of ingredients) {
-                allIngredients.push({
-                    id: crypto.randomUUID(),
-                    recipeId: recipeInstance.recipeId,
-                    ingredientText: ingredient.ingredientText,
-                });
-            }
-        }
-
         const newMealIngredients: MealIngredientsType = {
             mealId: safeCreateMealIngredientsJsonBody.mealId,
-            ingredients: allIngredients,
+            ingredients: safeCreateMealIngredientsJsonBody.ingredients,
         };
 
         const createMealIngredientsEvent =
