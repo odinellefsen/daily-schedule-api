@@ -6,7 +6,7 @@ import {
     mealStepByStepInstructionsSchema,
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
-import { meals, recipeSteps } from "../../../db/schemas";
+import { meals } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
