@@ -55,7 +55,7 @@ export const mealIngredients = pgTable("meal_ingredients", {
     mealId: uuid("meal_id")
         .notNull()
         .references(() => meals.id, { onDelete: "cascade" }),
-    recipeId: uuid("recipe_id").notNull(),
+    recipeId: uuid("recipe_id"), // if the meal ingredient is from a recipe instance, we store the recipe id here.
     ingredientText: text("ingredient_text").notNull(),
 });
 

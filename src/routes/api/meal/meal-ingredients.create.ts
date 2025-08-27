@@ -6,7 +6,7 @@ import {
     mealIngredientsSchema,
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
-import { meals, recipeIngredients } from "../../../db/schemas";
+import { meals } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -56,7 +56,13 @@ export function registerCreateMealIngredients(app: Hono) {
 
         const newMealIngredients: MealIngredientsType = {
             mealId: safeCreateMealIngredientsJsonBody.mealId,
-            ingredients: safeCreateMealIngredientsJsonBody.ingredients,
+            ingredients: safeCreateMealIngredientsJsonBody.ingredients.map(
+                (ingredient) => ({
+                    type: "fromTheMealItself",
+                    id: ingredient.id,
+                    ingredientText: ingredient.ingredientText,
+                }),
+            ),
         };
 
         const createMealIngredientsEvent =

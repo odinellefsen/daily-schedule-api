@@ -16,12 +16,17 @@ export async function handleMealIngredientsCreated(
 ) {
     const { payload } = event;
 
+    // we already make sure that only fromTheMealItself is sent in the payload on the rest endpoint side.
+    // so maybe find a way to remove this filter here.
+    const mealSpecificIngredients = payload.ingredients.filter(
+        (ingredient) => ingredient.type === "fromTheMealItself",
+    );
+
     // Insert meal ingredients
-    for (const ingredient of payload.ingredients) {
+    for (const ingredient of mealSpecificIngredients) {
         await db.insert(mealIngredients).values({
             id: ingredient.id,
             mealId: payload.mealId,
-            recipeId: ingredient.recipeId,
             ingredientText: ingredient.ingredientText,
         });
     }
@@ -44,7 +49,10 @@ export async function handleMealIngredientsUpdated(
         await db.insert(mealIngredients).values({
             id: ingredient.id,
             mealId: payload.mealId,
-            recipeId: ingredient.recipeId,
+            recipeId:
+                ingredient.type === "fromRecipeInstance"
+                    ? ingredient.recipeId
+                    : undefined,
             ingredientText: ingredient.ingredientText,
         });
     }

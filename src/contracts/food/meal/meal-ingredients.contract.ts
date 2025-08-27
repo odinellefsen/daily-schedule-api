@@ -4,7 +4,7 @@ export const mealIngredientsSchema = z.object({
     mealId: z.string().uuid(),
     ingredients: z
         .array(
-            z.union([
+            z.discriminatedUnion("type", [
                 z.object({
                     id: z.string().uuid(),
                     recipeId: z.string().uuid(),
@@ -15,6 +15,8 @@ export const mealIngredientsSchema = z.object({
                             150,
                             "Ingredient text must be less than 150 characters",
                         ),
+                    // a meal ingredient came from the recipe instance that we attached to the meal.
+                    type: z.literal("fromRecipeInstance"),
                 }),
                 z.object({
                     id: z.string().uuid(),
@@ -25,6 +27,8 @@ export const mealIngredientsSchema = z.object({
                             150,
                             "Ingredient text must be less than 150 characters",
                         ),
+                    // we created a meal ingredient inside the meal so it's not from a recipe instance.
+                    type: z.literal("fromTheMealItself"),
                 }),
             ]),
         )
