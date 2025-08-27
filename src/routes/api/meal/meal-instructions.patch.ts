@@ -80,8 +80,8 @@ export function registerPatchMealInstructions(app: Hono) {
             mealId: safeUpdateMealInstructionsRequestBody.mealId,
             stepByStepInstructions: existingInstructions.map((step) => ({
                 id: step.id,
-                recipeId: step.recipeId,
-                originalRecipeStepId: step.originalRecipeStepId,
+                recipeId: step.recipeId ?? undefined,
+                originalRecipeStepId: step.originalRecipeStepId ?? undefined,
                 isStepCompleted: step.isStepCompleted,
                 stepNumber: step.stepNumber,
                 stepInstruction: step.instruction,
@@ -113,8 +113,6 @@ export function registerPatchMealInstructions(app: Hono) {
                             stepInstruction: step.stepInstruction,
                             estimatedDurationMinutes:
                                 step.estimatedDurationMinutes,
-                            assignedToDate: step.assignedToDate,
-                            todoId: step.todoId,
                             foodItemUnitsUsedInStep: undefined,
                         };
                     },

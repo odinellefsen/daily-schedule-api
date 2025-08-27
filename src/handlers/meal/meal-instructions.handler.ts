@@ -28,7 +28,6 @@ export async function handleMealInstructionsCreated(
             isStepCompleted: step.isStepCompleted,
             estimatedDurationMinutes: step.estimatedDurationMinutes,
             assignedToDate: step.assignedToDate,
-            todoId: step.todoId,
             foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
                 ? JSON.stringify(step.foodItemUnitsUsedInStep)
                 : null,
@@ -58,7 +57,6 @@ export async function handleMealInstructionsUpdated(
             isStepCompleted: step.isStepCompleted,
             estimatedDurationMinutes: step.estimatedDurationMinutes,
             assignedToDate: step.assignedToDate,
-            todoId: step.todoId,
             foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
                 ? JSON.stringify(step.foodItemUnitsUsedInStep)
                 : null,

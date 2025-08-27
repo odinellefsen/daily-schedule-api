@@ -68,8 +68,8 @@ export function registerDeleteMealInstructions(app: Hono) {
             mealId: safeDeleteMealInstructionsRequestBody.mealId,
             stepByStepInstructions: existingInstructions.map((step) => ({
                 id: step.id,
-                recipeId: step.recipeId,
-                originalRecipeStepId: step.originalRecipeStepId,
+                recipeId: step.recipeId ?? undefined,
+                originalRecipeStepId: step.originalRecipeStepId ?? undefined,
                 isStepCompleted: step.isStepCompleted,
                 stepNumber: step.stepNumber,
                 stepInstruction: step.instruction,

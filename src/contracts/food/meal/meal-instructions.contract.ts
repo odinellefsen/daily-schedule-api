@@ -5,10 +5,10 @@ export const mealStepByStepInstructionsSchema = z.object({
     stepByStepInstructions: z.array(
         z.object({
             id: z.string().uuid(),
-            // if you create a new step inside the meal itself then it wouldn't be attached to a recipe.
+            // if you create a new step inside the meal itself then it wouldn't be attached to a recipe, which is why it's optional.
             recipeId: z.string().uuid().optional(),
+            // same here
             originalRecipeStepId: z.string().uuid().optional(),
-            todoId: z.string().uuid().optional(),
             isStepCompleted: z.boolean().default(false),
             stepNumber: z.number().int(),
             stepInstruction: z

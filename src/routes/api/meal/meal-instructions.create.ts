@@ -6,13 +6,34 @@ import {
     mealStepByStepInstructionsSchema,
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
-import { mealSteps, meals, recipeSteps } from "../../../db/schemas";
+import { meals, recipeSteps } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
 // client side request schema
 const createMealInstructionsRequestSchema = z.object({
     mealId: z.string().uuid(),
+    stepByStepInstructions: z
+        .array(
+            z.object({
+                stepInstruction: z.string().min(1).max(250),
+                foodItemUnitsUsedInStep: z
+                    .array(
+                        z.object({
+                            foodItemUnitId: z.string().uuid(),
+                            foodItemId: z.string().uuid(),
+                            quantityOfFoodItemUnit: z
+                                .number()
+                                .positive()
+                                .max(1_000_000)
+                                .default(1),
+                        }),
+                    )
+                    .optional(),
+            }),
+        )
+        .min(1)
+        .max(30),
 });
 
 export function registerCreateMealInstructions(app: Hono) {
@@ -45,53 +66,26 @@ export function registerCreateMealInstructions(app: Hono) {
             );
         }
 
-        // Check if instructions already exist
-        const existingInstructions = await db
-            .select()
-            .from(mealSteps)
-            .where(
-                eq(mealSteps.mealId, safeCreateMealInstructionsJsonBody.mealId),
-            );
-
-        if (existingInstructions.length > 0) {
-            return c.json(
-                ApiResponse.error("Meal instructions already exist"),
-                StatusCodes.CONFLICT,
-            );
-        }
-
-        // Generate meal instructions from recipe instances
-        const recipes = JSON.parse(mealFromDb.recipes);
-        const allSteps = [];
-        let globalStepNumber = 1;
-
-        for (const recipeInstance of recipes) {
-            // Get recipe instructions for this recipe
-            const recipeInstructions = await db
-                .select()
-                .from(recipeSteps)
-                .where(eq(recipeSteps.recipeId, recipeInstance.recipeId))
-                .orderBy(recipeSteps.stepNumber);
-
-            for (const step of recipeInstructions) {
-                allSteps.push({
-                    id: crypto.randomUUID(),
-                    recipeId: recipeInstance.recipeId,
-                    originalRecipeStepId: step.id,
-                    isStepCompleted: false,
-                    stepNumber: globalStepNumber++,
-                    stepInstruction: step.instruction,
-                    estimatedDurationMinutes: undefined,
-                    assignedToDate: undefined,
-                    todoId: undefined,
-                    foodItemUnitsUsedInStep: undefined,
-                });
-            }
-        }
-
         const newMealInstructions: MealStepByStepInstructionsType = {
             mealId: safeCreateMealInstructionsJsonBody.mealId,
-            stepByStepInstructions: allSteps,
+            stepByStepInstructions:
+                safeCreateMealInstructionsJsonBody.stepByStepInstructions.map(
+                    (step) => ({
+                        id: crypto.randomUUID(),
+                        stepInstruction: step.stepInstruction,
+                        foodItemUnitsUsedInStep:
+                            step.foodItemUnitsUsedInStep?.map(
+                                (foodItemUnit) => ({
+                                    foodItemUnitId: foodItemUnit.foodItemUnitId,
+                                    foodItemId: foodItemUnit.foodItemId,
+                                    quantityOfFoodItemUnit:
+                                        foodItemUnit.quantityOfFoodItemUnit,
+                                }),
+                            ),
+                        isStepCompleted: false,
+                        stepNumber: 1,
+                    }),
+                ),
         };
 
         const createMealInstructionsEvent =

@@ -192,15 +192,15 @@ export function registerPatchMeal(app: Hono) {
                 mealId: mealFromDb.id,
                 stepByStepInstructions: existingMealSteps.map((step) => ({
                     id: step.id,
-                    recipeId: step.recipeId,
-                    originalRecipeStepId: step.originalRecipeStepId,
+                    recipeId: step.recipeId ?? undefined,
+                    originalRecipeStepId:
+                        step.originalRecipeStepId ?? undefined,
                     isStepCompleted: step.isStepCompleted,
                     stepNumber: step.stepNumber,
                     stepInstruction: step.instruction,
                     estimatedDurationMinutes:
                         step.estimatedDurationMinutes || undefined,
                     assignedToDate: step.assignedToDate || undefined,
-                    todoId: step.todoId || undefined,
                     foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
                         ? JSON.parse(step.foodItemUnitsUsedInStep)
                         : undefined,
