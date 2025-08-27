@@ -35,6 +35,7 @@ import {
     recipeUpdateSchema,
 } from "../contracts/food/recipe";
 import { recipeVersionSchema } from "../contracts/food/recipe/recipe-version.contract";
+import { habitSchema } from "../contracts/habit/habit.contract";
 import {
     todoArchiveSchema,
     todoCancelledSchema,
@@ -53,6 +54,7 @@ import {
     handleFoodItemUnitsDeleted,
     handleFoodItemUnitsUpdated,
 } from "../handlers/food-item/food-item-units.handler";
+import { handleHabitCreated } from "../handlers/habit/habit.handler";
 import {
     handleMealArchived,
     handleMealCreated,
@@ -106,7 +108,7 @@ export const FlowcorePathways = new PathwaysBuilder({
     .withPathwayState(
         createPostgresPathwayState({
             connectionString: postgresUrl,
-        })
+        }),
     )
     .register({
         flowType: "food-item.v0",
@@ -294,74 +296,81 @@ export const FlowcorePathways = new PathwaysBuilder({
         retryDelayMs: 10000,
         schema: recipeVersionSchema,
     })
+    .register({
+        flowType: "habit.v0",
+        eventType: "habit.created.v0",
+        retryDelayMs: 10000,
+        schema: habitSchema,
+    })
     .handle("food-item.v0/food-item.created.v0", handleFoodItemCreated)
     .handle("food-item.v0/food-item.updated.v0", handleFoodItemUpdated)
     .handle("food-item.v0/food-item.archived.v0", handleFoodItemArchived)
     .handle(
         "food-item.v0/food-item.units.created.v0",
-        handleFoodItemUnitsCreated
+        handleFoodItemUnitsCreated,
     )
     .handle(
         "food-item.v0/food-item.units.updated.v0",
-        handleFoodItemUnitsUpdated
+        handleFoodItemUnitsUpdated,
     )
     .handle(
         "food-item.v0/food-item.units.deleted.v0",
-        handleFoodItemUnitsDeleted
+        handleFoodItemUnitsDeleted,
     )
     .handle("recipe.v0/recipe.created.v0", handleRecipeCreated)
     .handle("recipe.v0/recipe.updated.v0", handleRecipeUpdated)
     .handle("recipe.v0/recipe.archived.v0", handleRecipeArchived)
     .handle(
         "recipe.v0/recipe-instructions.created.v0",
-        handleRecipeInstructionsCreated
+        handleRecipeInstructionsCreated,
     )
     .handle(
         "recipe.v0/recipe-instructions.updated.v0",
-        handleRecipeInstructionsUpdated
+        handleRecipeInstructionsUpdated,
     )
     .handle(
         "recipe.v0/recipe-instructions.archived.v0",
-        handleRecipeInstructionsArchived
+        handleRecipeInstructionsArchived,
     )
     .handle(
         "recipe.v0/recipe-ingredients.created.v0",
-        handleRecipeIngredientsCreated
+        handleRecipeIngredientsCreated,
     )
     .handle(
         "recipe.v0/recipe-ingredients.updated.v0",
-        handleRecipeIngredientsUpdated
+        handleRecipeIngredientsUpdated,
     )
     .handle(
         "recipe.v0/recipe-ingredients.archived.v0",
-        handleRecipeIngredientsArchived
+        handleRecipeIngredientsArchived,
     )
     .handle("meal.v0/meal.created.v0", handleMealCreated)
     .handle("meal.v0/meal.updated.v0", handleMealUpdated)
     .handle("meal.v0/meal.archived.v0", handleMealArchived)
     .handle(
         "meal.v0/meal-instructions.created.v0",
-        handleMealInstructionsCreated
+        handleMealInstructionsCreated,
     )
     .handle(
         "meal.v0/meal-instructions.updated.v0",
-        handleMealInstructionsUpdated
+        handleMealInstructionsUpdated,
     )
     .handle(
         "meal.v0/meal-instructions.archived.v0",
-        handleMealInstructionsArchived
+        handleMealInstructionsArchived,
     )
     .handle("meal.v0/meal-ingredients.created.v0", handleMealIngredientsCreated)
     .handle("meal.v0/meal-ingredients.updated.v0", handleMealIngredientsUpdated)
     .handle(
         "meal.v0/meal-ingredients.archived.v0",
-        handleMealIngredientsArchived
+        handleMealIngredientsArchived,
     )
     .handle("todo.v0/todo.created.v0", handleTodoCreated)
     .handle("todo.v0/todo.archived.v0", handleTodoArchived)
     .handle("todo.v0/todo.completed.v0", handleTodoCompleted)
     .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled)
-    .handle("todo.v0/todo.relations.updated.v0", handleTodoRelationsUpdated);
+    .handle("todo.v0/todo.relations.updated.v0", handleTodoRelationsUpdated)
+    .handle("habit.v0/habit.created.v0", handleHabitCreated);
 
 // Combined handler for recipe version events
 FlowcorePathways.handle("recipe.v0/recipe-version.v0", async (event) => {
@@ -373,5 +382,5 @@ FlowcorePathways.handle("recipe.v0/recipe-version.v0", async (event) => {
 
 export const pathwaysRouter = new PathwayRouter(
     FlowcorePathways,
-    webhookApiKey
+    webhookApiKey,
 );

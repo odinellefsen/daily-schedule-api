@@ -109,6 +109,20 @@ export const foodItemUnits = pgTable("food_item_units", {
     source: text("source").notNull(),
 });
 
+export const habits = pgTable("habits", {
+    id: uuid("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").notNull().default(true),
+    recurrenceType: text("recurrence_type").notNull(),
+    recurrenceInterval: integer("recurrence_interval").notNull(),
+    weekDays: text("week_days").array(),
+    monthlyDay: integer("monthly_day"),
+    preferredTime: text("preferred_time"),
+    relationTemplate: text("relation_template"),
+});
+
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
 
