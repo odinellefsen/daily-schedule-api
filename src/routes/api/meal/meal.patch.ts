@@ -215,7 +215,7 @@ export function registerPatchMeal(app: Hono) {
                 mealId: mealFromDb.id,
                 ingredients: existingMealIngredients.map((ingredient) => ({
                     id: ingredient.id,
-                    recipeId: ingredient.recipeId,
+                    recipeId: ingredient.recipeId ?? undefined,
                     ingredientText: ingredient.ingredientText,
                 })),
             },

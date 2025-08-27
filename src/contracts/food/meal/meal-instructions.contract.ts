@@ -5,8 +5,10 @@ export const mealStepByStepInstructionsSchema = z.object({
     stepByStepInstructions: z.array(
         z.object({
             id: z.string().uuid(),
-            recipeId: z.string().uuid(),
-            originalRecipeStepId: z.string().uuid(),
+            // if you create a new step inside the meal itself then it wouldn't be attached to a recipe.
+            recipeId: z.string().uuid().optional(),
+            originalRecipeStepId: z.string().uuid().optional(),
+            todoId: z.string().uuid().optional(),
             isStepCompleted: z.boolean().default(false),
             stepNumber: z.number().int(),
             stepInstruction: z
@@ -15,7 +17,6 @@ export const mealStepByStepInstructionsSchema = z.object({
                 .max(250, "The instruction must be less than 250 characters"),
             estimatedDurationMinutes: z.number().int().positive().optional(),
             assignedToDate: z.string().date().optional(),
-            todoId: z.string().uuid().optional(),
             foodItemUnitsUsedInStep: z
                 .array(
                     z.object({

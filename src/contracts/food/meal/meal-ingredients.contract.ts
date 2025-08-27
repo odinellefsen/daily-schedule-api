@@ -4,33 +4,18 @@ export const mealIngredientsSchema = z.object({
     mealId: z.string().uuid(),
     ingredients: z
         .array(
-            z.discriminatedUnion("type", [
-                z.object({
-                    id: z.string().uuid(),
-                    recipeId: z.string().uuid(),
-                    ingredientText: z
-                        .string()
-                        .min(1, "Ingredient text is required")
-                        .max(
-                            150,
-                            "Ingredient text must be less than 150 characters",
-                        ),
-                    // a meal ingredient came from the recipe instance that we attached to the meal.
-                    type: z.literal("fromRecipeInstance"),
-                }),
-                z.object({
-                    id: z.string().uuid(),
-                    ingredientText: z
-                        .string()
-                        .min(1, "Ingredient text is required")
-                        .max(
-                            150,
-                            "Ingredient text must be less than 150 characters",
-                        ),
-                    // we created a meal ingredient inside the meal so it's not from a recipe instance.
-                    type: z.literal("fromTheMealItself"),
-                }),
-            ]),
+            z.object({
+                id: z.string().uuid(),
+                // if you create a new ingredient inside the meal itself then it wouldn't be attached to a recipe.
+                recipeId: z.string().uuid().optional(),
+                ingredientText: z
+                    .string()
+                    .min(1, "Ingredient text is required")
+                    .max(
+                        150,
+                        "Ingredient text must be less than 150 characters",
+                    ),
+            }),
         )
         .min(1, "You must have at least one ingredient")
         .max(50, "Maximum 50 ingredients allowed"),

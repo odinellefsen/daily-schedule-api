@@ -56,13 +56,7 @@ export function registerCreateMealIngredients(app: Hono) {
 
         const newMealIngredients: MealIngredientsType = {
             mealId: safeCreateMealIngredientsJsonBody.mealId,
-            ingredients: safeCreateMealIngredientsJsonBody.ingredients.map(
-                (ingredient) => ({
-                    type: "fromTheMealItself",
-                    id: ingredient.id,
-                    ingredientText: ingredient.ingredientText,
-                }),
-            ),
+            ingredients: safeCreateMealIngredientsJsonBody.ingredients,
         };
 
         const createMealIngredientsEvent =

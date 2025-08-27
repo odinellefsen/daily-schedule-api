@@ -139,7 +139,6 @@ export function registerCreateMeal(app: Hono) {
                 allMealIngredients.push({
                     id: crypto.randomUUID(),
                     recipeId: recipeInstance.recipeId,
-                    type: "fromRecipeInstance",
                     ingredientText: ingredient.ingredientText,
                 });
             }
@@ -147,12 +146,7 @@ export function registerCreateMeal(app: Hono) {
 
         const mealIngredients: MealIngredientsType = {
             mealId: safeCreateMealEvent.id,
-            ingredients: allMealIngredients.map((ingredient) => ({
-                type: "fromRecipeInstance",
-                id: ingredient.id,
-                recipeId: ingredient.recipeId,
-                ingredientText: ingredient.ingredientText,
-            })),
+            ingredients: allMealIngredients,
         };
 
         // Validate the instruction and ingredient events
