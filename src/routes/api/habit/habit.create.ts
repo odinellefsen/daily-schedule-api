@@ -10,9 +10,28 @@ import { FlowcorePathways } from "../../../utils/flowcore";
 const createHabitRequestSchema = z.object({
     name: z.string().min(1).max(100),
     description: z.string().optional(),
-    frequency: z.enum(["daily", "weekly", "monthly"]),
-    startDate: z.string().datetime(),
-    endDate: z.string().datetime().optional(),
+    recurrenceType: z.enum(["daily", "weekly"]),
+    recurrenceInterval: z.number().int().positive(),
+    // if recurrenceType is weekly, then weekDays is required
+    weekDays: z
+        .array(
+            z.enum([
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday",
+            ]),
+        )
+        .optional(),
+    // if recurrenceType is monthly, then monthlyDay is required
+    whatTimeToStart: z
+        .string()
+        .regex(/^\d{2}:\d{2}$/)
+        .optional(), // HH:MM format
+    relationTemplate: z.any().optional(), // For future extensibility
 });
 
 export function registerCreateHabit(app: Hono) {
