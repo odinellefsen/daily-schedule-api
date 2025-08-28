@@ -6,8 +6,13 @@ export const habitSchema = z.object({
     title: z.string().min(1).max(100),
     description: z.string().min(1).max(250),
     isActive: z.boolean(),
+
     recurrenceType: z.enum(["daily", "weekly"]),
-    recurrenceInterval: z.number().int().positive(),
+    recurrenceInterval: z.number().int().positive().default(1),
+
+    startDate: z.string().date(), // anchor point
+    timezone: z.string().optional(), // optional
+
     weekDays: z
         .array(
             z.enum([
@@ -21,11 +26,12 @@ export const habitSchema = z.object({
             ]),
         )
         .optional(),
+
     whatTimeToStart: z
         .string()
         .regex(/^\d{2}:\d{2}$/)
-        .optional(), // HH:MM format
-    relationTemplate: z.any().optional(), // For future extensibility
+        .optional(), // "HH:MM"
+    relationTemplate: z.any().optional(),
 });
 
 export const habitCreatedSchema = habitSchema;
