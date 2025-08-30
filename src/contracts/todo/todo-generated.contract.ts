@@ -2,9 +2,6 @@ import { z } from "zod";
 import { HHMM, InstructionKey, YMD } from "../habit/habit.contract";
 
 export const todoGeneratedSchema = z.object({
-    // Idempotency
-    idempotencyKey: z.string().min(1),
-
     // Basic todo fields
     userId: z.string().min(1),
     title: z.string().min(1),

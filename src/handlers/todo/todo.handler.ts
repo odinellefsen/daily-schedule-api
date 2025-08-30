@@ -100,7 +100,7 @@ export async function handleTodoGenerated(
     // Generate new UUID for the todo
     const todoId = crypto.randomUUID();
 
-    // UPSERT the todo (idempotent)
+    // UPSERT the todo (idempotent using natural business key)
     await db
         .insert(todos)
         .values({
@@ -112,7 +112,6 @@ export async function handleTodoGenerated(
             completed: false,
             habitId: payload.habitId,
             occurrenceId: payload.occurrenceId,
-            idempotencyKey: payload.idempotencyKey,
             relation: JSON.stringify(payload.relation),
             instructionKey: payload.instructionKey
                 ? JSON.stringify(payload.instructionKey)
@@ -126,7 +125,12 @@ export async function handleTodoGenerated(
             relations: null,
         })
         .onConflictDoNothing({
-            target: todos.idempotencyKey,
+            target: [
+                todos.userId,
+                todos.habitId,
+                todos.dueDate,
+                todos.instructionKey,
+            ],
         });
 
     // If this is an instruction-based todo, ensure the occurrence step exists

@@ -92,7 +92,6 @@ export const todos = pgTable(
         // Habit system fields
         habitId: uuid("habit_id").references(() => habits.id),
         occurrenceId: uuid("occurrence_id").references(() => occurrences.id),
-        idempotencyKey: text("idempotency_key").unique(), // For preventing duplicates
 
         // Domain relation for habit todos
         relation: text("relation"), // JSON: { domain, entityId, version }

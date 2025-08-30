@@ -92,25 +92,6 @@ function getWeekdayFromDate(dateStr: string): string {
 }
 
 /**
- * Idempotency key generation
- */
-function makeIdempotencyKey(
-    userId: string,
-    habitId: string,
-    dueDate: string,
-    instructionKey?: unknown,
-): string {
-    const base = `${userId}:${habitId}:${dueDate}`;
-    const keyPart = instructionKey
-        ? `:${crypto.createHash("sha256").update(JSON.stringify(instructionKey)).digest("hex").substring(0, 16)}`
-        : "";
-    return crypto
-        .createHash("sha256")
-        .update(base + keyPart)
-        .digest("hex");
-}
-
-/**
  * Find habits that should generate todos for the given date
  */
 async function selectDueHabits(
@@ -260,13 +241,6 @@ async function generateTodosForHabit(
         const dueDate = addDays(targetDate, item.offsetDays);
         const instructionKey = item.instructionKey;
 
-        const idempotencyKey = makeIdempotencyKey(
-            habit.userId,
-            habit.id,
-            dueDate,
-            instructionKey,
-        );
-
         // Get snapshot for replay safety
         const snapshot = await adapter.snapshot(entityId, version);
 
@@ -274,7 +248,6 @@ async function generateTodosForHabit(
         const title = item.titleOverride || habit.name;
 
         const todoEvent: TodoGeneratedType = {
-            idempotencyKey,
             userId: habit.userId,
             habitId: habit.id,
             occurrenceId: occurrence.id,
