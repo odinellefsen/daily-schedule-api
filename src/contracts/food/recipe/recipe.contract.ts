@@ -13,11 +13,11 @@ export const recipeSchema = z.object({
         .string()
         .min(
             1,
-            "If generalDescriptionOfTheRecipe is NOT undefined, you must have at least one character"
+            "If generalDescriptionOfTheRecipe is NOT undefined, you must have at least one character",
         )
         .max(
             250,
-            "The general description of the recipe must be less than 250 characters"
+            "The general description of the recipe must be less than 250 characters",
         )
         .optional(),
 });

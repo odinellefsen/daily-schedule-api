@@ -29,9 +29,9 @@ export function registerDeleteFoodItem(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeDeleteFoodItemRequestBody = parsedRequestJsonBody.data;
@@ -39,14 +39,14 @@ export function registerDeleteFoodItem(app: Hono) {
         const foodItemFromDb = await db.query.foodItems.findFirst({
             where: and(
                 eq(foodItems.name, safeDeleteFoodItemRequestBody.foodItemName),
-                eq(foodItems.userId, safeUserId)
+                eq(foodItems.userId, safeUserId),
             ),
         });
 
         if (!foodItemFromDb) {
             return c.json(
                 ApiResponse.error("Food item not found"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -67,9 +67,9 @@ export function registerDeleteFoodItem(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item archived data",
-                    foodItemArchivedEvent.error.errors
+                    foodItemArchivedEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeFoodItemArchivedEvent = foodItemArchivedEvent.data;
@@ -81,15 +81,15 @@ export function registerDeleteFoodItem(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to archive food item", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Food item archived successfully",
-                safeFoodItemArchivedEvent
-            )
+                safeFoodItemArchivedEvent,
+            ),
         );
     });
 }

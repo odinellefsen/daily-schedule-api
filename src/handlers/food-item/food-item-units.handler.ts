@@ -11,7 +11,7 @@ import { foodItemUnits } from "../../db/schemas";
 export async function handleFoodItemUnitsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: FoodItemUnitType;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -30,14 +30,14 @@ export async function handleFoodItemUnitsCreated(
             sugarInGrams: unit.nutritionPerOfThisUnit.sugarInGrams,
             sodiumInMilligrams: unit.nutritionPerOfThisUnit.sodiumInMilligrams,
             source: unit.source,
-        }))
+        })),
     );
 }
 
 export async function handleFoodItemUnitsUpdated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: FoodItemUnitUpdatedType;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -65,7 +65,7 @@ export async function handleFoodItemUnitsUpdated(
 export async function handleFoodItemUnitsDeleted(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: FoodItemUnitDeletedType;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -76,7 +76,7 @@ export async function handleFoodItemUnitsDeleted(
         .where(
             and(
                 inArray(foodItemUnits.id, unitIds),
-                eq(foodItemUnits.foodItemId, payload.foodItemId)
-            )
+                eq(foodItemUnits.foodItemId, payload.foodItemId),
+            ),
         );
 }

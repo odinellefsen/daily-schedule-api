@@ -35,9 +35,9 @@ export const clerkAuth = () => {
             if (!authHeader?.startsWith("Bearer ")) {
                 return c.json(
                     ApiResponse.error(
-                        "Authorization header with Bearer token is required"
+                        "Authorization header with Bearer token is required",
                     ),
-                    StatusCodes.UNAUTHORIZED
+                    StatusCodes.UNAUTHORIZED,
                 );
             }
 
@@ -52,7 +52,7 @@ export const clerkAuth = () => {
             if (!payload || !payload.sub) {
                 return c.json(
                     ApiResponse.error("Invalid or expired token"),
-                    StatusCodes.UNAUTHORIZED
+                    StatusCodes.UNAUTHORIZED,
                 );
             }
 
@@ -66,7 +66,7 @@ export const clerkAuth = () => {
             console.error("Authentication error:", error);
             return c.json(
                 ApiResponse.error("Authentication failed", error),
-                StatusCodes.UNAUTHORIZED
+                StatusCodes.UNAUTHORIZED,
             );
         }
     };

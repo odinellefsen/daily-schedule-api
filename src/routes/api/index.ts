@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import foodItem from "./food-item";
 import habit from "./habit";
 import meal from "./meal";
@@ -6,9 +6,30 @@ import recipe from "./recipe";
 import todo from "./todo";
 import transformer from "./transformer";
 
-export const api = new Hono();
+export const api = new OpenAPIHono();
 
-api.get("/", (c) => {
+// Root endpoint with OpenAPI documentation
+const rootRoute = createRoute({
+    method: "get",
+    path: "/",
+    tags: ["System"],
+    summary: "API health check",
+    description: "Returns a simple message to confirm the API is running",
+    responses: {
+        200: {
+            description: "API is running",
+            content: {
+                "text/plain": {
+                    schema: z.string().openapi({
+                        example: "Daily Scheduler API",
+                    }),
+                },
+            },
+        },
+    },
+});
+
+api.openapi(rootRoute, (c) => {
     return c.text("Daily Scheduler API");
 });
 

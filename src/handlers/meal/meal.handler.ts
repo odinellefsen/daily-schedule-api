@@ -12,7 +12,7 @@ import { meals } from "../../db/schemas";
 export async function handleMealCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof mealSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -31,7 +31,7 @@ export async function handleMealCreated(
 export async function handleMealUpdated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof mealUpdateSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -51,7 +51,7 @@ export async function handleMealUpdated(
 export async function handleMealArchived(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof mealArchiveSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 

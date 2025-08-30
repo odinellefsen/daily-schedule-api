@@ -30,9 +30,9 @@ export function registerPatchFoodItem(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateFoodItemRequestBody = parsedRequestJsonBody.data;
@@ -40,13 +40,13 @@ export function registerPatchFoodItem(app: Hono) {
         const foodItemFromDb = await db.query.foodItems.findFirst({
             where: and(
                 eq(foodItems.name, safeUpdateFoodItemRequestBody.foodItemName),
-                eq(foodItems.userId, safeUserId)
+                eq(foodItems.userId, safeUserId),
             ),
         });
         if (!foodItemFromDb) {
             return c.json(
                 ApiResponse.error("Food item not found"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -72,9 +72,9 @@ export function registerPatchFoodItem(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item data",
-                    updateFoodItemEvent.error.errors
+                    updateFoodItemEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateFoodItemEvent = updateFoodItemEvent.data;
@@ -86,15 +86,15 @@ export function registerPatchFoodItem(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update food item", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Food item updated successfully",
-                safeUpdateFoodItemEvent
-            )
+                safeUpdateFoodItemEvent,
+            ),
         );
     });
 }
