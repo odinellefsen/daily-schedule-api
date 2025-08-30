@@ -1,5 +1,5 @@
 import z from "zod";
-import { InstructionKey, YMD } from "./habit.contract";
+import { YMD } from "./habit.contract";
 
 export const occurrenceSchema = z.object({
     id: z.string().uuid(),
@@ -17,7 +17,7 @@ export const occurrenceSchema = z.object({
 
 export const occurrenceStepSchema = z.object({
     occurrenceId: z.string().uuid(),
-    key: InstructionKey, // stable within recipeVersion
+    key: z.string(), // stable within recipeVersion
     title: z.string(), // snapshot of instruction text
     dueDate: YMD, // supports offsets (e.g., -2 days)
     todoId: z.string().uuid().optional(),

@@ -41,15 +41,6 @@ function calculateScheduledFor(
     return new Date(localDateTime.getTime() + offset);
 }
 
-/**
- * Add days to a date string
- */
-function addDays(dateStr: string, days: number): string {
-    const date = new Date(dateStr);
-    date.setDate(date.getDate() + days);
-    return date.toISOString().split("T")[0]; // YYYY-MM-DD
-}
-
 function getWeekdayFromDate(dateStr: string): string {
     const date = new Date(dateStr);
     const weekdays = [
@@ -170,9 +161,9 @@ async function generateTodoForHabit(
     // Create or get occurrence for this instruction
     const occurrence = await upsertOccurrence({
         userId: habit.userId,
-        domain: habit.domain,
-        entityId: habit.entityId,
-        subEntityId: habit.subEntityId,
+        domain: habit.domain ?? undefined,
+        entityId: habit.entityId ?? undefined,
+        subEntityId: habit.subEntityId ?? undefined,
         targetDate,
         habitId: habit.id,
     });
@@ -194,9 +185,9 @@ async function generateTodoForHabit(
         preferredTime: habit.preferredTime || undefined,
         scheduledFor: scheduledFor.toISOString(),
         timezone: habit.timezone || undefined,
-        domain: habit.domain,
-        entityId: habit.entityId,
-        subEntityId: habit.subEntityId,
+        domain: habit.domain ?? undefined,
+        entityId: habit.entityId ?? undefined,
+        subEntityId: habit.subEntityId ?? undefined,
     };
 
     // Emit the event through Flowcore

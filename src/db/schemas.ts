@@ -165,9 +165,6 @@ export const occurrences = pgTable("occurrences", {
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// REMOVED: occurrenceSteps table no longer needed
-// Each habit now maps directly to one instruction and one todo
-
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
 
