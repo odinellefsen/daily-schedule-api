@@ -14,9 +14,10 @@ export const todoGeneratedSchema = z.object({
     habitId: z.string().uuid(),
     occurrenceId: z.string().uuid(),
 
-    // Direct instruction reference (simplified)
-    instructionId: z.string().uuid(),
-    mealId: z.string().uuid(), // For meal context
+    // Domain-agnostic reference (optional for plain text habits)
+    domain: z.string().optional(), // e.g., "meal", "workout", null for text habits
+    entityId: z.string().uuid().optional(), // e.g., mealId, workoutId
+    subEntityId: z.string().uuid().optional(), // e.g., instructionId, exerciseId
 
     // Event metadata
     eventId: z.string().optional(), // Will be filled by Flowcore

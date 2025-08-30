@@ -90,9 +90,10 @@ export const todos = pgTable("todos", {
     habitId: uuid("habit_id").references(() => habits.id),
     occurrenceId: uuid("occurrence_id").references(() => occurrences.id),
 
-    // Direct instruction reference (simplified)
-    instructionId: uuid("instruction_id"),
-    mealId: uuid("meal_id"), // For meal context
+    // Domain-agnostic reference (simplified)
+    domain: text("domain"), // e.g., "meal", "workout", null for text habits
+    entityId: uuid("entity_id"), // e.g., mealId, workoutId
+    subEntityId: uuid("sub_entity_id"), // e.g., instructionId, exerciseId
 
     // Legacy relations field for manual todos
     relations: text("relations"), // JSON array of relations
@@ -132,10 +133,12 @@ export const habits = pgTable("habits", {
     description: text("description"),
     isActive: boolean("is_active").notNull().default(true),
 
-    // Direct instruction reference (simplified)
-    instructionId: uuid("instruction_id").notNull(),
-    mealId: uuid("meal_id").notNull(), // For grouping and meal context
-    mealName: text("meal_name").notNull(), // For UI display
+    // Domain reference (optional - for domain-linked habits)
+    domain: text("domain"), // e.g., "meal", "workout", "reading"
+    entityId: uuid("entity_id"), // e.g., mealId, workoutId
+    entityName: text("entity_name"), // e.g., meal name for display
+    subEntityId: uuid("sub_entity_id"), // e.g., instructionId, exerciseId
+    subEntityName: text("sub_entity_name"), // e.g., instruction text for display
 
     // Recurrence configuration
     recurrenceType: text("recurrence_type").notNull(),
@@ -145,19 +148,18 @@ export const habits = pgTable("habits", {
     weekDays: text("week_days").array(),
     monthlyDay: integer("monthly_day"),
     preferredTime: text("preferred_time"),
-
-    // REMOVED: relationTemplate (no longer needed!)
 });
 
 export const occurrences = pgTable("occurrences", {
     id: uuid("id").primaryKey(),
     userId: text("user_id").notNull(),
 
-    // Simplified: Direct instruction reference
-    instructionId: uuid("instruction_id").notNull(),
-    mealId: uuid("meal_id").notNull(), // For meal context
+    // Domain-agnostic reference
+    domain: text("domain"), // e.g., "meal", "workout", null for text habits
+    entityId: uuid("entity_id"), // e.g., mealId, workoutId
+    subEntityId: uuid("sub_entity_id"), // e.g., instructionId, exerciseId
 
-    targetDate: text("target_date").notNull(), // YYYY-MM-DD when instruction should happen
+    targetDate: text("target_date").notNull(), // YYYY-MM-DD when habit should happen
     habitId: uuid("habit_id").references(() => habits.id),
     status: text("status").notNull().default("planned"), // planned, active, completed, cancelled
     createdAt: timestamp("created_at").notNull().defaultNow(),

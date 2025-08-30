@@ -124,8 +124,9 @@ function shouldGenerateForDate(habit: Habit, targetDate: string): boolean {
  */
 async function upsertOccurrence(data: {
     userId: string;
-    instructionId: string;
-    mealId: string;
+    domain?: string;
+    entityId?: string;
+    subEntityId?: string;
     targetDate: string;
     habitId: string;
 }): Promise<{ id: string }> {
@@ -133,7 +134,7 @@ async function upsertOccurrence(data: {
     const existing = await db.query.occurrences.findFirst({
         where: and(
             eq(occurrences.userId, data.userId),
-            eq(occurrences.instructionId, data.instructionId),
+            eq(occurrences.habitId, data.habitId),
             eq(occurrences.targetDate, data.targetDate),
         ),
     });
@@ -146,8 +147,9 @@ async function upsertOccurrence(data: {
     const newOccurrence = {
         id: crypto.randomUUID(),
         userId: data.userId,
-        instructionId: data.instructionId,
-        mealId: data.mealId,
+        domain: data.domain,
+        entityId: data.entityId,
+        subEntityId: data.subEntityId,
         targetDate: data.targetDate,
         habitId: data.habitId,
         status: "planned" as const,
@@ -168,8 +170,9 @@ async function generateTodoForHabit(
     // Create or get occurrence for this instruction
     const occurrence = await upsertOccurrence({
         userId: habit.userId,
-        instructionId: habit.instructionId,
-        mealId: habit.mealId,
+        domain: habit.domain,
+        entityId: habit.entityId,
+        subEntityId: habit.subEntityId,
         targetDate,
         habitId: habit.id,
     });
@@ -191,8 +194,9 @@ async function generateTodoForHabit(
         preferredTime: habit.preferredTime || undefined,
         scheduledFor: scheduledFor.toISOString(),
         timezone: habit.timezone || undefined,
-        instructionId: habit.instructionId,
-        mealId: habit.mealId,
+        domain: habit.domain,
+        entityId: habit.entityId,
+        subEntityId: habit.subEntityId,
     };
 
     // Emit the event through Flowcore

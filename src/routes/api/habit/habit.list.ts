@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
 import { habits } from "../../../db/schemas";
@@ -10,44 +10,69 @@ export function registerListHabits(app: Hono) {
 
         const userHabits = await db.query.habits.findMany({
             where: eq(habits.userId, safeUserId),
-            orderBy: [habits.mealName, habits.name],
+            orderBy: [habits.domain, habits.entityName, habits.name],
         });
 
-        // Group habits by meal for better organization
-        const habitsByMeal = userHabits.reduce(
-            (acc, habit) => {
-                if (!acc[habit.mealId]) {
-                    acc[habit.mealId] = {
-                        mealId: habit.mealId,
-                        mealName: habit.mealName,
+        // Group habits by type and domain
+        const groupedHabits = {
+            textHabits: [] as any[],
+            domainHabits: {} as Record<string, any>,
+        };
+
+        for (const habit of userHabits) {
+            const habitData = {
+                id: habit.id,
+                name: habit.name,
+                description: habit.description,
+                isActive: habit.isActive,
+                recurrenceType: habit.recurrenceType,
+                recurrenceInterval: habit.recurrenceInterval,
+                startDate: habit.startDate,
+                timezone: habit.timezone,
+                weekDays: habit.weekDays,
+                preferredTime: habit.preferredTime,
+            };
+
+            if (!habit.domain) {
+                // Text-based habit
+                groupedHabits.textHabits.push(habitData);
+            } else {
+                // Domain-linked habit
+                if (!groupedHabits.domainHabits[habit.domain]) {
+                    groupedHabits.domainHabits[habit.domain] = {};
+                }
+
+                const entityKey = habit.entityId || "unknown";
+                if (!groupedHabits.domainHabits[habit.domain][entityKey]) {
+                    groupedHabits.domainHabits[habit.domain][entityKey] = {
+                        domain: habit.domain,
+                        entityId: habit.entityId,
+                        entityName: habit.entityName,
                         habits: [],
                     };
                 }
 
-                acc[habit.mealId].habits.push({
-                    id: habit.id,
-                    name: habit.name,
-                    description: habit.description,
-                    isActive: habit.isActive,
-                    instructionId: habit.instructionId,
-                    recurrenceType: habit.recurrenceType,
-                    recurrenceInterval: habit.recurrenceInterval,
-                    startDate: habit.startDate,
-                    timezone: habit.timezone,
-                    weekDays: habit.weekDays,
-                    preferredTime: habit.preferredTime,
-                });
+                groupedHabits.domainHabits[habit.domain][entityKey].habits.push(
+                    {
+                        ...habitData,
+                        subEntityId: habit.subEntityId,
+                        subEntityName: habit.subEntityName,
+                    },
+                );
+            }
+        }
 
-                return acc;
-            },
-            {} as Record<string, any>,
-        );
+        // Flatten domain habits for easier consumption
+        const domainHabitsFlattened = Object.values(
+            groupedHabits.domainHabits,
+        ).flatMap((domain) => Object.values(domain));
 
         return c.json(
-            ApiResponse.success(
-                "Instruction habits retrieved successfully",
-                Object.values(habitsByMeal),
-            ),
+            ApiResponse.success("Habits retrieved successfully", {
+                textHabits: groupedHabits.textHabits,
+                domainHabits: domainHabitsFlattened,
+                totalCount: userHabits.length,
+            }),
         );
     });
 
@@ -59,70 +84,81 @@ export function registerListHabits(app: Hono) {
                 eq(habits.userId, safeUserId),
                 eq(habits.isActive, true),
             ),
-            orderBy: [habits.mealName, habits.name],
+            orderBy: [habits.domain, habits.entityName, habits.name],
         });
 
-        // Group active habits by meal
-        const habitsByMeal = activeHabits.reduce(
-            (acc, habit) => {
-                if (!acc[habit.mealId]) {
-                    acc[habit.mealId] = {
-                        mealId: habit.mealId,
-                        mealName: habit.mealName,
+        // Same grouping logic as above but only for active habits
+        const groupedHabits = {
+            textHabits: [] as any[],
+            domainHabits: {} as Record<string, any>,
+        };
+
+        for (const habit of activeHabits) {
+            const habitData = {
+                id: habit.id,
+                name: habit.name,
+                description: habit.description,
+                recurrenceType: habit.recurrenceType,
+                recurrenceInterval: habit.recurrenceInterval,
+                startDate: habit.startDate,
+                timezone: habit.timezone,
+                weekDays: habit.weekDays,
+                preferredTime: habit.preferredTime,
+            };
+
+            if (!habit.domain) {
+                groupedHabits.textHabits.push(habitData);
+            } else {
+                if (!groupedHabits.domainHabits[habit.domain]) {
+                    groupedHabits.domainHabits[habit.domain] = {};
+                }
+
+                const entityKey = habit.entityId || "unknown";
+                if (!groupedHabits.domainHabits[habit.domain][entityKey]) {
+                    groupedHabits.domainHabits[habit.domain][entityKey] = {
+                        domain: habit.domain,
+                        entityId: habit.entityId,
+                        entityName: habit.entityName,
                         habits: [],
                     };
                 }
 
-                acc[habit.mealId].habits.push({
-                    id: habit.id,
-                    name: habit.name,
-                    description: habit.description,
-                    instructionId: habit.instructionId,
-                    recurrenceType: habit.recurrenceType,
-                    recurrenceInterval: habit.recurrenceInterval,
-                    startDate: habit.startDate,
-                    timezone: habit.timezone,
-                    weekDays: habit.weekDays,
-                    preferredTime: habit.preferredTime,
-                });
+                groupedHabits.domainHabits[habit.domain][entityKey].habits.push(
+                    {
+                        ...habitData,
+                        subEntityId: habit.subEntityId,
+                        subEntityName: habit.subEntityName,
+                    },
+                );
+            }
+        }
 
-                return acc;
-            },
-            {} as Record<string, any>,
-        );
+        const domainHabitsFlattened = Object.values(
+            groupedHabits.domainHabits,
+        ).flatMap((domain) => Object.values(domain));
 
         return c.json(
-            ApiResponse.success(
-                "Active instruction habits retrieved successfully",
-                Object.values(habitsByMeal),
-            ),
+            ApiResponse.success("Active habits retrieved successfully", {
+                textHabits: groupedHabits.textHabits,
+                domainHabits: domainHabitsFlattened,
+                totalCount: activeHabits.length,
+            }),
         );
     });
 
-    app.get("/meal/:mealId", async (c) => {
+    app.get("/text", async (c) => {
         const safeUserId = c.userId!;
-        const mealId = c.req.param("mealId");
 
-        const mealHabits = await db.query.habits.findMany({
-            where: and(
-                eq(habits.userId, safeUserId),
-                eq(habits.mealId, mealId),
-            ),
+        const textHabits = await db.query.habits.findMany({
+            where: and(eq(habits.userId, safeUserId), isNull(habits.domain)),
             orderBy: habits.name,
         });
 
-        if (!mealHabits.length) {
-            return c.json(
-                ApiResponse.success("No habits found for this meal", []),
-            );
-        }
-
-        const transformedHabits = mealHabits.map((habit) => ({
+        const transformedHabits = textHabits.map((habit) => ({
             id: habit.id,
             name: habit.name,
             description: habit.description,
             isActive: habit.isActive,
-            instructionId: habit.instructionId,
             recurrenceType: habit.recurrenceType,
             recurrenceInterval: habit.recurrenceInterval,
             startDate: habit.startDate,
@@ -133,10 +169,104 @@ export function registerListHabits(app: Hono) {
 
         return c.json(
             ApiResponse.success(
-                `Instruction habits for ${mealHabits[0].mealName}`,
+                "Text habits retrieved successfully",
+                transformedHabits,
+            ),
+        );
+    });
+
+    app.get("/domain/:domain", async (c) => {
+        const safeUserId = c.userId!;
+        const domain = c.req.param("domain");
+
+        const domainHabits = await db.query.habits.findMany({
+            where: and(
+                eq(habits.userId, safeUserId),
+                eq(habits.domain, domain),
+            ),
+            orderBy: [habits.entityName, habits.name],
+        });
+
+        // Group by entity
+        const entitiesMap: Record<string, any> = {};
+
+        for (const habit of domainHabits) {
+            const entityKey = habit.entityId || "unknown";
+            if (!entitiesMap[entityKey]) {
+                entitiesMap[entityKey] = {
+                    domain: habit.domain,
+                    entityId: habit.entityId,
+                    entityName: habit.entityName,
+                    habits: [],
+                };
+            }
+
+            entitiesMap[entityKey].habits.push({
+                id: habit.id,
+                name: habit.name,
+                description: habit.description,
+                isActive: habit.isActive,
+                subEntityId: habit.subEntityId,
+                subEntityName: habit.subEntityName,
+                recurrenceType: habit.recurrenceType,
+                recurrenceInterval: habit.recurrenceInterval,
+                startDate: habit.startDate,
+                timezone: habit.timezone,
+                weekDays: habit.weekDays,
+                preferredTime: habit.preferredTime,
+            });
+        }
+
+        return c.json(
+            ApiResponse.success(
+                `Habits for ${domain} domain retrieved successfully`,
+                Object.values(entitiesMap),
+            ),
+        );
+    });
+
+    app.get("/entity/:domain/:entityId", async (c) => {
+        const safeUserId = c.userId!;
+        const domain = c.req.param("domain");
+        const entityId = c.req.param("entityId");
+
+        const entityHabits = await db.query.habits.findMany({
+            where: and(
+                eq(habits.userId, safeUserId),
+                eq(habits.domain, domain),
+                eq(habits.entityId, entityId),
+            ),
+            orderBy: habits.name,
+        });
+
+        if (!entityHabits.length) {
+            return c.json(
+                ApiResponse.success("No habits found for this entity", []),
+            );
+        }
+
+        const transformedHabits = entityHabits.map((habit) => ({
+            id: habit.id,
+            name: habit.name,
+            description: habit.description,
+            isActive: habit.isActive,
+            subEntityId: habit.subEntityId,
+            subEntityName: habit.subEntityName,
+            recurrenceType: habit.recurrenceType,
+            recurrenceInterval: habit.recurrenceInterval,
+            startDate: habit.startDate,
+            timezone: habit.timezone,
+            weekDays: habit.weekDays,
+            preferredTime: habit.preferredTime,
+        }));
+
+        return c.json(
+            ApiResponse.success(
+                `Habits for ${entityHabits[0].entityName || entityId}`,
                 {
-                    mealId: mealId,
-                    mealName: mealHabits[0].mealName,
+                    domain: domain,
+                    entityId: entityId,
+                    entityName: entityHabits[0].entityName,
                     habits: transformedHabits,
                 },
             ),

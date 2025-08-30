@@ -19,19 +19,22 @@ export async function handleHabitCreated(
     const { payload } = event;
 
     await db.insert(habits).values({
-        id: payload.id,
+        id: payload.id || crypto.randomUUID(),
         userId: payload.userId,
         name: payload.name,
         description: payload.description,
         isActive: payload.isActive,
-        instructionId: payload.instructionId,
-        mealId: payload.mealId,
-        mealName: payload.mealName,
+        domain: payload.domain,
+        entityId: payload.entityId,
+        entityName: payload.entityName,
+        subEntityId: payload.subEntityId,
+        subEntityName: payload.subEntityName,
         recurrenceType: payload.recurrenceType,
         recurrenceInterval: payload.recurrenceInterval,
         startDate: payload.startDate,
         timezone: payload.timezone,
         weekDays: payload.weekDays,
+        monthlyDay: payload.monthlyDay,
         preferredTime: payload.preferredTime,
     });
 }
@@ -47,17 +50,20 @@ export async function handleHabitsCreated(
     const habitRecords = payload.habits.map((habitData) => ({
         id: crypto.randomUUID(),
         userId: payload.userId,
-        name: `${payload.mealName}: ${habitData.instructionText}`,
-        description: `Instruction for ${payload.mealName}`,
+        name: habitData.name,
+        description: habitData.description,
         isActive: true,
-        instructionId: habitData.instructionId,
-        mealId: payload.mealId,
-        mealName: payload.mealName,
+        domain: payload.domain,
+        entityId: payload.entityId,
+        entityName: payload.entityName,
+        subEntityId: habitData.subEntityId,
+        subEntityName: habitData.subEntityName,
         recurrenceType: habitData.recurrenceType,
         recurrenceInterval: habitData.recurrenceInterval,
         startDate: habitData.startDate,
         timezone: habitData.timezone,
         weekDays: habitData.weekDays,
+        monthlyDay: undefined, // Not supported in batch creation yet
         preferredTime: habitData.preferredTime,
     }));
 
@@ -78,14 +84,17 @@ export async function handleHabitUpdated(
             name: payload.name,
             description: payload.description,
             isActive: payload.isActive,
-            instructionId: payload.instructionId,
-            mealId: payload.mealId,
-            mealName: payload.mealName,
+            domain: payload.domain,
+            entityId: payload.entityId,
+            entityName: payload.entityName,
+            subEntityId: payload.subEntityId,
+            subEntityName: payload.subEntityName,
             recurrenceType: payload.recurrenceType,
             recurrenceInterval: payload.recurrenceInterval,
             startDate: payload.startDate,
             timezone: payload.timezone,
             weekDays: payload.weekDays,
+            monthlyDay: payload.monthlyDay,
             preferredTime: payload.preferredTime,
         })
         .where(eq(habits.id, payload.id));

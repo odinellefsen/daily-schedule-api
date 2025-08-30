@@ -16,69 +16,78 @@ export const Weekday = z.enum([
     "sunday",
 ]);
 
-/** Generic domain target */
-export const TargetRef = z.object({
-    domain: z.string(), // e.g. "meal"
-    entityId: z.string().uuid(), // e.g. mealId
-});
+// Domain-agnostic habit schema supporting both text and domain-linked habits
+export const habitSchema = z
+    .object({
+        id: z.string().uuid().optional(),
+        userId: z.string(),
+        name: z.string().min(1).max(100), // Habit title/name
+        description: z.string().min(1).max(250).optional(),
+        isActive: z.boolean().default(true),
 
-/** Selection strategy (domain-agnostic) */
-export const SelectionStrategy = z.discriminatedUnion("type", [
-    z.object({ type: z.literal("fixed") }),
-    z.object({ type: z.literal("rotate") }),
-    z.object({ type: z.literal("random") }),
-    z.object({
-        type: z.literal("byWeekday"),
-        map: z.record(Weekday, z.number().int().min(0)), // index into items[]
-    }),
-]);
+        // Domain reference (optional - for domain-linked habits like meal instructions)
+        domain: z.string().optional(), // e.g., "meal", "workout", "reading", etc.
+        entityId: z.string().uuid().optional(), // e.g., mealId, workoutId
+        entityName: z.string().max(100).optional(), // e.g., meal name for display
+        subEntityId: z.string().uuid().optional(), // e.g., instructionId, exerciseId
+        subEntityName: z.string().max(100).optional(), // e.g., instruction text for display
 
-/** Habit relation template (domain-agnostic wrapper; payload is domain-specific) */
-export const RelationTemplate = z.object({
-    strategy: SelectionStrategy,
-    items: z.array(TargetRef).min(1),
-    payload: z.unknown().optional(), // validated by the domain adapter at runtime
-});
+        // Recurrence configuration
+        recurrenceType: z.enum(["daily", "weekly"]),
+        recurrenceInterval: z.number().int().positive().default(1),
+        startDate: YMD,
+        timezone: z.string().optional(),
+        weekDays: z.array(Weekday).optional(),
+        monthlyDay: z.number().int().min(1).max(31).optional(),
+        preferredTime: HHMM.optional(),
+    })
+    .superRefine((val, ctx) => {
+        if (val.recurrenceType === "weekly") {
+            if (!val.weekDays?.length) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["weekDays"],
+                    message:
+                        "weekDays is required and must be non-empty for weekly habits",
+                });
+            }
+        }
 
-/** Instruction key for step-level targeting (versioned) */
-export const InstructionKey = z.object({
-    recipeId: z.string().uuid(),
-    recipeVersion: z.number().int().positive(),
-    instructionId: z.string().uuid(),
-});
+        // If domain is specified, entityId is required
+        if (val.domain && !val.entityId) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["entityId"],
+                message: "entityId is required when domain is specified",
+            });
+        }
 
-// Individual instruction habit schema
-export const habitSchema = z.object({
-    id: z.string().uuid(),
-    userId: z.string(),
-    name: z.string().min(1).max(100), // e.g. "Margherita Pizza: Mix dough"
-    description: z.string().min(1).max(250).optional(),
-    isActive: z.boolean(),
+        // If entityId is specified, domain is required
+        if (val.entityId && !val.domain) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["domain"],
+                message: "domain is required when entityId is specified",
+            });
+        }
+    });
 
-    // Direct instruction reference (simplified)
-    instructionId: z.string().uuid(),
-    mealId: z.string().uuid(),
-    mealName: z.string().min(1).max(100),
+// Single habit creation schema
+export const createHabitSchema = habitSchema.omit({ id: true });
 
-    // Recurrence configuration
-    recurrenceType: z.enum(["daily", "weekly"]),
-    recurrenceInterval: z.number().int().positive().default(1),
-    startDate: YMD,
-    timezone: z.string().optional(),
-    weekDays: z.array(Weekday).optional(),
-    preferredTime: HHMM.optional(),
-});
-
-// Batch habit creation schema for creating multiple instruction habits at once
+// Batch habit creation schema for domain-linked habits (e.g., meal instructions)
 export const batchHabitCreationSchema = z.object({
     userId: z.string(),
-    mealId: z.string().uuid(),
-    mealName: z.string().min(1).max(100),
+    domain: z.string(), // e.g., "meal"
+    entityId: z.string().uuid(), // e.g., mealId
+    entityName: z.string().min(1).max(100), // e.g., meal name
     habits: z
         .array(
             z.object({
-                instructionId: z.string().uuid(),
-                instructionText: z.string().min(1).max(250),
+                name: z.string().min(1).max(100), // Habit name/title
+                description: z.string().min(1).max(250).optional(),
+                subEntityId: z.string().uuid().optional(), // e.g., instructionId
+                subEntityName: z.string().max(100).optional(), // e.g., instruction text
                 recurrenceType: z.enum(["daily", "weekly"]),
                 recurrenceInterval: z.number().int().positive().default(1),
                 startDate: YMD,
@@ -88,30 +97,12 @@ export const batchHabitCreationSchema = z.object({
             }),
         )
         .min(1)
-        .max(20), // Allow 1-20 instruction habits per batch
+        .max(20), // Allow 1-20 habits per batch
 });
-// .superRefine((val, ctx) => {
-//     if (val.recurrenceType === "weekly") {
-//         if (!val.weekDays?.length) {
-//             ctx.addIssue({
-//                 code: z.ZodIssueCode.custom,
-//                 path: ["weekDays"],
-//                 message:
-//                     "weekDays is required and must be non-empty for weekly habits",
-//             });
-//         }
-//     } else if (val.weekDays) {
-//         ctx.addIssue({
-//             code: z.ZodIssueCode.custom,
-//             path: ["weekDays"],
-//             message: "weekDays must be omitted for daily habits",
-//         });
-//     }
-// });
 
 // Event schemas
 export const habitCreatedSchema = habitSchema;
-export const habitsCreatedSchema = batchHabitCreationSchema; // NEW: Batch creation event
+export const habitsCreatedSchema = batchHabitCreationSchema; // Batch creation event
 
 export const habitUpdatedSchema = habitSchema.extend({
     oldValues: habitSchema,
@@ -125,6 +116,7 @@ export const habitArchivedSchema = z.object({
 
 // Type exports
 export type HabitType = z.infer<typeof habitSchema>;
+export type CreateHabitType = z.infer<typeof createHabitSchema>;
 export type BatchHabitCreationType = z.infer<typeof batchHabitCreationSchema>;
 export type HabitCreatedType = z.infer<typeof habitCreatedSchema>;
 export type HabitsCreatedType = z.infer<typeof habitsCreatedSchema>;
