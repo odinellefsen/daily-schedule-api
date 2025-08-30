@@ -2,8 +2,12 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
 import { todos } from "../../../db/schemas";
+import { generateMissingHabitTodos } from "../../../services/habit-generation";
 import { ApiResponse } from "../../../utils/api-responses";
-import { getDayBoundsInTimezone } from "../../../utils/timezone";
+import {
+    getCurrentDateInTimezone,
+    getDayBoundsInTimezone,
+} from "../../../utils/timezone";
 
 export function registerListTodos(app: Hono) {
     app.get("/today", async (c) => {
@@ -11,6 +15,17 @@ export function registerListTodos(app: Hono) {
 
         // Get user's timezone from header, default to UTC
         const userTimezone = c.req.header("X-Timezone") || "UTC";
+
+        // Get today's date in user's timezone (YYYY-MM-DD format)
+        const todayDate = getCurrentDateInTimezone(userTimezone);
+
+        // LAZY GENERATION: Generate missing habit todos for today
+        try {
+            await generateMissingHabitTodos(safeUserId, todayDate);
+        } catch (error) {
+            console.error("Failed to generate habit todos:", error);
+            // Continue even if habit generation fails
+        }
 
         // Get today's date bounds in user's timezone, converted to UTC for database query
         const { startOfDay: startOfDayUTC, endOfDay: endOfDayUTC } =

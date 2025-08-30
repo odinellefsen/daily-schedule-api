@@ -56,5 +56,6 @@ development:
         - todo.cancelled.v0
         - todo.relations.updated.v0
         - todo.archived.v0
+        - todo.generated.v0
       endpoints:
        - ""

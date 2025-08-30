@@ -40,6 +40,7 @@ import {
     todoArchiveSchema,
     todoCancelledSchema,
     todoCompletedSchema,
+    todoGeneratedSchema,
     todoRelationsUpdatedSchema,
     todoSchema,
     todoUpdateSchema,
@@ -93,6 +94,7 @@ import {
     handleTodoCancelled,
     handleTodoCompleted,
     handleTodoCreated,
+    handleTodoGenerated,
     handleTodoRelationsUpdated,
 } from "../handlers/todo/todo.handler";
 
@@ -291,6 +293,12 @@ export const FlowcorePathways = new PathwaysBuilder({
         schema: todoArchiveSchema,
     })
     .register({
+        flowType: "todo.v0",
+        eventType: "todo.generated.v0",
+        retryDelayMs: 10000,
+        schema: todoGeneratedSchema,
+    })
+    .register({
         flowType: "recipe.v0",
         eventType: "recipe-version.v0",
         retryDelayMs: 10000,
@@ -370,6 +378,7 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle("todo.v0/todo.completed.v0", handleTodoCompleted)
     .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled)
     .handle("todo.v0/todo.relations.updated.v0", handleTodoRelationsUpdated)
+    .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
     .handle("habit.v0/habit.created.v0", handleHabitCreated);
 
 // Combined handler for recipe version events

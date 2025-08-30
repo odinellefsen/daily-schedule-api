@@ -5,16 +5,17 @@ import type {
     todoArchiveSchema,
     todoCancelledSchema,
     todoCompletedSchema,
+    todoGeneratedSchema,
     todoRelationsUpdatedSchema,
     todoSchema,
 } from "../../contracts/todo";
 import { db } from "../../db";
-import { mealSteps, todos } from "../../db/schemas";
+import { mealSteps, occurrenceSteps, todos } from "../../db/schemas";
 
 export async function handleTodoCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof todoSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -34,7 +35,7 @@ export async function handleTodoCreated(
 export async function handleTodoArchived(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof todoArchiveSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -44,7 +45,7 @@ export async function handleTodoArchived(
 export async function handleTodoCompleted(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof todoCompletedSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -68,7 +69,7 @@ export async function handleTodoCompleted(
 export async function handleTodoCancelled(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof todoCancelledSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -79,7 +80,7 @@ export async function handleTodoCancelled(
 export async function handleTodoRelationsUpdated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof todoRelationsUpdatedSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -87,4 +88,68 @@ export async function handleTodoRelationsUpdated(
         .update(todos)
         .set({ relations: JSON.stringify(payload.relations) })
         .where(eq(todos.id, payload.id));
+}
+
+export async function handleTodoGenerated(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: z.infer<typeof todoGeneratedSchema>;
+    },
+) {
+    const { payload } = event;
+
+    // Generate new UUID for the todo
+    const todoId = crypto.randomUUID();
+
+    // UPSERT the todo (idempotent)
+    await db
+        .insert(todos)
+        .values({
+            id: todoId,
+            userId: payload.userId,
+            title: payload.title,
+            dueDate: payload.dueDate,
+            preferredTime: payload.preferredTime || null,
+            completed: false,
+            habitId: payload.habitId,
+            occurrenceId: payload.occurrenceId,
+            idempotencyKey: payload.idempotencyKey,
+            relation: JSON.stringify(payload.relation),
+            instructionKey: payload.instructionKey
+                ? JSON.stringify(payload.instructionKey)
+                : null,
+            snapshot: JSON.stringify(payload.snapshot),
+            eventId: event.eventId,
+            // Leave legacy fields null for habit-generated todos
+            description: payload.title, // Fallback for compatibility
+            scheduledFor: null,
+            completedAt: null,
+            relations: null,
+        })
+        .onConflictDoNothing({
+            target: todos.idempotencyKey,
+        });
+
+    // If this is an instruction-based todo, ensure the occurrence step exists
+    if (payload.instructionKey) {
+        await db
+            .insert(occurrenceSteps)
+            .values({
+                id: crypto.randomUUID(),
+                occurrenceId: payload.occurrenceId,
+                recipeId: payload.instructionKey.recipeId,
+                recipeVersion: payload.instructionKey.recipeVersion,
+                instructionId: payload.instructionKey.instructionId,
+                title: payload.title,
+                dueDate: payload.dueDate,
+                todoId: todoId,
+            })
+            .onConflictDoNothing({
+                target: [
+                    occurrenceSteps.occurrenceId,
+                    occurrenceSteps.recipeId,
+                    occurrenceSteps.recipeVersion,
+                    occurrenceSteps.instructionId,
+                ],
+            });
+    }
 }

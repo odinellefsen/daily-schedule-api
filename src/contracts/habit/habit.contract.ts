@@ -51,8 +51,8 @@ export const habitSchema = z
     .object({
         id: z.string().uuid(),
         userId: z.string(),
-        title: z.string().min(1).max(100), // copied to todos
-        description: z.string().min(1).max(250),
+        name: z.string().min(1).max(100), // Changed from title to match DB
+        description: z.string().min(1).max(250).optional(),
         isActive: z.boolean(),
 
         recurrenceType: z.enum(["daily", "weekly"]),
