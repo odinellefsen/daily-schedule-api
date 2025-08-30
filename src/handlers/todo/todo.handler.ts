@@ -10,7 +10,7 @@ import type {
     todoSchema,
 } from "../../contracts/todo";
 import { db } from "../../db";
-import { mealSteps, todos } from "../../db/schemas";
+import { todos } from "../../db/schemas";
 
 export async function handleTodoCreated(
     event: Omit<FlowcoreEvent, "payload"> & {

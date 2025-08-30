@@ -7,6 +7,7 @@ import {
     timestamp,
     uuid,
 } from "drizzle-orm/pg-core";
+import type { mealSteps } from "../../drizzle/schema";
 
 export const recipes = pgTable("recipes", {
     id: uuid("id").primaryKey(),
@@ -59,18 +60,16 @@ export const mealIngredients = pgTable("meal_ingredients", {
     ingredientText: text("ingredient_text").notNull(),
 });
 
-export const mealSteps = pgTable("meal_steps", {
+export const mealInstructions = pgTable("meal_instructions", {
     id: uuid("id").primaryKey(),
     mealId: uuid("meal_id")
         .notNull()
         .references(() => meals.id, { onDelete: "cascade" }),
-    recipeId: uuid("recipe_id"), // if the meal step is from a recipe instance, we store the recipe id here.
-    originalRecipeStepId: uuid("original_recipe_step_id"), // if the meal step is from a recipe instance, we store the original recipe step id here.
+    originalRecipeId: uuid("original_recipe_id"), // if the meal step is from a recipe instance, we store the recipe id here.
+    originalRecipeInstructionId: uuid("original_recipe_step_id"), // if the meal step is from a recipe instance, we store the original recipe step id here.
     instruction: text("instruction").notNull(),
     stepNumber: integer("step_number").notNull(),
     estimatedDurationMinutes: integer("estimated_duration_minutes"),
-    assignedToDate: text("assigned_to_date"), // YYYY-MM-DD format
-    todoId: uuid("todo_id"),
     foodItemUnitsUsedInStep: text("ingredients_used_in_step"), // JSON array
 });
 

@@ -1,13 +1,14 @@
 import type { FlowcoreEvent } from "@flowcore/pathways";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
+import { mealSteps } from "../../../drizzle/schema";
 import type {
     mealInstructionsArchiveSchema,
     mealInstructionsUpdateSchema,
     mealStepByStepInstructionsSchema,
 } from "../../contracts/food/meal";
 import { db } from "../../db";
-import { mealSteps } from "../../db/schemas";
+import { mealInstructions } from "../../db/schemas";
 
 export async function handleMealInstructionsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
@@ -18,16 +19,14 @@ export async function handleMealInstructionsCreated(
 
     // Insert meal steps
     for (const step of payload.stepByStepInstructions) {
-        await db.insert(mealSteps).values({
+        await db.insert(mealInstructions).values({
             id: step.id,
             mealId: payload.mealId,
-            recipeId: step.recipeId,
-            originalRecipeStepId: step.originalRecipeStepId,
+            originalRecipeId: step.recipeId,
+            originalRecipeInstructionId: step.originalRecipeStepId,
             instruction: step.stepInstruction,
             stepNumber: step.stepNumber,
-            isStepCompleted: step.isStepCompleted,
             estimatedDurationMinutes: step.estimatedDurationMinutes,
-            assignedToDate: step.assignedToDate,
             foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
                 ? JSON.stringify(step.foodItemUnitsUsedInStep)
                 : null,
@@ -47,16 +46,14 @@ export async function handleMealInstructionsUpdated(
 
     // Insert updated steps
     for (const step of payload.stepByStepInstructions) {
-        await db.insert(mealSteps).values({
+        await db.insert(mealInstructions).values({
             id: step.id,
             mealId: payload.mealId,
-            recipeId: step.recipeId,
-            originalRecipeStepId: step.originalRecipeStepId,
+            originalRecipeId: step.recipeId,
+            originalRecipeInstructionId: step.originalRecipeStepId,
             instruction: step.stepInstruction,
             stepNumber: step.stepNumber,
-            isStepCompleted: step.isStepCompleted,
             estimatedDurationMinutes: step.estimatedDurationMinutes,
-            assignedToDate: step.assignedToDate,
             foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
                 ? JSON.stringify(step.foodItemUnitsUsedInStep)
                 : null,
@@ -72,5 +69,7 @@ export async function handleMealInstructionsArchived(
     const { payload } = event;
 
     // Delete meal steps
-    await db.delete(mealSteps).where(eq(mealSteps.mealId, payload.mealId));
+    await db
+        .delete(mealInstructions)
+        .where(eq(mealInstructions.mealId, payload.mealId));
 }
