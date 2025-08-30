@@ -6,7 +6,7 @@ import {
     mealInstructionsUpdateSchema,
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
-import { mealSteps, meals } from "../../../db/schemas";
+import { mealInstructions, meals } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -16,7 +16,7 @@ const updateMealInstructionsRequestSchema = z.object({
     stepByStepInstructions: z.array(
         z.object({
             id: z.string().uuid(),
-            stepNumber: z.number().int(),
+            instructionNumber: z.number().int(),
             stepInstruction: z.string().min(1).max(250),
             isStepCompleted: z.boolean().default(false),
             estimatedDurationMinutes: z.number().int().positive().optional(),
@@ -60,10 +60,10 @@ export function registerPatchMealInstructions(app: Hono) {
         // Get existing instructions
         const existingInstructions = await db
             .select()
-            .from(mealSteps)
+            .from(mealInstructions)
             .where(
                 eq(
-                    mealSteps.mealId,
+                    mealInstructions.mealId,
                     safeUpdateMealInstructionsRequestBody.mealId,
                 ),
             );
@@ -80,15 +80,14 @@ export function registerPatchMealInstructions(app: Hono) {
             mealId: safeUpdateMealInstructionsRequestBody.mealId,
             stepByStepInstructions: existingInstructions.map((step) => ({
                 id: step.id,
-                recipeId: step.recipeId ?? undefined,
-                originalRecipeStepId: step.originalRecipeStepId ?? undefined,
-                isStepCompleted: step.isStepCompleted,
-                stepNumber: step.stepNumber,
+                recipeId: step.originalRecipeId ?? undefined,
+                originalRecipeInstructionId:
+                    step.originalRecipeInstructionId ?? undefined,
+                isStepCompleted: false,
+                instructionNumber: step.instructionNumber,
                 stepInstruction: step.instruction,
                 estimatedDurationMinutes:
                     step.estimatedDurationMinutes || undefined,
-                assignedToDate: step.assignedToDate || undefined,
-                todoId: step.todoId || undefined,
                 foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
                     ? JSON.parse(step.foodItemUnitsUsedInStep)
                     : undefined,
@@ -105,11 +104,11 @@ export function registerPatchMealInstructions(app: Hono) {
                         );
                         return {
                             id: step.id,
-                            recipeId: existingStep?.recipeId || "",
-                            originalRecipeStepId:
-                                existingStep?.originalRecipeStepId || "",
+                            recipeId: existingStep?.originalRecipeId || "",
+                            originalRecipeInstructionId:
+                                existingStep?.originalRecipeInstructionId || "",
                             isStepCompleted: step.isStepCompleted,
-                            stepNumber: step.stepNumber,
+                            instructionNumber: step.instructionNumber,
                             stepInstruction: step.stepInstruction,
                             estimatedDurationMinutes:
                                 step.estimatedDurationMinutes,

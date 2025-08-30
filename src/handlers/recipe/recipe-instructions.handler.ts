@@ -9,8 +9,8 @@ import type {
 import type { recipeVersionSchema } from "../../contracts/food/recipe/recipe-version.contract";
 import { db } from "../../db";
 import {
-    recipeStepFoodItemUnits,
-    recipeSteps,
+    recipeInstructionFoodItemUnits,
+    recipeInstructions,
     recipes,
 } from "../../db/schemas";
 
@@ -23,18 +23,18 @@ export async function handleRecipeInstructionsCreated(
 
     // Insert recipe steps
     for (const step of payload.stepByStepInstructions) {
-        await db.insert(recipeSteps).values({
+        await db.insert(recipeInstructions).values({
             id: step.id,
             recipeId: payload.recipeId,
             instruction: step.stepInstruction,
-            stepNumber: step.stepNumber,
+            instructionNumber: step.instructionNumber,
         });
 
         if (step.foodItemUnitsUsedInStep) {
             for (const foodItemUnit of step.foodItemUnitsUsedInStep) {
-                await db.insert(recipeStepFoodItemUnits).values({
+                await db.insert(recipeInstructionFoodItemUnits).values({
                     id: crypto.randomUUID(),
-                    recipeStepId: step.id,
+                    recipeInstructionId: step.id,
                     foodItemUnitId: foodItemUnit.foodItemUnitId,
                     quantity: foodItemUnit.quantityOfFoodItemUnit,
                 });
@@ -53,33 +53,35 @@ export async function handleRecipeInstructionsUpdated(
     // Delete existing steps and ingredients
     const existingSteps = await db
         .select()
-        .from(recipeSteps)
-        .where(eq(recipeSteps.recipeId, payload.recipeId));
+        .from(recipeInstructions)
+        .where(eq(recipeInstructions.recipeId, payload.recipeId));
 
     for (const step of existingSteps) {
         await db
-            .delete(recipeStepFoodItemUnits)
-            .where(eq(recipeStepFoodItemUnits.recipeStepId, step.id));
+            .delete(recipeInstructionFoodItemUnits)
+            .where(
+                eq(recipeInstructionFoodItemUnits.recipeInstructionId, step.id),
+            );
     }
     await db
-        .delete(recipeSteps)
-        .where(eq(recipeSteps.recipeId, payload.recipeId));
+        .delete(recipeInstructions)
+        .where(eq(recipeInstructions.recipeId, payload.recipeId));
 
     // Insert updated steps
     for (const step of payload.stepByStepInstructions) {
-        await db.insert(recipeSteps).values({
+        await db.insert(recipeInstructions).values({
             id: step.id,
             recipeId: payload.recipeId,
             instruction: step.stepInstruction,
-            stepNumber: step.stepNumber,
+            instructionNumber: step.instructionNumber,
         });
 
         // Insert food item units for this step if they exist
         if (step.foodItemUnitsUsedInStep) {
             for (const foodItemUnit of step.foodItemUnitsUsedInStep) {
-                await db.insert(recipeStepFoodItemUnits).values({
+                await db.insert(recipeInstructionFoodItemUnits).values({
                     id: crypto.randomUUID(),
-                    recipeStepId: step.id,
+                    recipeInstructionId: step.id,
                     foodItemUnitId: foodItemUnit.foodItemUnitId,
                     quantity: foodItemUnit.quantityOfFoodItemUnit,
                 });
@@ -98,19 +100,21 @@ export async function handleRecipeInstructionsArchived(
     // Delete ingredients first (foreign key constraint)
     const existingSteps = await db
         .select()
-        .from(recipeSteps)
-        .where(eq(recipeSteps.recipeId, payload.recipeId));
+        .from(recipeInstructions)
+        .where(eq(recipeInstructions.recipeId, payload.recipeId));
 
     for (const step of existingSteps) {
         await db
-            .delete(recipeStepFoodItemUnits)
-            .where(eq(recipeStepFoodItemUnits.recipeStepId, step.id));
+            .delete(recipeInstructionFoodItemUnits)
+            .where(
+                eq(recipeInstructionFoodItemUnits.recipeInstructionId, step.id),
+            );
     }
 
     // Delete recipe steps
     await db
-        .delete(recipeSteps)
-        .where(eq(recipeSteps.recipeId, payload.recipeId));
+        .delete(recipeInstructions)
+        .where(eq(recipeInstructions.recipeId, payload.recipeId));
 }
 
 export async function handleRecipeInstructionsVersionUpdated(

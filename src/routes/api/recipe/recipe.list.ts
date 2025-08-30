@@ -1,7 +1,11 @@
 import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
-import { recipeIngredients, recipeSteps, recipes } from "../../../db/schemas";
+import {
+    recipeIngredients,
+    recipeInstructions,
+    recipes,
+} from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 
 export function registerListRecipes(app: Hono) {
@@ -19,8 +23,8 @@ export function registerListRecipes(app: Hono) {
             userRecipes.map(async (recipe) => {
                 const steps = await db
                     .select()
-                    .from(recipeSteps)
-                    .where(eq(recipeSteps.recipeId, recipe.id));
+                    .from(recipeInstructions)
+                    .where(eq(recipeInstructions.recipeId, recipe.id));
 
                 const ingredients = await db
                     .select()
@@ -72,9 +76,9 @@ export function registerListRecipes(app: Hono) {
         // Get recipe steps
         const steps = await db
             .select()
-            .from(recipeSteps)
-            .where(eq(recipeSteps.recipeId, recipeId))
-            .orderBy(recipeSteps.stepNumber);
+            .from(recipeInstructions)
+            .where(eq(recipeInstructions.recipeId, recipeId))
+            .orderBy(recipeInstructions.instructionNumber);
 
         // Get recipe ingredients
         const ingredients = await db
@@ -92,7 +96,7 @@ export function registerListRecipes(app: Hono) {
             steps: steps.map((step) => ({
                 id: step.id,
                 instruction: step.instruction,
-                stepNumber: step.stepNumber,
+                instructionNumber: step.instructionNumber,
             })),
             ingredients: ingredients.map((ingredient) => ({
                 id: ingredient.id,

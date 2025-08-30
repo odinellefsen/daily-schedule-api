@@ -47,7 +47,7 @@ export const mealSteps = pgTable(
         recipeId: uuid("recipe_id").notNull(),
         originalRecipeStepId: uuid("original_recipe_step_id").notNull(),
         instruction: text().notNull(),
-        stepNumber: integer("step_number").notNull(),
+        instructionNumber: integer("step_number").notNull(),
         isStepCompleted: boolean("is_step_completed").default(false).notNull(),
         estimatedDurationMinutes: integer("estimated_duration_minutes"),
         assignedToDate: text("assigned_to_date"),
@@ -85,7 +85,7 @@ export const recipeSteps = pgTable(
         id: uuid().primaryKey().notNull(),
         recipeId: uuid("recipe_id"),
         step: text().notNull(),
-        stepNumber: integer("step_number").notNull(),
+        instructionNumber: integer("step_number").notNull(),
     },
     (table) => [
         foreignKey({

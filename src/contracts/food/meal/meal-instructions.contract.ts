@@ -10,7 +10,7 @@ export const mealStepByStepInstructionsSchema = z.object({
             // same here
             originalRecipeStepId: z.string().uuid().optional(),
             isStepCompleted: z.boolean().default(false),
-            stepNumber: z.number().int(),
+            instructionNumber: z.number().int(),
             stepInstruction: z
                 .string()
                 .min(1)

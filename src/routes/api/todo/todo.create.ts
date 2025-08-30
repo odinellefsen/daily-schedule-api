@@ -18,7 +18,7 @@ const createTodoRequestSchema = z.object({
                     mealStepId: z.string().uuid(),
                     mealId: z.string().uuid(),
                     recipeId: z.string().uuid(),
-                    stepNumber: z.number().int().positive(),
+                    instructionNumber: z.number().int().positive(),
                 }),
             }),
         )

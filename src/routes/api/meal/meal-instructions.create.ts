@@ -83,7 +83,7 @@ export function registerCreateMealInstructions(app: Hono) {
                                 }),
                             ),
                         isStepCompleted: false,
-                        stepNumber: 1,
+                        instructionNumber: 1,
                     }),
                 ),
         };

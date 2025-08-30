@@ -6,7 +6,7 @@ import {
     recipeInstructionsSchema,
 } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
-import { recipeSteps, recipes } from "../../../db/schemas";
+import { recipeInstructions, recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -70,11 +70,11 @@ export function registerCreateRecipeInstructions(app: Hono) {
 
         // Get the current maximum step number for this recipe
         const maxStepResult = await db
-            .select({ maxStep: max(recipeSteps.stepNumber) })
-            .from(recipeSteps)
+            .select({ maxStep: max(recipeInstructions.instructionNumber) })
+            .from(recipeInstructions)
             .where(
                 eq(
-                    recipeSteps.recipeId,
+                    recipeInstructions.recipeId,
                     safeCreateRecipeInstructionsJsonBody.recipeId,
                 ),
             );
@@ -87,7 +87,7 @@ export function registerCreateRecipeInstructions(app: Hono) {
                 safeCreateRecipeInstructionsJsonBody.stepByStepInstructions.map(
                     (step, index) => ({
                         id: crypto.randomUUID(),
-                        stepNumber: currentMaxStep + index + 1,
+                        instructionNumber: currentMaxStep + index + 1,
                         stepInstruction: step.stepInstruction,
                         foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep,
                     }),

@@ -10,7 +10,7 @@ import {
     whatTriggeredVersionUpate,
 } from "../../../contracts/food/recipe/recipe-version.contract";
 import { db } from "../../../db";
-import { recipeSteps, recipes } from "../../../db/schemas";
+import { recipeInstructions, recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -20,7 +20,7 @@ const updateRecipeInstructionsRequestSchema = z.object({
     stepByStepInstructions: z
         .array(
             z.object({
-                stepNumber: z.number().positive().int(),
+                instructionNumber: z.number().positive().int(),
                 stepInstruction: z.string().min(1).max(250),
                 foodItemUnitsUsedInStep: z
                     .array(
@@ -81,10 +81,10 @@ export function registerPatchRecipeInstructions(app: Hono) {
         // Get existing instructions
         const existingInstructions = await db
             .select()
-            .from(recipeSteps)
+            .from(recipeInstructions)
             .where(
                 eq(
-                    recipeSteps.recipeId,
+                    recipeInstructions.recipeId,
                     safeUpdateRecipeInstructionsRequestBody.recipeId,
                 ),
             );
@@ -101,7 +101,7 @@ export function registerPatchRecipeInstructions(app: Hono) {
             recipeId: safeUpdateRecipeInstructionsRequestBody.recipeId,
             stepByStepInstructions: existingInstructions.map((step) => ({
                 id: step.id,
-                stepNumber: step.stepNumber,
+                instructionNumber: step.instructionNumber,
                 stepInstruction: step.instruction,
                 foodItemUnitsUsedInStep: [], // Simplified - would need to fetch from recipeStepIngredients
             })),
@@ -113,7 +113,7 @@ export function registerPatchRecipeInstructions(app: Hono) {
                 safeUpdateRecipeInstructionsRequestBody.stepByStepInstructions.map(
                     (step) => ({
                         id: crypto.randomUUID(),
-                        stepNumber: step.stepNumber,
+                        instructionNumber: step.instructionNumber,
                         stepInstruction: step.stepInstruction,
                         foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep,
                     }),

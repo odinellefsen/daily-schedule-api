@@ -160,7 +160,7 @@ Actionable tasks (standalone or meal-related)
       "context": {
         "type": "meal",           // "meal" | "standalone"
         "mealName": "Sunday Pizza Night",
-        "stepNumber": 1,
+        "instructionNumber": 1,
         "estimatedDuration": 15   // minutes
       },
       "urgency": "now",           // "overdue" | "now" | "upcoming" | "later"
@@ -334,7 +334,7 @@ generates shopping list, flattens all steps into sequential order.
       "id": "step-uuid",
       "recipeId": "pizza-recipe-uuid",
       "instruction": "Mix flour and water",
-      "stepNumber": 1,
+      "instructionNumber": 1,
       "isStepCompleted": false,
       "estimatedDurationMinutes": 10,
       "assignedToDate": null,  // Can be assigned to specific day
@@ -406,7 +406,7 @@ generates shopping list, flattens all steps into sequential order.
     {
       "id": "step-uuid",
       "instruction": "Mix flour and water", 
-      "stepNumber": 1
+      "instructionNumber": 1
     }
   ],
   "ingredients": [
@@ -447,12 +447,12 @@ generates shopping list, flattens all steps into sequential order.
   "instructions": [
     {
       "instruction": "Mix flour and water",
-      "stepNumber": 1,
+      "instructionNumber": 1,
       "estimatedDurationMinutes": 5
     },
     {
       "instruction": "Knead dough",
-      "stepNumber": 2,
+      "instructionNumber": 2,
       "estimatedDurationMinutes": 10
     }
   ]
@@ -555,7 +555,7 @@ generates shopping list, flattens all steps into sequential order.
           "mealStepId": "step-uuid",
           "mealId": "meal-uuid",
           "recipeId": "recipe-uuid",
-          "stepNumber": 1,
+          "instructionNumber": 1,
         },
       },
     ],
@@ -584,7 +584,7 @@ generates shopping list, flattens all steps into sequential order.
         "mealStepId": "step-uuid",
         "mealId": "meal-uuid", 
         "recipeId": "recipe-uuid",
-        "stepNumber": 1
+        "instructionNumber": 1
       }
     }
   ]
@@ -674,11 +674,11 @@ POST /api/recipe {
 POST /api/recipe/instructions {
   recipeId: "new-recipe-uuid",
   instructions: [
-    { instruction: "Mix flour and water", stepNumber: 1, estimatedDurationMinutes: 5 },
-    { instruction: "Knead dough", stepNumber: 2, estimatedDurationMinutes: 10 },
-    { instruction: "Let rise", stepNumber: 3, estimatedDurationMinutes: 60 },
-    { instruction: "Preheat oven", stepNumber: 4, estimatedDurationMinutes: 15 },
-    { instruction: "Shape and bake", stepNumber: 5, estimatedDurationMinutes: 20 }
+    { instruction: "Mix flour and water", instructionNumber: 1, estimatedDurationMinutes: 5 },
+    { instruction: "Knead dough", instructionNumber: 2, estimatedDurationMinutes: 10 },
+    { instruction: "Let rise", instructionNumber: 3, estimatedDurationMinutes: 60 },
+    { instruction: "Preheat oven", instructionNumber: 4, estimatedDurationMinutes: 15 },
+    { instruction: "Shape and bake", instructionNumber: 5, estimatedDurationMinutes: 20 }
   ]
 }
 

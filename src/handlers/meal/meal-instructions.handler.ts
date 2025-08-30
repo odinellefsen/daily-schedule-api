@@ -25,7 +25,7 @@ export async function handleMealInstructionsCreated(
             originalRecipeId: step.recipeId,
             originalRecipeInstructionId: step.originalRecipeStepId,
             instruction: step.stepInstruction,
-            stepNumber: step.stepNumber,
+            instructionNumber: step.instructionNumber,
             estimatedDurationMinutes: step.estimatedDurationMinutes,
             foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
                 ? JSON.stringify(step.foodItemUnitsUsedInStep)
@@ -52,7 +52,7 @@ export async function handleMealInstructionsUpdated(
             originalRecipeId: step.recipeId,
             originalRecipeInstructionId: step.originalRecipeStepId,
             instruction: step.stepInstruction,
-            stepNumber: step.stepNumber,
+            instructionNumber: step.instructionNumber,
             estimatedDurationMinutes: step.estimatedDurationMinutes,
             foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
                 ? JSON.stringify(step.foodItemUnitsUsedInStep)

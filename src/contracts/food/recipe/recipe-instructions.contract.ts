@@ -7,7 +7,7 @@ export const recipeInstructionsSchema = z.object({
         .array(
             z.object({
                 id: z.string().uuid(),
-                stepNumber: z
+                instructionNumber: z
                     .number()
                     .positive("Step number must be greater than 0")
                     .int("Step number must be an integer"),

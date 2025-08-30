@@ -18,19 +18,24 @@ export const recipes = pgTable("recipes", {
     version: integer("version").notNull().default(1),
 });
 
-export const recipeSteps = pgTable("recipe_steps", {
+export const recipeInstructions = pgTable("recipe_instructions", {
     id: uuid("id").primaryKey(),
     recipeId: uuid("recipe_id").references(() => recipes.id),
-    instruction: text("step").notNull(),
-    stepNumber: integer("step_number").notNull(),
+    instruction: text("instruction").notNull(),
+    instructionNumber: integer("instruction_number").notNull(),
 });
 
-export const recipeStepFoodItemUnits = pgTable("recipe_steps_food_item_units", {
-    id: uuid("id").primaryKey(),
-    recipeStepId: uuid("recipe_step_id").references(() => recipeSteps.id),
-    foodItemUnitId: uuid("food_item_unit_id").notNull(),
-    quantity: doublePrecision("quantity").notNull(),
-});
+export const recipeInstructionFoodItemUnits = pgTable(
+    "recipe_instructions_food_item_units",
+    {
+        id: uuid("id").primaryKey(),
+        recipeInstructionId: uuid("recipe_instruction_id").references(
+            () => recipeInstructions.id,
+        ),
+        foodItemUnitId: uuid("food_item_unit_id").notNull(),
+        quantity: doublePrecision("quantity").notNull(),
+    },
+);
 
 export const recipeIngredients = pgTable("recipe_ingredients", {
     id: uuid("id").primaryKey(),
@@ -68,7 +73,7 @@ export const mealInstructions = pgTable("meal_instructions", {
     originalRecipeId: uuid("original_recipe_id"), // if the meal step is from a recipe instance, we store the recipe id here.
     originalRecipeInstructionId: uuid("original_recipe_step_id"), // if the meal step is from a recipe instance, we store the original recipe step id here.
     instruction: text("instruction").notNull(),
-    stepNumber: integer("step_number").notNull(),
+    instructionNumber: integer("instruction_number").notNull(),
     estimatedDurationMinutes: integer("estimated_duration_minutes"),
     foodItemUnitsUsedInStep: text("ingredients_used_in_step"), // JSON array
 });

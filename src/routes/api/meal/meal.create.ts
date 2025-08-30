@@ -10,7 +10,11 @@ import {
     mealStepByStepInstructionsSchema,
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
-import { recipeIngredients, recipeSteps, recipes } from "../../../db/schemas";
+import {
+    recipeIngredients,
+    recipeInstructions,
+    recipes,
+} from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -101,17 +105,17 @@ export function registerCreateMeal(app: Hono) {
         for (const recipeInstance of recipeInstances) {
             const steps = await db
                 .select()
-                .from(recipeSteps)
-                .where(eq(recipeSteps.recipeId, recipeInstance.recipeId))
-                .orderBy(recipeSteps.stepNumber);
+                .from(recipeInstructions)
+                .where(eq(recipeInstructions.recipeId, recipeInstance.recipeId))
+                .orderBy(recipeInstructions.instructionNumber);
 
             for (const step of steps) {
                 allMealSteps.push({
                     id: crypto.randomUUID(),
                     recipeId: recipeInstance.recipeId,
-                    originalRecipeStepId: step.id,
+                    originalRecipeInstructionId: step.id,
                     isStepCompleted: false,
-                    stepNumber: globalStepNumber++,
+                    instructionNumber: globalStepNumber++,
                     stepInstruction: step.instruction,
                     estimatedDurationMinutes: undefined, // Will be set later when planning todos
                     assignedToDate: undefined,

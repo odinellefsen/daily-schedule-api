@@ -6,7 +6,7 @@ const mealRelationSchema = z.object({
     mealId: z.string().uuid(),
     mealName: z.string().min(1).max(100), // snapshot for display
     stepId: z.string().uuid().optional(), // if todo came from specific step
-    stepNumber: z.number().int().positive().optional(),
+    instructionNumber: z.number().int().positive().optional(),
     recipeName: z.string().optional(), // snapshot for context
 });
 
@@ -14,7 +14,7 @@ const mealInstructionRelationSchema = z.object({
     mealStepId: z.string().uuid(),
     mealId: z.string().uuid(),
     recipeId: z.string().uuid(),
-    stepNumber: z.number().int().positive(),
+    instructionNumber: z.number().int().positive(),
 });
 
 // Main todo schema

@@ -1,7 +1,7 @@
 import { and, eq, gte, lte } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
-import { mealSteps, meals } from "../../../db/schemas";
+import { mealInstructions, meals } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 
 export function registerListMeals(app: Hono) {
@@ -36,12 +36,9 @@ export function registerListMeals(app: Hono) {
             // Get meal progress
             const allSteps = await db
                 .select()
-                .from(mealSteps)
-                .where(eq(mealSteps.mealId, mealData.id));
+                .from(mealInstructions)
+                .where(eq(mealInstructions.mealId, mealData.id));
 
-            const completedSteps = allSteps.filter(
-                (step) => step.isStepCompleted,
-            );
             const recipes = JSON.parse(mealData.recipes);
 
             const mealWithProgress = {
@@ -54,20 +51,6 @@ export function registerListMeals(app: Hono) {
                     recipeName: recipe.recipeName,
                     recipeVersion: recipe.recipeVersion,
                 })),
-                progress: {
-                    completed: completedSteps.length,
-                    total: allSteps.length,
-                    percentage:
-                        allSteps.length > 0
-                            ? Math.round(
-                                  (completedSteps.length / allSteps.length) *
-                                      100,
-                              )
-                            : 0,
-                },
-                nextStep:
-                    allSteps.find((step) => !step.isStepCompleted)
-                        ?.instruction || null,
                 canStartPrep: mealData.scheduledToBeEatenAt
                     ? new Date(
                           mealData.scheduledToBeEatenAt.getTime() -
@@ -165,12 +148,11 @@ export function registerListMeals(app: Hono) {
         // Get meal steps
         const steps = await db
             .select()
-            .from(mealSteps)
-            .where(eq(mealSteps.mealId, mealId))
-            .orderBy(mealSteps.stepNumber);
+            .from(mealInstructions)
+            .where(eq(mealInstructions.mealId, mealId))
+            .orderBy(mealInstructions.instructionNumber);
 
         const recipes = JSON.parse(mealFromDb.recipes);
-        const completedSteps = steps.filter((step) => step.isStepCompleted);
 
         const fullMeal = {
             id: mealFromDb.id,
@@ -181,36 +163,25 @@ export function registerListMeals(app: Hono) {
             recipes: recipes,
             steps: steps.map((step) => ({
                 id: step.id,
-                recipeId: step.recipeId,
-                originalRecipeStepId: step.originalRecipeStepId,
+                recipeId: step.originalRecipeId,
+                originalRecipeInstructionId: step.originalRecipeInstructionId,
                 instruction: step.instruction,
-                stepNumber: step.stepNumber,
-                isStepCompleted: step.isStepCompleted,
+                instructionNumber: step.instructionNumber,
                 estimatedDurationMinutes: step.estimatedDurationMinutes,
-                assignedToDate: step.assignedToDate,
-                todoId: step.todoId,
                 foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
                     ? JSON.parse(step.foodItemUnitsUsedInStep)
                     : null,
             })),
             progress: {
-                completed: completedSteps.length,
+                completed: steps.length,
                 total: steps.length,
                 percentage:
                     steps.length > 0
-                        ? Math.round(
-                              (completedSteps.length / steps.length) * 100,
-                          )
+                        ? Math.round((steps.length / steps.length) * 100)
                         : 0,
             },
-            nextStep:
-                steps.find((step) => !step.isStepCompleted)?.instruction ||
-                null,
             estimatedTimeRemaining: steps
-                .filter(
-                    (step) =>
-                        !step.isStepCompleted && step.estimatedDurationMinutes,
-                )
+                .filter((step) => !step.estimatedDurationMinutes)
                 .reduce(
                     (sum, step) => sum + (step.estimatedDurationMinutes || 0),
                     0,

@@ -21,10 +21,10 @@ const updateRelationsRequestSchema = z.object({
                         mealStepId: z.string().uuid(),
                         mealId: z.string().uuid(),
                         recipeId: z.string().uuid(),
-                        stepNumber: z.number().int().positive(),
+                        instructionNumber: z.number().int().positive(),
                     })
                     .optional(),
-            })
+            }),
         )
         .max(5),
 });
@@ -39,9 +39,9 @@ export function registerUpdateTodoRelations(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid todo relations",
-                    parsed.error.errors
+                    parsed.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
 
@@ -54,7 +54,7 @@ export function registerUpdateTodoRelations(app: Hono) {
         if (!todoFromDb || todoFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Todo not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -69,9 +69,9 @@ export function registerUpdateTodoRelations(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid todo relations event",
-                    eventParsed.error.errors
+                    eventParsed.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
 
@@ -82,15 +82,15 @@ export function registerUpdateTodoRelations(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update todo relations", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Todo relations updated successfully",
-                eventParsed.data
-            )
+                eventParsed.data,
+            ),
         );
     });
 }

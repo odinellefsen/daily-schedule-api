@@ -27,9 +27,9 @@ export function registerDeleteTodo(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid todo data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeDeleteTodoRequestBody = parsedRequestJsonBody.data;
@@ -41,14 +41,14 @@ export function registerDeleteTodo(app: Hono) {
         if (!todoFromDb || todoFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Todo not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
         const todoArchived: TodoArchiveType = {
             id: todoFromDb.id,
             userId: todoFromDb.userId,
-            description: todoFromDb.description,
+            description: todoFromDb.description || "",
             completed: todoFromDb.completed,
             scheduledFor: todoFromDb.scheduledFor?.toISOString(),
             completedAt: todoFromDb.completedAt?.toISOString(),
@@ -63,9 +63,9 @@ export function registerDeleteTodo(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid todo archived data",
-                    todoArchivedEvent.error.errors
+                    todoArchivedEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeTodoArchivedEvent = todoArchivedEvent.data;
@@ -77,15 +77,15 @@ export function registerDeleteTodo(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to archive todo", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Todo archived successfully",
-                safeTodoArchivedEvent
-            )
+                safeTodoArchivedEvent,
+            ),
         );
     });
 }

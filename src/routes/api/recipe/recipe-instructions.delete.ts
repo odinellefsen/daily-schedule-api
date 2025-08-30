@@ -6,7 +6,7 @@ import {
     recipeInstructionsArchiveSchema,
 } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
-import { recipeSteps, recipes } from "../../../db/schemas";
+import { recipeInstructions, recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -52,10 +52,10 @@ export function registerDeleteRecipeInstructions(app: Hono) {
         // Get existing instructions
         const existingInstructions = await db
             .select()
-            .from(recipeSteps)
+            .from(recipeInstructions)
             .where(
                 eq(
-                    recipeSteps.recipeId,
+                    recipeInstructions.recipeId,
                     safeDeleteRecipeInstructionsRequestBody.recipeId,
                 ),
             );
@@ -71,7 +71,7 @@ export function registerDeleteRecipeInstructions(app: Hono) {
             recipeId: safeDeleteRecipeInstructionsRequestBody.recipeId,
             stepByStepInstructions: existingInstructions.map((step) => ({
                 id: step.id,
-                stepNumber: step.stepNumber,
+                instructionNumber: step.instructionNumber,
                 stepInstruction: step.instruction,
                 foodItemUnitsUsedInStep: [], // Simplified - would need to fetch from recipeStepIngredients
             })),

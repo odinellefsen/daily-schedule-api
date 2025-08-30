@@ -76,8 +76,8 @@ export function registerListTodos(app: Hono) {
                 context: mealRelation
                     ? {
                           type: "meal",
-                          mealName: `Step ${mealRelation.stepNumber}`, // We'd need to fetch meal name in a real implementation
-                          stepNumber: mealRelation.stepNumber,
+                          mealName: `Step ${mealRelation.instructionNumber}`, // We'd need to fetch meal name in a real implementation
+                          instructionNumber: mealRelation.instructionNumber,
                           estimatedDuration: null, // Would come from meal step data
                       }
                     : {
