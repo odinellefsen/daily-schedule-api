@@ -8,6 +8,71 @@ import { FlowcorePathways } from "../utils/flowcore";
 import { domainAdapters } from "./domain-adapters";
 
 /**
+ * Convert dueDate, preferredTime, and timezone into a scheduledFor timestamp
+ */
+function calculateScheduledFor(
+    dueDate: string, // YYYY-MM-DD
+    preferredTime: string | undefined, // HH:MM
+    timezone: string | undefined, // IANA timezone
+    stepIndex: number = 0, // For time distribution of multiple steps
+    totalSteps: number = 1, // Total steps on this date
+): Date {
+    // Default time if not specified (9:00 AM)
+    const timeToUse = preferredTime || "09:00";
+    const timezoneToUse = timezone || "UTC";
+
+    // Parse the time
+    const [hours, minutes] = timeToUse.split(":").map(Number);
+
+    // If multiple steps on same day, distribute them
+    let adjustedHours = hours;
+    let adjustedMinutes = minutes;
+
+    if (totalSteps > 1) {
+        // Spread steps over a 4-hour window, starting from preferred time
+        const minutesToAdd = Math.floor(
+            (stepIndex * 240) / Math.max(totalSteps - 1, 1),
+        );
+        adjustedMinutes += minutesToAdd;
+        adjustedHours += Math.floor(adjustedMinutes / 60);
+        adjustedMinutes %= 60;
+
+        // Cap at reasonable hours (don't go past 10 PM)
+        if (adjustedHours > 22) {
+            adjustedHours = 22;
+            adjustedMinutes = 0;
+        }
+    }
+
+    // Create date in user's timezone
+    const [year, month, day] = dueDate.split("-").map(Number);
+
+    // Create a date object representing the local time in the user's timezone
+    const localDateTime = new Date(
+        year,
+        month - 1,
+        day,
+        adjustedHours,
+        adjustedMinutes,
+        0,
+        0,
+    );
+
+    // Convert to UTC using timezone offset calculation
+    const localString = localDateTime.toISOString().slice(0, 19); // Remove Z
+    const timeInTargetTz = new Date(`${localString} UTC`);
+
+    // Calculate the offset by comparing UTC time with timezone time
+    const utcTime = timeInTargetTz.getTime();
+    const timezoneTime = new Date(
+        timeInTargetTz.toLocaleString("sv-SE", { timeZone: timezoneToUse }),
+    ).getTime();
+    const offset = utcTime - timezoneTime;
+
+    return new Date(localDateTime.getTime() + offset);
+}
+
+/**
  * Selection strategy implementations
  */
 function selectFromTemplate(
@@ -236,33 +301,72 @@ async function generateTodosForHabit(
                   },
               ];
 
-    // Generate todos for each step
+    // Group items by dueDate for intelligent time distribution
+    const itemsByDate = new Map<
+        string,
+        Array<{
+            instructionKey:
+                | {
+                      recipeId: string;
+                      recipeVersion: number;
+                      instructionId: string;
+                  }
+                | undefined;
+            offsetDays: number;
+            titleOverride?: string;
+        }>
+    >();
+
     for (const item of items) {
         const dueDate = addDays(targetDate, item.offsetDays);
-        const instructionKey = item.instructionKey;
+        if (!itemsByDate.has(dueDate)) {
+            itemsByDate.set(dueDate, []);
+        }
+        itemsByDate.get(dueDate)!.push(item);
+    }
 
-        // Get snapshot for replay safety
-        const snapshot = await adapter.snapshot(entityId, version);
+    // Generate todos for each step with intelligent scheduling
+    for (const [dueDate, dateItems] of Array.from(itemsByDate.entries())) {
+        const totalStepsOnDate = dateItems.length;
 
-        // Determine title
-        const title = item.titleOverride || habit.name;
+        for (let stepIndex = 0; stepIndex < dateItems.length; stepIndex++) {
+            const item = dateItems[stepIndex];
+            const instructionKey = item.instructionKey;
 
-        const todoEvent: TodoGeneratedType = {
-            userId: habit.userId,
-            habitId: habit.id,
-            occurrenceId: occurrence.id,
-            title,
-            dueDate,
-            preferredTime: habit.preferredTime || undefined,
-            relation: { domain, entityId, version },
-            instructionKey,
-            snapshot,
-        };
+            // Get snapshot for replay safety (cached per entityId+version)
+            const snapshot = await adapter.snapshot(entityId, version);
 
-        // Emit the event through Flowcore
-        await FlowcorePathways.write("todo.v0/todo.generated.v0", {
-            data: todoEvent,
-        });
+            // Determine title
+            const title = item.titleOverride || habit.name;
+
+            // Calculate the precise scheduling timestamp with intelligent distribution
+            const scheduledFor = calculateScheduledFor(
+                dueDate,
+                habit.preferredTime || undefined,
+                habit.timezone || undefined,
+                stepIndex,
+                totalStepsOnDate,
+            );
+
+            const todoEvent: TodoGeneratedType = {
+                userId: habit.userId,
+                habitId: habit.id,
+                occurrenceId: occurrence.id,
+                title,
+                dueDate,
+                preferredTime: habit.preferredTime || undefined,
+                scheduledFor: scheduledFor.toISOString(),
+                timezone: habit.timezone || undefined,
+                relation: { domain, entityId, version },
+                instructionKey,
+                snapshot,
+            };
+
+            // Emit the event through Flowcore
+            await FlowcorePathways.write("todo.v0/todo.generated.v0", {
+                data: todoEvent,
+            });
+        }
     }
 }
 

@@ -118,9 +118,9 @@ export async function handleTodoGenerated(
                 : null,
             snapshot: JSON.stringify(payload.snapshot),
             eventId: event.eventId,
-            // Leave legacy fields null for habit-generated todos
+            // Set precise scheduling for habit-generated todos
             description: payload.title, // Fallback for compatibility
-            scheduledFor: null,
+            scheduledFor: new Date(payload.scheduledFor),
             completedAt: null,
             relations: null,
         })
