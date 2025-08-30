@@ -65,6 +65,7 @@ development:
       flowType: habit.v0
       events:
         - habit.created.v0
+        - habit.updated.v0
         - habit.archived.v0
       endpoints:
        - ""

@@ -7,31 +7,46 @@ import { habits } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-const createHabitRequestSchema = z.object({
-    name: z.string().min(1).max(100),
-    description: z.string().optional(),
-    recurrenceType: z.enum(["daily", "weekly"]),
-    recurrenceInterval: z.number().int().positive(),
-    // if recurrenceType is weekly, then weekDays is needed
-    weekDays: z
-        .array(
-            z.enum([
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ]),
-        )
-        .optional(),
-    whatTimeToStart: z
-        .string()
-        .regex(/^\d{2}:\d{2}$/)
-        .optional(), // HH:MM format
-    relationTemplate: z.any().optional(), // For future extensibility
-});
+const createHabitRequestSchema = z
+    .object({
+        name: z.string().min(1).max(100),
+        description: z.string().min(1).max(250).optional(),
+        recurrenceType: z.enum(["daily", "weekly"]),
+        recurrenceInterval: z.number().int().positive().default(1),
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD
+        timezone: z.string().optional(),
+        // if recurrenceType is weekly, then weekDays is needed
+        weekDays: z
+            .array(
+                z.enum([
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                ]),
+            )
+            .optional(),
+        preferredTime: z
+            .string()
+            .regex(/^\d{2}:\d{2}$/)
+            .optional(), // HH:MM format
+        relationTemplate: z.any().optional(), // For domain-specific configuration
+    })
+    .superRefine((val, ctx) => {
+        if (val.recurrenceType === "weekly") {
+            if (!val.weekDays?.length) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["weekDays"],
+                    message:
+                        "weekDays is required and must be non-empty for weekly habits",
+                });
+            }
+        }
+    });
 
 export function registerCreateHabit(app: Hono) {
     app.post("/", async (c) => {
@@ -68,6 +83,17 @@ export function registerCreateHabit(app: Hono) {
             id: crypto.randomUUID(),
             userId: safeUserId,
             name: safeCreateHabitJsonBody.name,
+            description: safeCreateHabitJsonBody.description,
+            isActive: true,
+            recurrenceType: safeCreateHabitJsonBody.recurrenceType,
+            recurrenceInterval: safeCreateHabitJsonBody.recurrenceInterval,
+            startDate: safeCreateHabitJsonBody.startDate,
+            timezone: safeCreateHabitJsonBody.timezone,
+            weekDays: safeCreateHabitJsonBody.weekDays,
+            preferredTime: safeCreateHabitJsonBody.preferredTime,
+            relationTemplate: safeCreateHabitJsonBody.relationTemplate
+                ? JSON.stringify(safeCreateHabitJsonBody.relationTemplate)
+                : null,
         };
 
         const createHabitEvent = habitSchema.safeParse(newHabit);

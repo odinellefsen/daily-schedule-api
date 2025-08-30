@@ -35,7 +35,10 @@ import {
     recipeUpdateSchema,
 } from "../contracts/food/recipe";
 import { recipeVersionSchema } from "../contracts/food/recipe/recipe-version.contract";
-import { habitSchema } from "../contracts/habit/habit.contract";
+import {
+    habitArchivedSchema,
+    habitCreatedSchema,
+} from "../contracts/habit/habit.contract";
 import {
     todoArchiveSchema,
     todoCancelledSchema,
@@ -55,7 +58,10 @@ import {
     handleFoodItemUnitsDeleted,
     handleFoodItemUnitsUpdated,
 } from "../handlers/food-item/food-item-units.handler";
-import { handleHabitCreated } from "../handlers/habit/habit.handler";
+import {
+    handleHabitArchived,
+    handleHabitCreated,
+} from "../handlers/habit/habit.handler";
 import {
     handleMealArchived,
     handleMealCreated,
@@ -308,7 +314,13 @@ export const FlowcorePathways = new PathwaysBuilder({
         flowType: "habit.v0",
         eventType: "habit.created.v0",
         retryDelayMs: 10000,
-        schema: habitSchema,
+        schema: habitCreatedSchema,
+    })
+    .register({
+        flowType: "habit.v0",
+        eventType: "habit.archived.v0",
+        retryDelayMs: 10000,
+        schema: habitArchivedSchema,
     })
     .handle("food-item.v0/food-item.created.v0", handleFoodItemCreated)
     .handle("food-item.v0/food-item.updated.v0", handleFoodItemUpdated)
@@ -379,7 +391,8 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled)
     .handle("todo.v0/todo.relations.updated.v0", handleTodoRelationsUpdated)
     .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
-    .handle("habit.v0/habit.created.v0", handleHabitCreated);
+    .handle("habit.v0/habit.created.v0", handleHabitCreated)
+    .handle("habit.v0/habit.archived.v0", handleHabitArchived);
 
 // Combined handler for recipe version events
 FlowcorePathways.handle("recipe.v0/recipe-version.v0", async (event) => {

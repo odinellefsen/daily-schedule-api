@@ -47,47 +47,51 @@ export const InstructionKey = z.object({
     instructionId: z.string().uuid(),
 });
 
-export const habitSchema = z
-    .object({
-        id: z.string().uuid(),
-        userId: z.string(),
-        name: z.string().min(1).max(100), // Changed from title to match DB
-        description: z.string().min(1).max(250).optional(),
-        isActive: z.boolean(),
+export const habitSchema = z.object({
+    id: z.string().uuid(),
+    userId: z.string(),
+    name: z.string().min(1).max(100), // Changed from title to match DB
+    description: z.string().min(1).max(250).optional(),
+    isActive: z.boolean(),
 
-        recurrenceType: z.enum(["daily", "weekly"]),
-        recurrenceInterval: z.number().int().positive().default(1),
+    recurrenceType: z.enum(["daily", "weekly"]),
+    recurrenceInterval: z.number().int().positive().default(1),
 
-        startDate: YMD, // anchor for intervals
-        timezone: z.string().optional(),
+    startDate: YMD, // anchor for intervals
+    timezone: z.string().optional(),
 
-        weekDays: z.array(Weekday).optional(), // required for weekly
+    weekDays: z.array(Weekday).optional(), // required for weekly
 
-        preferredTime: HHMM.optional(),
-        relationTemplate: RelationTemplate.optional(), // points to domain targets
-    })
-    .superRefine((val, ctx) => {
-        if (val.recurrenceType === "weekly") {
-            if (!val.weekDays?.length) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ["weekDays"],
-                    message:
-                        "weekDays is required and must be non-empty for weekly habits",
-                });
-            }
-        } else if (val.weekDays) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["weekDays"],
-                message: "weekDays must be omitted for daily habits",
-            });
-        }
-    });
+    preferredTime: HHMM.optional(),
+    relationTemplate: RelationTemplate.optional(), // points to domain targets
+});
+// .superRefine((val, ctx) => {
+//     if (val.recurrenceType === "weekly") {
+//         if (!val.weekDays?.length) {
+//             ctx.addIssue({
+//                 code: z.ZodIssueCode.custom,
+//                 path: ["weekDays"],
+//                 message:
+//                     "weekDays is required and must be non-empty for weekly habits",
+//             });
+//         }
+//     } else if (val.weekDays) {
+//         ctx.addIssue({
+//             code: z.ZodIssueCode.custom,
+//             path: ["weekDays"],
+//             message: "weekDays must be omitted for daily habits",
+//         });
+//     }
+// });
 
 export const habitCreatedSchema = habitSchema;
+
 export const habitArchivedSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),
     archivedAt: z.string().datetime(),
 });
+
+export type HabitType = z.infer<typeof habitSchema>;
+export type HabitCreatedType = z.infer<typeof habitCreatedSchema>;
+export type HabitArchivedType = z.infer<typeof habitArchivedSchema>;

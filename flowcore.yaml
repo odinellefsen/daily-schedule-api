@@ -89,5 +89,7 @@ dataCore:
       eventTypes:
         habit.created.v0:
           description: "Habit created event"
+        habit.updated.v0:
+          description: "Habit updated event"
         habit.archived.v0:
           description: "Habit archived event"
