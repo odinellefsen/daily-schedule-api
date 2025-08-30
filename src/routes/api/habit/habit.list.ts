@@ -10,30 +10,43 @@ export function registerListHabits(app: Hono) {
 
         const userHabits = await db.query.habits.findMany({
             where: eq(habits.userId, safeUserId),
-            orderBy: habits.name,
+            orderBy: [habits.mealName, habits.name],
         });
 
-        // Transform for API response
-        const transformedHabits = userHabits.map((habit) => ({
-            id: habit.id,
-            name: habit.name,
-            description: habit.description,
-            isActive: habit.isActive,
-            recurrenceType: habit.recurrenceType,
-            recurrenceInterval: habit.recurrenceInterval,
-            startDate: habit.startDate,
-            timezone: habit.timezone,
-            weekDays: habit.weekDays,
-            preferredTime: habit.preferredTime,
-            relationTemplate: habit.relationTemplate
-                ? JSON.parse(habit.relationTemplate)
-                : null,
-        }));
+        // Group habits by meal for better organization
+        const habitsByMeal = userHabits.reduce(
+            (acc, habit) => {
+                if (!acc[habit.mealId]) {
+                    acc[habit.mealId] = {
+                        mealId: habit.mealId,
+                        mealName: habit.mealName,
+                        habits: [],
+                    };
+                }
+
+                acc[habit.mealId].habits.push({
+                    id: habit.id,
+                    name: habit.name,
+                    description: habit.description,
+                    isActive: habit.isActive,
+                    instructionId: habit.instructionId,
+                    recurrenceType: habit.recurrenceType,
+                    recurrenceInterval: habit.recurrenceInterval,
+                    startDate: habit.startDate,
+                    timezone: habit.timezone,
+                    weekDays: habit.weekDays,
+                    preferredTime: habit.preferredTime,
+                });
+
+                return acc;
+            },
+            {} as Record<string, any>,
+        );
 
         return c.json(
             ApiResponse.success(
-                "Habits retrieved successfully",
-                transformedHabits,
+                "Instruction habits retrieved successfully",
+                Object.values(habitsByMeal),
             ),
         );
     });
@@ -46,29 +59,86 @@ export function registerListHabits(app: Hono) {
                 eq(habits.userId, safeUserId),
                 eq(habits.isActive, true),
             ),
+            orderBy: [habits.mealName, habits.name],
+        });
+
+        // Group active habits by meal
+        const habitsByMeal = activeHabits.reduce(
+            (acc, habit) => {
+                if (!acc[habit.mealId]) {
+                    acc[habit.mealId] = {
+                        mealId: habit.mealId,
+                        mealName: habit.mealName,
+                        habits: [],
+                    };
+                }
+
+                acc[habit.mealId].habits.push({
+                    id: habit.id,
+                    name: habit.name,
+                    description: habit.description,
+                    instructionId: habit.instructionId,
+                    recurrenceType: habit.recurrenceType,
+                    recurrenceInterval: habit.recurrenceInterval,
+                    startDate: habit.startDate,
+                    timezone: habit.timezone,
+                    weekDays: habit.weekDays,
+                    preferredTime: habit.preferredTime,
+                });
+
+                return acc;
+            },
+            {} as Record<string, any>,
+        );
+
+        return c.json(
+            ApiResponse.success(
+                "Active instruction habits retrieved successfully",
+                Object.values(habitsByMeal),
+            ),
+        );
+    });
+
+    app.get("/meal/:mealId", async (c) => {
+        const safeUserId = c.userId!;
+        const mealId = c.req.param("mealId");
+
+        const mealHabits = await db.query.habits.findMany({
+            where: and(
+                eq(habits.userId, safeUserId),
+                eq(habits.mealId, mealId),
+            ),
             orderBy: habits.name,
         });
 
-        // Transform for API response
-        const transformedHabits = activeHabits.map((habit) => ({
+        if (!mealHabits.length) {
+            return c.json(
+                ApiResponse.success("No habits found for this meal", []),
+            );
+        }
+
+        const transformedHabits = mealHabits.map((habit) => ({
             id: habit.id,
             name: habit.name,
             description: habit.description,
+            isActive: habit.isActive,
+            instructionId: habit.instructionId,
             recurrenceType: habit.recurrenceType,
             recurrenceInterval: habit.recurrenceInterval,
             startDate: habit.startDate,
             timezone: habit.timezone,
             weekDays: habit.weekDays,
             preferredTime: habit.preferredTime,
-            relationTemplate: habit.relationTemplate
-                ? JSON.parse(habit.relationTemplate)
-                : null,
         }));
 
         return c.json(
             ApiResponse.success(
-                "Active habits retrieved successfully",
-                transformedHabits,
+                `Instruction habits for ${mealHabits[0].mealName}`,
+                {
+                    mealId: mealId,
+                    mealName: mealHabits[0].mealName,
+                    habits: transformedHabits,
+                },
             ),
         );
     });

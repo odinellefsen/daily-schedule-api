@@ -36,7 +36,6 @@ const updateHabitRequestSchema = z
             .string()
             .regex(/^\d{2}:\d{2}$/)
             .optional(), // HH:MM format
-        relationTemplate: z.any().optional(), // For domain-specific configuration
     })
     .superRefine((val, ctx) => {
         if (val.recurrenceType === "weekly") {
@@ -75,7 +74,9 @@ export function registerUpdateHabit(app: Hono) {
 
         if (!existingHabit || existingHabit.userId !== safeUserId) {
             return c.json(
-                ApiResponse.error("Habit not found or access denied"),
+                ApiResponse.error(
+                    "Instruction habit not found or access denied",
+                ),
                 StatusCodes.NOT_FOUND,
             );
         }
@@ -84,9 +85,6 @@ export function registerUpdateHabit(app: Hono) {
         const updatedHabit = {
             ...existingHabit,
             ...updateData,
-            relationTemplate: updateData.relationTemplate
-                ? JSON.stringify(updateData.relationTemplate)
-                : existingHabit.relationTemplate,
         };
 
         // Validate against habit schema
@@ -112,13 +110,16 @@ export function registerUpdateHabit(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to update habit", error),
+                ApiResponse.error("Failed to update instruction habit", error),
                 StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
-            ApiResponse.success("Habit updated successfully", safeHabitEvent),
+            ApiResponse.success(
+                "Instruction habit updated successfully",
+                safeHabitEvent,
+            ),
         );
     });
 }

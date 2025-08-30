@@ -9,10 +9,10 @@ export const habit = new Hono();
 
 habit.use("/*", requireAuth());
 
-// Register all habit routes
-registerCreateHabit(habit);
-registerListHabits(habit);
-registerUpdateHabit(habit);
-registerDeleteHabit(habit);
+// Register all instruction habit routes
+registerCreateHabit(habit); // POST /batch for batch creation
+registerListHabits(habit); // GET /, GET /active, GET /meal/:mealId
+registerUpdateHabit(habit); // PATCH /:id
+registerDeleteHabit(habit); // DELETE /:id, PATCH /:id/activate, PATCH /:id/deactivate, DELETE /meal/:mealId
 
 export default habit;

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
 import { habits } from "../../../db/schemas";
@@ -17,7 +17,9 @@ export function registerDeleteHabit(app: Hono) {
 
         if (!existingHabit || existingHabit.userId !== safeUserId) {
             return c.json(
-                ApiResponse.error("Habit not found or access denied"),
+                ApiResponse.error(
+                    "Instruction habit not found or access denied",
+                ),
                 StatusCodes.NOT_FOUND,
             );
         }
@@ -32,12 +34,14 @@ export function registerDeleteHabit(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to delete habit", error),
+                ApiResponse.error("Failed to delete instruction habit", error),
                 StatusCodes.SERVER_ERROR,
             );
         }
 
-        return c.json(ApiResponse.success("Habit deleted successfully"));
+        return c.json(
+            ApiResponse.success("Instruction habit deleted successfully"),
+        );
     });
 
     app.patch("/:id/deactivate", async (c) => {
@@ -51,7 +55,9 @@ export function registerDeleteHabit(app: Hono) {
 
         if (!existingHabit || existingHabit.userId !== safeUserId) {
             return c.json(
-                ApiResponse.error("Habit not found or access denied"),
+                ApiResponse.error(
+                    "Instruction habit not found or access denied",
+                ),
                 StatusCodes.NOT_FOUND,
             );
         }
@@ -70,13 +76,19 @@ export function registerDeleteHabit(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to deactivate habit", error),
+                ApiResponse.error(
+                    "Failed to deactivate instruction habit",
+                    error,
+                ),
                 StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
-            ApiResponse.success("Habit deactivated successfully", updatedHabit),
+            ApiResponse.success(
+                "Instruction habit deactivated successfully",
+                updatedHabit,
+            ),
         );
     });
 
@@ -91,7 +103,9 @@ export function registerDeleteHabit(app: Hono) {
 
         if (!existingHabit || existingHabit.userId !== safeUserId) {
             return c.json(
-                ApiResponse.error("Habit not found or access denied"),
+                ApiResponse.error(
+                    "Instruction habit not found or access denied",
+                ),
                 StatusCodes.NOT_FOUND,
             );
         }
@@ -110,13 +124,71 @@ export function registerDeleteHabit(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to activate habit", error),
+                ApiResponse.error(
+                    "Failed to activate instruction habit",
+                    error,
+                ),
                 StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
-            ApiResponse.success("Habit activated successfully", updatedHabit),
+            ApiResponse.success(
+                "Instruction habit activated successfully",
+                updatedHabit,
+            ),
+        );
+    });
+
+    app.delete("/meal/:mealId", async (c) => {
+        const safeUserId = c.userId!;
+        const mealId = c.req.param("mealId");
+
+        // Get all habits for this meal
+        const mealHabits = await db.query.habits.findMany({
+            where: and(
+                eq(habits.userId, safeUserId),
+                eq(habits.mealId, mealId),
+            ),
+        });
+
+        if (!mealHabits.length) {
+            return c.json(
+                ApiResponse.error("No instruction habits found for this meal"),
+                StatusCodes.NOT_FOUND,
+            );
+        }
+
+        // Archive all habits for this meal
+        try {
+            for (const habit of mealHabits) {
+                await FlowcorePathways.write("habit.v0/habit.archived.v0", {
+                    data: {
+                        id: habit.id,
+                        userId: safeUserId,
+                        archivedAt: new Date().toISOString(),
+                    },
+                });
+            }
+        } catch (error) {
+            return c.json(
+                ApiResponse.error(
+                    "Failed to delete meal instruction habits",
+                    error,
+                ),
+                StatusCodes.SERVER_ERROR,
+            );
+        }
+
+        return c.json(
+            ApiResponse.success(
+                "All instruction habits for meal deleted successfully",
+                {
+                    mealId: mealId,
+                    mealName: mealHabits[0].mealName,
+                    deletedCount: mealHabits.length,
+                },
+            ),
         );
     });
 }
