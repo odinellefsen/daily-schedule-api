@@ -40,7 +40,7 @@ import {
     habitCreatedSchema,
     habitsCreatedSchema,
     habitUpdatedSchema,
-} from "../contracts/habit/habit-simple.contract";
+} from "../contracts/habit/habit.contract";
 import {
     todoArchiveSchema,
     todoCancelledSchema,
