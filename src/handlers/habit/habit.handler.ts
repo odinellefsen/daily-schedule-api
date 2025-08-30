@@ -1,9 +1,11 @@
+import crypto from "node:crypto";
 import type { FlowcoreEvent } from "@flowcore/pathways";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import type {
     habitArchivedSchema,
     habitCreatedSchema,
+    habitsCreatedSchema,
     habitUpdatedSchema,
 } from "../../contracts/habit/habit.contract";
 import { db } from "../../db";
@@ -22,14 +24,45 @@ export async function handleHabitCreated(
         name: payload.name,
         description: payload.description,
         isActive: payload.isActive,
+        instructionId: payload.instructionId,
+        mealId: payload.mealId,
+        mealName: payload.mealName,
         recurrenceType: payload.recurrenceType,
         recurrenceInterval: payload.recurrenceInterval,
         startDate: payload.startDate,
         timezone: payload.timezone,
         weekDays: payload.weekDays,
         preferredTime: payload.preferredTime,
-        relationTemplate: payload.relationTemplate,
     });
+}
+
+export async function handleHabitsCreated(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: z.infer<typeof habitsCreatedSchema>;
+    },
+) {
+    const { payload } = event;
+
+    // Create multiple habit records from the batch
+    const habitRecords = payload.habits.map((habitData) => ({
+        id: crypto.randomUUID(),
+        userId: payload.userId,
+        name: `${payload.mealName}: ${habitData.instructionText}`,
+        description: `Instruction for ${payload.mealName}`,
+        isActive: true,
+        instructionId: habitData.instructionId,
+        mealId: payload.mealId,
+        mealName: payload.mealName,
+        recurrenceType: habitData.recurrenceType,
+        recurrenceInterval: habitData.recurrenceInterval,
+        startDate: habitData.startDate,
+        timezone: habitData.timezone,
+        weekDays: habitData.weekDays,
+        preferredTime: habitData.preferredTime,
+    }));
+
+    // Insert all habits in a single transaction
+    await db.insert(habits).values(habitRecords);
 }
 
 export async function handleHabitUpdated(
@@ -45,13 +78,15 @@ export async function handleHabitUpdated(
             name: payload.name,
             description: payload.description,
             isActive: payload.isActive,
+            instructionId: payload.instructionId,
+            mealId: payload.mealId,
+            mealName: payload.mealName,
             recurrenceType: payload.recurrenceType,
             recurrenceInterval: payload.recurrenceInterval,
             startDate: payload.startDate,
             timezone: payload.timezone,
             weekDays: payload.weekDays,
             preferredTime: payload.preferredTime,
-            relationTemplate: payload.relationTemplate,
         })
         .where(eq(habits.id, payload.id));
 }

@@ -5,7 +5,6 @@ import { db } from "../db";
 import type { Habit } from "../db/schemas";
 import { habits, occurrences } from "../db/schemas";
 import { FlowcorePathways } from "../utils/flowcore";
-import { domainAdapters } from "./domain-adapters";
 
 /**
  * Convert dueDate, preferredTime, and timezone into a scheduledFor timestamp
@@ -14,8 +13,6 @@ function calculateScheduledFor(
     dueDate: string, // YYYY-MM-DD
     preferredTime: string | undefined, // HH:MM
     timezone: string | undefined, // IANA timezone
-    stepIndex: number = 0, // For time distribution of multiple steps
-    totalSteps: number = 1, // Total steps on this date
 ): Date {
     // Default time if not specified (9:00 AM)
     const timeToUse = preferredTime || "09:00";
@@ -24,39 +21,11 @@ function calculateScheduledFor(
     // Parse the time
     const [hours, minutes] = timeToUse.split(":").map(Number);
 
-    // If multiple steps on same day, distribute them
-    let adjustedHours = hours;
-    let adjustedMinutes = minutes;
-
-    if (totalSteps > 1) {
-        // Spread steps over a 4-hour window, starting from preferred time
-        const minutesToAdd = Math.floor(
-            (stepIndex * 240) / Math.max(totalSteps - 1, 1),
-        );
-        adjustedMinutes += minutesToAdd;
-        adjustedHours += Math.floor(adjustedMinutes / 60);
-        adjustedMinutes %= 60;
-
-        // Cap at reasonable hours (don't go past 10 PM)
-        if (adjustedHours > 22) {
-            adjustedHours = 22;
-            adjustedMinutes = 0;
-        }
-    }
-
     // Create date in user's timezone
     const [year, month, day] = dueDate.split("-").map(Number);
 
     // Create a date object representing the local time in the user's timezone
-    const localDateTime = new Date(
-        year,
-        month - 1,
-        day,
-        adjustedHours,
-        adjustedMinutes,
-        0,
-        0,
-    );
+    const localDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
 
     // Convert to UTC using timezone offset calculation
     const localString = localDateTime.toISOString().slice(0, 19); // Remove Z
@@ -73,68 +42,7 @@ function calculateScheduledFor(
 }
 
 /**
- * Selection strategy implementations
- */
-function selectFromTemplate(
-    relationTemplate: unknown,
-    targetDate: string,
-): { domain: string; entityId: string } {
-    const template = relationTemplate as {
-        strategy: { type: string; map?: Record<string, number> };
-        items: Array<{ domain: string; entityId: string }>;
-    };
-
-    if (!template?.items?.length) {
-        throw new Error("No items in relation template");
-    }
-
-    const { strategy, items } = template;
-
-    switch (strategy.type) {
-        case "fixed":
-            return items[0];
-
-        case "rotate": {
-            // Use date as seed for consistent rotation
-            const daysSinceEpoch = Math.floor(
-                new Date(targetDate).getTime() / (1000 * 60 * 60 * 24),
-            );
-            const index = daysSinceEpoch % items.length;
-            return items[index];
-        }
-
-        case "random": {
-            // Use date as seed for consistent randomness per day
-            const seed = targetDate;
-            const hash = crypto.createHash("sha256").update(seed).digest("hex");
-            const num = parseInt(hash.substring(0, 8), 16);
-            const index = num % items.length;
-            return items[index];
-        }
-
-        case "byWeekday": {
-            const date = new Date(targetDate);
-            const weekdayNames = [
-                "sunday",
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-            ];
-            const weekday = weekdayNames[date.getDay()];
-            const index = strategy.map?.[weekday] ?? 0;
-            return items[index] || items[0];
-        }
-
-        default:
-            return items[0];
-    }
-}
-
-/**
- * Date utilities
+ * Add days to a date string
  */
 function addDays(dateStr: string, days: number): string {
     const date = new Date(dateStr);
@@ -157,7 +65,7 @@ function getWeekdayFromDate(dateStr: string): string {
 }
 
 /**
- * Find habits that should generate todos for the given date
+ * Get all habits that should generate todos for the given date
  */
 async function selectDueHabits(
     userId: string,
@@ -212,13 +120,12 @@ function shouldGenerateForDate(habit: Habit, targetDate: string): boolean {
 }
 
 /**
- * Create or get existing occurrence
+ * Create or get existing occurrence for an instruction habit
  */
 async function upsertOccurrence(data: {
     userId: string;
-    domain: string;
-    entityId: string;
-    version: number;
+    instructionId: string;
+    mealId: string;
     targetDate: string;
     habitId: string;
 }): Promise<{ id: string }> {
@@ -226,9 +133,7 @@ async function upsertOccurrence(data: {
     const existing = await db.query.occurrences.findFirst({
         where: and(
             eq(occurrences.userId, data.userId),
-            eq(occurrences.domain, data.domain),
-            eq(occurrences.entityId, data.entityId),
-            eq(occurrences.version, data.version),
+            eq(occurrences.instructionId, data.instructionId),
             eq(occurrences.targetDate, data.targetDate),
         ),
     });
@@ -241,9 +146,8 @@ async function upsertOccurrence(data: {
     const newOccurrence = {
         id: crypto.randomUUID(),
         userId: data.userId,
-        domain: data.domain,
-        entityId: data.entityId,
-        version: data.version,
+        instructionId: data.instructionId,
+        mealId: data.mealId,
         targetDate: data.targetDate,
         habitId: data.habitId,
         status: "planned" as const,
@@ -254,124 +158,52 @@ async function upsertOccurrence(data: {
 }
 
 /**
- * Generate todos for a specific habit and date
+ * Generate a single todo for an instruction habit
+ * MASSIVELY SIMPLIFIED: Direct habit → todo mapping (1:1)
  */
-async function generateTodosForHabit(
+async function generateTodoForHabit(
     habit: Habit,
     targetDate: string,
 ): Promise<void> {
-    // Select domain target using strategy
-    const { domain, entityId } = selectFromTemplate(
-        habit.relationTemplate ? JSON.parse(habit.relationTemplate) : null,
-        targetDate,
-    );
-
-    // Get domain adapter
-    const adapter = domainAdapters.get(domain);
-
-    // Get latest version and create/upsert occurrence
-    const version = await adapter.getLatestVersion(entityId);
+    // Create or get occurrence for this instruction
     const occurrence = await upsertOccurrence({
         userId: habit.userId,
-        domain,
-        entityId,
-        version,
+        instructionId: habit.instructionId,
+        mealId: habit.mealId,
         targetDate,
         habitId: habit.id,
     });
 
-    // Resolve the plan (what steps to create)
-    const planSteps = await adapter.resolvePlan(
-        habit.relationTemplate
-            ? JSON.parse(habit.relationTemplate).payload
-            : null,
-        entityId,
-        version,
+    // Calculate the precise scheduling timestamp
+    const scheduledFor = calculateScheduledFor(
+        targetDate,
+        habit.preferredTime || undefined,
+        habit.timezone || undefined,
     );
 
-    // If no specific steps, create one todo for the whole item
-    const items =
-        planSteps.length > 0
-            ? planSteps
-            : [
-                  {
-                      instructionKey: undefined,
-                      offsetDays: 0,
-                      titleOverride: undefined,
-                  },
-              ];
+    // Create the todo event - SIMPLE!
+    const todoEvent: TodoGeneratedType = {
+        userId: habit.userId,
+        habitId: habit.id,
+        occurrenceId: occurrence.id,
+        title: habit.name,
+        dueDate: targetDate,
+        preferredTime: habit.preferredTime || undefined,
+        scheduledFor: scheduledFor.toISOString(),
+        timezone: habit.timezone || undefined,
+        instructionId: habit.instructionId,
+        mealId: habit.mealId,
+    };
 
-    // Group items by dueDate for intelligent time distribution
-    const itemsByDate = new Map<
-        string,
-        Array<{
-            instructionKey:
-                | {
-                      recipeId: string;
-                      recipeVersion: number;
-                      instructionId: string;
-                  }
-                | undefined;
-            offsetDays: number;
-            titleOverride?: string;
-        }>
-    >();
-
-    for (const item of items) {
-        const dueDate = addDays(targetDate, item.offsetDays);
-        if (!itemsByDate.has(dueDate)) {
-            itemsByDate.set(dueDate, []);
-        }
-        itemsByDate.get(dueDate)!.push(item);
-    }
-
-    // Generate todos for each step with intelligent scheduling
-    for (const [dueDate, dateItems] of Array.from(itemsByDate.entries())) {
-        const totalStepsOnDate = dateItems.length;
-
-        for (let stepIndex = 0; stepIndex < dateItems.length; stepIndex++) {
-            const item = dateItems[stepIndex];
-            const instructionKey = item.instructionKey;
-
-            // Get snapshot for replay safety (cached per entityId+version)
-            const snapshot = await adapter.snapshot(entityId, version);
-
-            // Determine title
-            const title = item.titleOverride || habit.name;
-
-            // Calculate the precise scheduling timestamp with intelligent distribution
-            const scheduledFor = calculateScheduledFor(
-                dueDate,
-                habit.preferredTime || undefined,
-                habit.timezone || undefined,
-                stepIndex,
-                totalStepsOnDate,
-            );
-
-            const todoEvent: TodoGeneratedType = {
-                userId: habit.userId,
-                habitId: habit.id,
-                occurrenceId: occurrence.id,
-                title,
-                dueDate,
-                preferredTime: habit.preferredTime || undefined,
-                scheduledFor: scheduledFor.toISOString(),
-                timezone: habit.timezone || undefined,
-                relation: { domain, entityId, version },
-                instructionKey,
-                snapshot,
-            };
-
-            // Emit the event through Flowcore
-            await FlowcorePathways.write("todo.v0/todo.generated.v0", {
-                data: todoEvent,
-            });
-        }
-    }
+    // Emit the event through Flowcore
+    await FlowcorePathways.write("todo.v0/todo.generated.v0", {
+        data: todoEvent,
+    });
 }
 
 /**
- * Core habit generation service - main entry point
+ * Core habit generation service - SIMPLIFIED!
+ * No more complex offset calculations, no more domain adapters!
  */
 export async function generateMissingHabitTodos(
     userId: string,
@@ -381,10 +213,10 @@ export async function generateMissingHabitTodos(
 
     for (const habit of dueHabits) {
         try {
-            await generateTodosForHabit(habit, targetDate);
+            await generateTodoForHabit(habit, targetDate);
         } catch (error) {
             console.error(
-                `Failed to generate todos for habit ${habit.id}:`,
+                `Failed to generate todo for habit ${habit.id}:`,
                 error,
             );
             // Continue with other habits even if one fails

@@ -47,23 +47,48 @@ export const InstructionKey = z.object({
     instructionId: z.string().uuid(),
 });
 
+// Individual instruction habit schema
 export const habitSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),
-    name: z.string().min(1).max(100), // Changed from title to match DB
+    name: z.string().min(1).max(100), // e.g. "Margherita Pizza: Mix dough"
     description: z.string().min(1).max(250).optional(),
     isActive: z.boolean(),
 
+    // Direct instruction reference (simplified)
+    instructionId: z.string().uuid(),
+    mealId: z.string().uuid(),
+    mealName: z.string().min(1).max(100),
+
+    // Recurrence configuration
     recurrenceType: z.enum(["daily", "weekly"]),
     recurrenceInterval: z.number().int().positive().default(1),
-
-    startDate: YMD, // anchor for intervals
+    startDate: YMD,
     timezone: z.string().optional(),
-
-    weekDays: z.array(Weekday).optional(), // required for weekly
-
+    weekDays: z.array(Weekday).optional(),
     preferredTime: HHMM.optional(),
-    relationTemplate: RelationTemplate.optional(), // points to domain targets
+});
+
+// Batch habit creation schema for creating multiple instruction habits at once
+export const batchHabitCreationSchema = z.object({
+    userId: z.string(),
+    mealId: z.string().uuid(),
+    mealName: z.string().min(1).max(100),
+    habits: z
+        .array(
+            z.object({
+                instructionId: z.string().uuid(),
+                instructionText: z.string().min(1).max(250),
+                recurrenceType: z.enum(["daily", "weekly"]),
+                recurrenceInterval: z.number().int().positive().default(1),
+                startDate: YMD,
+                timezone: z.string().optional(),
+                weekDays: z.array(Weekday).optional(),
+                preferredTime: HHMM.optional(),
+            }),
+        )
+        .min(1)
+        .max(20), // Allow 1-20 instruction habits per batch
 });
 // .superRefine((val, ctx) => {
 //     if (val.recurrenceType === "weekly") {
@@ -84,7 +109,13 @@ export const habitSchema = z.object({
 //     }
 // });
 
+// Event schemas
 export const habitCreatedSchema = habitSchema;
+export const habitsCreatedSchema = batchHabitCreationSchema; // NEW: Batch creation event
+
+export const habitUpdatedSchema = habitSchema.extend({
+    oldValues: habitSchema,
+});
 
 export const habitArchivedSchema = z.object({
     id: z.string().uuid(),
@@ -92,6 +123,10 @@ export const habitArchivedSchema = z.object({
     archivedAt: z.string().datetime(),
 });
 
+// Type exports
 export type HabitType = z.infer<typeof habitSchema>;
+export type BatchHabitCreationType = z.infer<typeof batchHabitCreationSchema>;
 export type HabitCreatedType = z.infer<typeof habitCreatedSchema>;
+export type HabitsCreatedType = z.infer<typeof habitsCreatedSchema>;
+export type HabitUpdatedType = z.infer<typeof habitUpdatedSchema>;
 export type HabitArchivedType = z.infer<typeof habitArchivedSchema>;

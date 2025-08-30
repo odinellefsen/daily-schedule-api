@@ -10,7 +10,7 @@ import type {
     todoSchema,
 } from "../../contracts/todo";
 import { db } from "../../db";
-import { mealSteps, occurrenceSteps, todos } from "../../db/schemas";
+import { mealSteps, todos } from "../../db/schemas";
 
 export async function handleTodoCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
@@ -22,6 +22,7 @@ export async function handleTodoCreated(
     await db.insert(todos).values({
         id: payload.id,
         userId: payload.userId,
+        title: payload.description,
         description: payload.description,
         completed: payload.completed,
         scheduledFor: payload.scheduledFor
@@ -100,60 +101,33 @@ export async function handleTodoGenerated(
     // Generate new UUID for the todo
     const todoId = crypto.randomUUID();
 
-    // UPSERT the todo (idempotent using natural business key)
+    // UPSERT the todo (simplified structure)
     await db
         .insert(todos)
         .values({
             id: todoId,
             userId: payload.userId,
             title: payload.title,
+            description: payload.title, // Use title as description for compatibility
             dueDate: payload.dueDate,
             preferredTime: payload.preferredTime || null,
             completed: false,
-            habitId: payload.habitId,
-            occurrenceId: payload.occurrenceId,
-            relation: JSON.stringify(payload.relation),
-            instructionKey: payload.instructionKey
-                ? JSON.stringify(payload.instructionKey)
-                : null,
-            snapshot: JSON.stringify(payload.snapshot),
-            eventId: event.eventId,
-            // Set precise scheduling for habit-generated todos
-            description: payload.title, // Fallback for compatibility
             scheduledFor: new Date(payload.scheduledFor),
             completedAt: null,
+
+            // Simplified habit system fields
+            habitId: payload.habitId,
+            occurrenceId: payload.occurrenceId,
+            instructionId: payload.instructionId,
+            mealId: payload.mealId,
+
+            // Legacy fields
             relations: null,
+            eventId: event.eventId,
         })
         .onConflictDoNothing({
-            target: [
-                todos.userId,
-                todos.habitId,
-                todos.dueDate,
-                todos.instructionKey,
-            ],
+            target: [todos.userId, todos.habitId, todos.dueDate],
         });
 
-    // If this is an instruction-based todo, ensure the occurrence step exists
-    if (payload.instructionKey) {
-        await db
-            .insert(occurrenceSteps)
-            .values({
-                id: crypto.randomUUID(),
-                occurrenceId: payload.occurrenceId,
-                recipeId: payload.instructionKey.recipeId,
-                recipeVersion: payload.instructionKey.recipeVersion,
-                instructionId: payload.instructionKey.instructionId,
-                title: payload.title,
-                dueDate: payload.dueDate,
-                todoId: todoId,
-            })
-            .onConflictDoNothing({
-                target: [
-                    occurrenceSteps.occurrenceId,
-                    occurrenceSteps.recipeId,
-                    occurrenceSteps.recipeVersion,
-                    occurrenceSteps.instructionId,
-                ],
-            });
-    }
+    // No more occurrence steps needed - direct instruction reference!
 }

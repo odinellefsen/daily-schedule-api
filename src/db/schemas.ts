@@ -5,7 +5,6 @@ import {
     pgTable,
     text,
     timestamp,
-    unique,
     uuid,
 } from "drizzle-orm/pg-core";
 
@@ -76,44 +75,31 @@ export const mealSteps = pgTable("meal_steps", {
     foodItemUnitsUsedInStep: text("ingredients_used_in_step"), // JSON array
 });
 
-export const todos = pgTable(
-    "todos",
-    {
-        id: uuid("id").primaryKey(),
-        userId: text("user_id").notNull(),
-        description: text("description").notNull(), // Legacy field for manual todos
-        title: text("title"), // New field for habit-generated todos
-        completed: boolean("completed").notNull().default(false),
-        scheduledFor: timestamp("scheduled_for"), // Legacy datetime field
-        dueDate: text("due_date"), // YYYY-MM-DD for habit todos
-        preferredTime: text("preferred_time"), // HH:MM for habit todos
-        completedAt: timestamp("completed_at"),
+export const todos = pgTable("todos", {
+    id: uuid("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    title: text("title").notNull(), // Unified title field
+    description: text("description"), // Optional description
+    completed: boolean("completed").notNull().default(false),
+    scheduledFor: timestamp("scheduled_for"), // Precise scheduling timestamp
+    dueDate: text("due_date"), // YYYY-MM-DD for habit todos
+    preferredTime: text("preferred_time"), // HH:MM for habit todos
+    completedAt: timestamp("completed_at"),
 
-        // Habit system fields
-        habitId: uuid("habit_id").references(() => habits.id),
-        occurrenceId: uuid("occurrence_id").references(() => occurrences.id),
+    // Simplified habit system fields
+    habitId: uuid("habit_id").references(() => habits.id),
+    occurrenceId: uuid("occurrence_id").references(() => occurrences.id),
 
-        // Domain relation for habit todos
-        relation: text("relation"), // JSON: { domain, entityId, version }
-        instructionKey: text("instruction_key"), // JSON: { recipeId, recipeVersion, instructionId }
-        snapshot: text("snapshot"), // JSON: domain-specific snapshot
+    // Direct instruction reference (simplified)
+    instructionId: uuid("instruction_id"),
+    mealId: uuid("meal_id"), // For meal context
 
-        // Legacy relations field for manual todos
-        relations: text("relations"), // JSON array of relations
+    // Legacy relations field for manual todos
+    relations: text("relations"), // JSON array of relations
 
-        // Event sourcing
-        eventId: text("event_id"), // Flowcore event ID
-    },
-    (table) => ({
-        // Unique constraint for habit todos to prevent duplicates
-        uniqueHabitTodo: unique().on(
-            table.userId,
-            table.habitId,
-            table.dueDate,
-            table.instructionKey,
-        ),
-    }),
-);
+    // Event sourcing
+    eventId: text("event_id"), // Flowcore event ID
+});
 
 export const foodItems = pgTable("food_items", {
     id: uuid("id").primaryKey(),
@@ -145,6 +131,13 @@ export const habits = pgTable("habits", {
     name: text("name").notNull(),
     description: text("description"),
     isActive: boolean("is_active").notNull().default(true),
+
+    // Direct instruction reference (simplified)
+    instructionId: uuid("instruction_id").notNull(),
+    mealId: uuid("meal_id").notNull(), // For grouping and meal context
+    mealName: text("meal_name").notNull(), // For UI display
+
+    // Recurrence configuration
     recurrenceType: text("recurrence_type").notNull(),
     recurrenceInterval: integer("recurrence_interval").notNull(),
     startDate: text("start_date").notNull(), // YYYY-MM-DD
@@ -152,60 +145,26 @@ export const habits = pgTable("habits", {
     weekDays: text("week_days").array(),
     monthlyDay: integer("monthly_day"),
     preferredTime: text("preferred_time"),
-    relationTemplate: text("relation_template"),
+
+    // REMOVED: relationTemplate (no longer needed!)
 });
 
-export const occurrences = pgTable(
-    "occurrences",
-    {
-        id: uuid("id").primaryKey(),
-        userId: text("user_id").notNull(),
-        domain: text("domain").notNull(), // "meal"
-        entityId: uuid("entity_id").notNull(), // mealId
-        version: integer("version").notNull(), // meal version chosen at generation
-        targetDate: text("target_date").notNull(), // YYYY-MM-DD - the event/serving date
-        habitId: uuid("habit_id").references(() => habits.id),
-        status: text("status").notNull().default("planned"), // planned, active, completed, cancelled
-        createdAt: timestamp("created_at").notNull().defaultNow(),
-    },
-    (table) => ({
-        // Ensure unique occurrence per user/domain/entity/version/date
-        uniqueOccurrence: unique().on(
-            table.userId,
-            table.domain,
-            table.entityId,
-            table.version,
-            table.targetDate,
-        ),
-    }),
-);
+export const occurrences = pgTable("occurrences", {
+    id: uuid("id").primaryKey(),
+    userId: text("user_id").notNull(),
 
-export const occurrenceSteps = pgTable(
-    "occurrence_steps",
-    {
-        id: uuid("id").primaryKey(),
-        occurrenceId: uuid("occurrence_id")
-            .notNull()
-            .references(() => occurrences.id, { onDelete: "cascade" }),
-        recipeId: uuid("recipe_id").notNull(),
-        recipeVersion: integer("recipe_version").notNull(),
-        instructionId: uuid("instruction_id").notNull(),
-        title: text("title").notNull(), // snapshot of instruction text
-        dueDate: text("due_date").notNull(), // YYYY-MM-DD - supports offsets
-        todoId: uuid("todo_id"), // references todos.id when todo is created
-        completedAt: timestamp("completed_at"),
-        completedBy: text("completed_by"),
-    },
-    (table) => ({
-        // Ensure unique step per occurrence and instruction
-        uniqueStep: unique().on(
-            table.occurrenceId,
-            table.recipeId,
-            table.recipeVersion,
-            table.instructionId,
-        ),
-    }),
-);
+    // Simplified: Direct instruction reference
+    instructionId: uuid("instruction_id").notNull(),
+    mealId: uuid("meal_id").notNull(), // For meal context
+
+    targetDate: text("target_date").notNull(), // YYYY-MM-DD when instruction should happen
+    habitId: uuid("habit_id").references(() => habits.id),
+    status: text("status").notNull().default("planned"), // planned, active, completed, cancelled
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// REMOVED: occurrenceSteps table no longer needed
+// Each habit now maps directly to one instruction and one todo
 
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
@@ -224,6 +183,3 @@ export type NewHabit = typeof habits.$inferInsert;
 
 export type Occurrence = typeof occurrences.$inferSelect;
 export type NewOccurrence = typeof occurrences.$inferInsert;
-
-export type OccurrenceStep = typeof occurrenceSteps.$inferSelect;
-export type NewOccurrenceStep = typeof occurrenceSteps.$inferInsert;
