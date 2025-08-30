@@ -2,10 +2,9 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
 import {
     batchHabitCreationSchema,
-    HHMM,
-    Weekday,
-    YMD,
-} from "../../../contracts/habit/habit.contract";
+    createTextHabitSchema,
+} from "../../../contracts/habit/habit-simple.contract";
+// All schemas now imported from habit-simple.contract.ts
 
 import { FlowcorePathways } from "../../../utils/flowcore";
 import {
@@ -13,55 +12,7 @@ import {
     ErrorResponseSchema,
 } from "../../../utils/openapi-schemas";
 
-// Schema for creating a simple text habit
-const createTextHabitSchema = z
-    .object({
-        name: z.string().min(1).max(100).openapi({
-            description: "Name of the habit",
-            example: "Morning meditation",
-        }),
-        description: z.string().min(1).max(250).optional().openapi({
-            description: "Optional description of the habit",
-            example: "10 minutes of mindfulness meditation every morning",
-        }),
-        recurrenceType: z.enum(["daily", "weekly"]).openapi({
-            description: "How often the habit should occur",
-            example: "daily",
-        }),
-        recurrenceInterval: z.number().int().positive().default(1).openapi({
-            description: "Interval for recurrence (e.g., every 2 days)",
-            example: 1,
-        }),
-        startDate: YMD,
-        timezone: z.string().optional().openapi({
-            description: "Timezone for the habit schedule",
-            example: "America/New_York",
-        }),
-        weekDays: z
-            .array(Weekday)
-            .optional()
-            .openapi({
-                description: "Days of the week for weekly habits",
-                example: ["monday", "wednesday", "friday"],
-            }),
-        preferredTime: HHMM.optional(),
-    })
-    .superRefine((val, ctx) => {
-        if (val.recurrenceType === "weekly") {
-            if (!val.weekDays?.length) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ["weekDays"],
-                    message:
-                        "weekDays is required and must be non-empty for weekly habits",
-                });
-            }
-        }
-    })
-    .openapi({
-        title: "CreateTextHabit",
-        description: "Schema for creating a simple text-based habit",
-    });
+// Using the imported createTextHabitSchema from habit-simple.contract.ts
 
 // Success response schema for text habit creation
 const textHabitSuccessResponseSchema = createSuccessResponseSchema(

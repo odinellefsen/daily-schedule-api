@@ -1,41 +1,21 @@
 import { z } from "@hono/zod-openapi";
 
 /** YYYY-MM-DD */
-export const YMD = z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .openapi({
-        title: "Date",
-        description: "Date in YYYY-MM-DD format",
-        example: "2024-01-15",
-    });
+export const YMD = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 /** HH:MM (24h) */
-export const HHMM = z
-    .string()
-    .regex(/^\d{2}:\d{2}$/)
-    .openapi({
-        title: "Time",
-        description: "Time in HH:MM format (24-hour)",
-        example: "14:30",
-    });
+export const HHMM = z.string().regex(/^\d{2}:\d{2}$/);
 
 /** Weekday literal */
-export const Weekday = z
-    .enum([
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-        "sunday",
-    ])
-    .openapi({
-        title: "Weekday",
-        description: "Day of the week",
-        example: "monday",
-    });
+export const Weekday = z.enum([
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]);
 
 // Domain-agnostic habit schema supporting both text and domain-linked habits
 export const habitSchema = z
