@@ -17,60 +17,59 @@ export const Weekday = z.enum([
 ]);
 
 // Domain-agnostic habit schema supporting both text and domain-linked habits
-export const habitSchema = z
-    .object({
-        id: z.string().uuid().optional(),
-        userId: z.string(),
-        name: z.string().min(1).max(100), // Habit title/name
-        description: z.string().min(1).max(250).optional(),
-        isActive: z.boolean().default(true),
+export const habitSchema = z.object({
+    id: z.string().uuid().optional(),
+    userId: z.string(),
+    name: z.string().min(1).max(100), // Habit title/name
+    description: z.string().min(1).max(250).optional(),
+    isActive: z.boolean().default(true),
 
-        // Domain reference (optional - for domain-linked habits like meal instructions)
-        domain: z.string().optional(), // e.g., "meal", "workout", "reading", etc.
-        entityId: z.string().uuid().optional(), // e.g., mealId, workoutId
-        entityName: z.string().max(100).optional(), // e.g., meal name for display
-        subEntityId: z.string().uuid().optional(), // e.g., instructionId, exerciseId
-        subEntityName: z.string().max(100).optional(), // e.g., instruction text for display
+    // Domain reference (optional - for domain-linked habits like meal instructions)
+    domain: z.string().optional(), // e.g., "meal", "workout", "reading", etc.
+    entityId: z.string().uuid().optional(), // e.g., mealId, workoutId
+    entityName: z.string().max(100).optional(), // e.g., meal name for display
+    subEntityId: z.string().uuid().optional(), // e.g., instructionId, exerciseId
+    subEntityName: z.string().max(100).optional(), // e.g., instruction text for display
 
-        // Recurrence configuration
-        recurrenceType: z.enum(["daily", "weekly"]),
-        recurrenceInterval: z.number().int().positive().default(1),
-        startDate: YMD,
-        timezone: z.string().optional(),
-        weekDays: z.array(Weekday).optional(),
-        monthlyDay: z.number().int().min(1).max(31).optional(),
-        preferredTime: HHMM.optional(),
-    })
-    .superRefine((val, ctx) => {
-        if (val.recurrenceType === "weekly") {
-            if (!val.weekDays?.length) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ["weekDays"],
-                    message:
-                        "weekDays is required and must be non-empty for weekly habits",
-                });
-            }
-        }
+    // Recurrence configuration
+    recurrenceType: z.enum(["daily", "weekly"]),
+    recurrenceInterval: z.number().int().positive().default(1),
+    startDate: YMD,
+    timezone: z.string().optional(),
+    weekDays: z.array(Weekday).optional(),
+    monthlyDay: z.number().int().min(1).max(31).optional(),
+    preferredTime: HHMM.optional(),
+});
+// .superRefine((val, ctx) => {
+//     if (val.recurrenceType === "weekly") {
+//         if (!val.weekDays?.length) {
+//             ctx.addIssue({
+//                 code: z.ZodIssueCode.custom,
+//                 path: ["weekDays"],
+//                 message:
+//                     "weekDays is required and must be non-empty for weekly habits",
+//             });
+//         }
+//     }
 
-        // If domain is specified, entityId is required
-        if (val.domain && !val.entityId) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["entityId"],
-                message: "entityId is required when domain is specified",
-            });
-        }
+//     // If domain is specified, entityId is required
+//     if (val.domain && !val.entityId) {
+//         ctx.addIssue({
+//             code: z.ZodIssueCode.custom,
+//             path: ["entityId"],
+//             message: "entityId is required when domain is specified",
+//         });
+//     }
 
-        // If entityId is specified, domain is required
-        if (val.entityId && !val.domain) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["domain"],
-                message: "domain is required when entityId is specified",
-            });
-        }
-    });
+//     // If entityId is specified, domain is required
+//     if (val.entityId && !val.domain) {
+//         ctx.addIssue({
+//             code: z.ZodIssueCode.custom,
+//             path: ["domain"],
+//             message: "domain is required when entityId is specified",
+//         });
+//     }
+// });
 
 // Single habit creation schema
 export const createHabitSchema = habitSchema.omit({ id: true });
