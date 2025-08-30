@@ -7,7 +7,7 @@ import {
     SuccessResponseSchema,
     WeekdaySchema,
     YMDSchema,
-} from "../schemas";
+} from "../common-schemas";
 
 // Convert your existing habit schemas to OpenAPI format
 const CreateHabitSchema = z.object({

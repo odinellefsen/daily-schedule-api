@@ -1,6 +1,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
+import { registerHabitOpenAPIRoutes } from "../handlers/habit";
 
 // Simple health check route
 const healthRoute = createRoute({
@@ -33,8 +34,10 @@ export function registerOpenAPIRoutes(app: OpenAPIHono) {
         });
     });
 
-    // TODO: Register habit routes and others later
-    // registerHabitOpenAPIRoutes(app);
+    // Register habit routes
+    registerHabitOpenAPIRoutes(app);
+
+    // TODO: Register other routes as you convert them
     // registerFoodItemOpenAPIRoutes(app);
     // registerMealOpenAPIRoutes(app);
     // registerRecipeOpenAPIRoutes(app);

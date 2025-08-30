@@ -22,6 +22,7 @@ export const openApiConfig = {
                 type: "http",
                 scheme: "bearer",
                 bearerFormat: "JWT",
+                description: "Enter your Clerk JWT token",
             },
         },
     },
