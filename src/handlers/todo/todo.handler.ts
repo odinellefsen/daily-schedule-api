@@ -58,13 +58,6 @@ export async function handleTodoCompleted(
             completedAt: new Date(payload.completedAt),
         })
         .where(eq(todos.id, payload.id));
-
-    // Sync to meal step if present
-    // We need relations to map step; since completed event is minimal, we rely on existing linkage in mealSteps
-    await db
-        .update(mealSteps)
-        .set({ isStepCompleted: true })
-        .where(eq(mealSteps.todoId, payload.id));
 }
 
 export async function handleTodoCancelled(

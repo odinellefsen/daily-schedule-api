@@ -68,7 +68,6 @@ export const mealSteps = pgTable("meal_steps", {
     originalRecipeStepId: uuid("original_recipe_step_id"), // if the meal step is from a recipe instance, we store the original recipe step id here.
     instruction: text("instruction").notNull(),
     stepNumber: integer("step_number").notNull(),
-    isStepCompleted: boolean("is_step_completed").notNull().default(false),
     estimatedDurationMinutes: integer("estimated_duration_minutes"),
     assignedToDate: text("assigned_to_date"), // YYYY-MM-DD format
     todoId: uuid("todo_id"),
