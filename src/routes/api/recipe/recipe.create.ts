@@ -31,9 +31,9 @@ export function registerCreateRecipe(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe data",
-                    parsedJsonBody.error.errors,
+                    parsedJsonBody.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
         const safeCreateRecipeJsonBody = parsedJsonBody.data;
@@ -45,15 +45,15 @@ export function registerCreateRecipe(app: Hono) {
                 and(
                     eq(
                         recipes.nameOfTheRecipe,
-                        safeCreateRecipeJsonBody.nameOfTheRecipe,
+                        safeCreateRecipeJsonBody.nameOfTheRecipe
                     ),
-                    eq(recipes.userId, safeUserId),
-                ),
+                    eq(recipes.userId, safeUserId)
+                )
             );
         if (existingRecipe.length > 0) {
             return c.json(
                 ApiResponse.error("Recipe with name already exists"),
-                StatusCodes.CONFLICT,
+                StatusCodes.CONFLICT
             );
         }
 
@@ -71,9 +71,9 @@ export function registerCreateRecipe(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe data",
-                    createRecipeEvent.error.errors,
+                    createRecipeEvent.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
         const safeCreateRecipeEvent = createRecipeEvent.data;
@@ -85,15 +85,15 @@ export function registerCreateRecipe(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to create recipe", error),
-                StatusCodes.SERVER_ERROR,
+                StatusCodes.SERVER_ERROR
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Recipe created successfully",
-                safeCreateRecipeEvent,
-            ),
+                safeCreateRecipeEvent
+            )
         );
     });
 }

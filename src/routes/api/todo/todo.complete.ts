@@ -26,9 +26,9 @@ export function registerCompleteTodo(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid todo data",
-                    parsedRequestJsonBody.error.errors,
+                    parsedRequestJsonBody.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
         const safeBody = parsedRequestJsonBody.data;
@@ -40,7 +40,7 @@ export function registerCompleteTodo(app: Hono) {
         if (!todoFromDb || todoFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Todo not found or access denied"),
-                StatusCodes.NOT_FOUND,
+                StatusCodes.NOT_FOUND
             );
         }
 
@@ -55,9 +55,9 @@ export function registerCompleteTodo(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid todo completed data",
-                    parsed.error.errors,
+                    parsed.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
 
@@ -68,12 +68,12 @@ export function registerCompleteTodo(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to complete todo", error),
-                StatusCodes.SERVER_ERROR,
+                StatusCodes.SERVER_ERROR
             );
         }
 
         return c.json(
-            ApiResponse.success("Todo completed successfully", parsed.data),
+            ApiResponse.success("Todo completed successfully", parsed.data)
         );
     });
 }

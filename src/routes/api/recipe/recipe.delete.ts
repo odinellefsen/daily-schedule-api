@@ -30,9 +30,9 @@ export function registerDeleteRecipe(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe data",
-                    parsedRequestJsonBody.error.errors,
+                    parsedRequestJsonBody.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
         const safeDeleteRecipeRequestBody = parsedRequestJsonBody.data;
@@ -41,16 +41,16 @@ export function registerDeleteRecipe(app: Hono) {
             where: and(
                 eq(
                     recipes.nameOfTheRecipe,
-                    safeDeleteRecipeRequestBody.nameOfTheRecipe,
+                    safeDeleteRecipeRequestBody.nameOfTheRecipe
                 ),
-                eq(recipes.userId, safeUserId),
+                eq(recipes.userId, safeUserId)
             ),
         });
 
         if (!recipeFromDb) {
             return c.json(
                 ApiResponse.error("Recipe not found"),
-                StatusCodes.NOT_FOUND,
+                StatusCodes.NOT_FOUND
             );
         }
 
@@ -62,7 +62,7 @@ export function registerDeleteRecipe(app: Hono) {
                 recipeFromDb.generalDescriptionOfTheRecipe || undefined,
             whenIsItConsumed: recipeFromDb.whenIsItConsumed
                 ? recipeFromDb.whenIsItConsumed.map(
-                      (val) => val as MealTimingEnum,
+                      (val) => val as MealTimingEnum
                   )
                 : undefined,
             reasonForArchiving: "User requested deletion",
@@ -74,9 +74,9 @@ export function registerDeleteRecipe(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe archived data",
-                    recipeArchivedEvent.error.errors,
+                    recipeArchivedEvent.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
         const safeRecipeArchivedEvent = recipeArchivedEvent.data;
@@ -88,15 +88,15 @@ export function registerDeleteRecipe(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to archive recipe", error),
-                StatusCodes.SERVER_ERROR,
+                StatusCodes.SERVER_ERROR
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Recipe archived successfully",
-                safeRecipeArchivedEvent,
-            ),
+                safeRecipeArchivedEvent
+            )
         );
     });
 }

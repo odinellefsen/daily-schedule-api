@@ -22,9 +22,9 @@ export function registerDeleteFoodItemUnits(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item unit data",
-                    parsedJsonBodyRequest.error.errors,
+                    parsedJsonBodyRequest.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
         const safeDeleteFoodItemUnitRequestBody = parsedJsonBodyRequest.data;
@@ -32,7 +32,7 @@ export function registerDeleteFoodItemUnits(app: Hono) {
         const foodItemUnitsFromDb = await db.query.foodItemUnits.findMany({
             where: inArray(
                 foodItemUnits.id,
-                safeDeleteFoodItemUnitRequestBody.unitIds,
+                safeDeleteFoodItemUnitRequestBody.unitIds
             ),
         });
 
@@ -42,19 +42,19 @@ export function registerDeleteFoodItemUnits(app: Hono) {
         ) {
             return c.json(
                 ApiResponse.error("One or more food item units not found"),
-                StatusCodes.NOT_FOUND,
+                StatusCodes.NOT_FOUND
             );
         }
 
         const uniqueFoodItemIds = new Set(
-            foodItemUnitsFromDb.map((unit) => unit.foodItemId),
+            foodItemUnitsFromDb.map((unit) => unit.foodItemId)
         );
         if (uniqueFoodItemIds.size !== 1) {
             return c.json(
                 ApiResponse.error(
-                    "All units must belong to the same food item",
+                    "All units must belong to the same food item"
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
 
@@ -88,9 +88,9 @@ export function registerDeleteFoodItemUnits(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item unit data",
-                    newDeleteFoodItemUnitEvent.error.errors,
+                    newDeleteFoodItemUnitEvent.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
         const safeDeleteFoodItemUnitEvent = newDeleteFoodItemUnitEvent.data;
@@ -100,13 +100,13 @@ export function registerDeleteFoodItemUnits(app: Hono) {
                 "food-item.v0/food-item.units.deleted.v0",
                 {
                     data: safeDeleteFoodItemUnitEvent,
-                },
+                }
             );
         } catch (error) {
             console.error(error);
             return c.json(
                 ApiResponse.error("Failed to delete food item units"),
-                StatusCodes.SERVER_ERROR,
+                StatusCodes.SERVER_ERROR
             );
         }
 

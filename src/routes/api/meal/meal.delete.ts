@@ -29,9 +29,9 @@ export function registerDeleteMeal(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal data",
-                    parsedRequestJsonBody.error.errors,
+                    parsedRequestJsonBody.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
         const safeDeleteMealRequestBody = parsedRequestJsonBody.data;
@@ -39,14 +39,14 @@ export function registerDeleteMeal(app: Hono) {
         const mealFromDb = await db.query.meals.findFirst({
             where: and(
                 eq(meals.mealName, safeDeleteMealRequestBody.mealName),
-                eq(meals.userId, safeUserId),
+                eq(meals.userId, safeUserId)
             ),
         });
 
         if (!mealFromDb) {
             return c.json(
                 ApiResponse.error("Meal not found"),
-                StatusCodes.NOT_FOUND,
+                StatusCodes.NOT_FOUND
             );
         }
 
@@ -66,9 +66,9 @@ export function registerDeleteMeal(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal archived data",
-                    mealArchivedEvent.error.errors,
+                    mealArchivedEvent.error.errors
                 ),
-                StatusCodes.BAD_REQUEST,
+                StatusCodes.BAD_REQUEST
             );
         }
         const safeMealArchivedEvent = mealArchivedEvent.data;
@@ -80,15 +80,15 @@ export function registerDeleteMeal(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to archive meal", error),
-                StatusCodes.SERVER_ERROR,
+                StatusCodes.SERVER_ERROR
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Meal archived successfully",
-                safeMealArchivedEvent,
-            ),
+                safeMealArchivedEvent
+            )
         );
     });
 }

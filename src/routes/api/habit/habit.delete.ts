@@ -148,7 +148,7 @@ export function registerDeleteHabit(app: Hono) {
         const mealHabits = await db.query.habits.findMany({
             where: and(
                 eq(habits.userId, safeUserId),
-                eq(habits.entityId, mealId),
+                eq(habits.mealId, mealId),
             ),
         });
 
@@ -185,7 +185,7 @@ export function registerDeleteHabit(app: Hono) {
                 "All instruction habits for meal deleted successfully",
                 {
                     mealId: mealId,
-                    mealName: mealHabits[0].entityName,
+                    mealName: mealHabits[0].mealName,
                     deletedCount: mealHabits.length,
                 },
             ),
