@@ -1,79 +1,74 @@
 import z from "zod";
 
-// Generic, domain-agnostic relation template
-const selectionStrategySchema = z.discriminatedUnion("type", [
+/** YYYY-MM-DD */
+export const YMD = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+/** HH:MM (24h) */
+export const HHMM = z.string().regex(/^\d{2}:\d{2}$/);
+
+/** Weekday literal */
+export const Weekday = z.enum([
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]);
+
+/** Generic domain target */
+export const TargetRef = z.object({
+    domain: z.string(), // e.g. "meal"
+    entityId: z.string().uuid(), // e.g. mealId
+});
+
+/** Selection strategy (domain-agnostic) */
+export const SelectionStrategy = z.discriminatedUnion("type", [
     z.object({ type: z.literal("fixed") }),
     z.object({ type: z.literal("rotate") }),
     z.object({ type: z.literal("random") }),
     z.object({
         type: z.literal("byWeekday"),
-        map: z.record(
-            z.enum([
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ]),
-            z
-                .number()
-                .int()
-                .min(0), // index into items[]
-        ),
+        map: z.record(Weekday, z.number().int().min(0)), // index into items[]
     }),
 ]);
 
-const targetRefSchema = z.object({
-    domain: z.enum(["meal"]), // in the future we'd add e.g. "workout", "reading"
-    entityId: z.string().uuid(),
+/** Habit relation template (domain-agnostic wrapper; payload is domain-specific) */
+export const RelationTemplate = z.object({
+    strategy: SelectionStrategy,
+    items: z.array(TargetRef).min(1),
+    payload: z.unknown().optional(), // validated by the domain adapter at runtime
 });
 
-const relationTemplateSchema = z.object({
-    strategy: selectionStrategySchema,
-    items: z.array(targetRefSchema).min(1),
+/** Instruction key for step-level targeting (versioned) */
+export const InstructionKey = z.object({
+    recipeId: z.string().uuid(),
+    recipeVersion: z.number().int().positive(),
+    instructionId: z.string().uuid(),
 });
-
-// Prefer strict YYYY-MM-DD string (works everywhere)
-const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export const habitSchema = z
     .object({
         id: z.string().uuid(),
         userId: z.string(),
-        title: z.string().min(1).max(100),
+        title: z.string().min(1).max(100), // copied to todos
         description: z.string().min(1).max(250),
         isActive: z.boolean(),
 
         recurrenceType: z.enum(["daily", "weekly"]),
         recurrenceInterval: z.number().int().positive().default(1),
 
-        startDate: ymd,
+        startDate: YMD, // anchor for intervals
+        timezone: z.string().optional(),
 
-        weekDays: z
-            .array(
-                z.enum([
-                    "monday",
-                    "tuesday",
-                    "wednesday",
-                    "thursday",
-                    "friday",
-                    "saturday",
-                    "sunday",
-                ]),
-            )
-            .optional(),
+        weekDays: z.array(Weekday).optional(), // required for weekly
 
-        preferredTime: z
-            .string()
-            .regex(/^\d{2}:\d{2}$/)
-            .optional(), // or keep your `whatTimeToStart`
-        relationTemplate: relationTemplateSchema.optional(),
+        preferredTime: HHMM.optional(),
+        relationTemplate: RelationTemplate.optional(), // points to domain targets
     })
     .superRefine((val, ctx) => {
         if (val.recurrenceType === "weekly") {
-            if (!val.weekDays || val.weekDays.length === 0) {
+            if (!val.weekDays?.length) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     path: ["weekDays"],
@@ -81,8 +76,7 @@ export const habitSchema = z
                         "weekDays is required and must be non-empty for weekly habits",
                 });
             }
-        }
-        if (val.recurrenceType === "daily" && val.weekDays) {
+        } else if (val.weekDays) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 path: ["weekDays"],
@@ -92,16 +86,8 @@ export const habitSchema = z
     });
 
 export const habitCreatedSchema = habitSchema;
-
 export const habitArchivedSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),
     archivedAt: z.string().datetime(),
-});
-
-export const habitTodosGeneratedSchema = z.object({
-    habitId: z.string().uuid(),
-    userId: z.string().uuid().or(z.string()), // keep as string if your userId isn't UUID
-    generatedDate: ymd,
-    todoIds: z.array(z.string().uuid()),
 });
