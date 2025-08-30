@@ -1,5 +1,5 @@
 import type { FlowcoreEvent } from "@flowcore/pathways";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { z } from "zod";
 import type {
     todoArchiveSchema,
@@ -10,7 +10,7 @@ import type {
     todoSchema,
 } from "../../contracts/todo";
 import { db } from "../../db";
-import { todos } from "../../db/schemas";
+import { occurrences, todos } from "../../db/schemas";
 
 export async function handleTodoCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
@@ -58,6 +58,21 @@ export async function handleTodoCompleted(
             completedAt: new Date(payload.completedAt),
         })
         .where(eq(todos.id, payload.id));
+
+    // Get the completed todo to understand context
+    const completedTodo = await db.query.todos.findFirst({
+        where: eq(todos.id, payload.id),
+    });
+
+    if (!completedTodo) {
+        console.warn(`Todo ${payload.id} not found after completion`);
+        return;
+    }
+
+    // If this todo is linked to an occurrence, check if all todos for that occurrence are complete
+    if (completedTodo.occurrenceId) {
+        await updateOccurrenceStatusIfComplete(completedTodo.occurrenceId);
+    }
 }
 
 export async function handleTodoCancelled(
@@ -124,4 +139,41 @@ export async function handleTodoGenerated(
         });
 
     // No more occurrence steps needed - direct instruction reference!
+}
+
+/**
+ * Check if all todos for an occurrence are complete, and if so, mark the occurrence as complete
+ */
+async function updateOccurrenceStatusIfComplete(
+    occurrenceId: string,
+): Promise<void> {
+    // Find all incomplete todos for this occurrence
+    const incompleteTodos = await db.query.todos.findMany({
+        where: and(
+            eq(todos.occurrenceId, occurrenceId),
+            eq(todos.completed, false),
+        ),
+    });
+
+    // If no incomplete todos remain, mark occurrence as complete
+    if (incompleteTodos.length === 0) {
+        await db
+            .update(occurrences)
+            .set({
+                status: "completed",
+            })
+            .where(eq(occurrences.id, occurrenceId));
+
+        console.log(
+            `Occurrence ${occurrenceId} marked as completed - all todos finished`,
+        );
+    } else {
+        // Optional: Mark as 'active' if some todos are complete but not all
+        await db
+            .update(occurrences)
+            .set({
+                status: "active",
+            })
+            .where(eq(occurrences.id, occurrenceId));
+    }
 }
