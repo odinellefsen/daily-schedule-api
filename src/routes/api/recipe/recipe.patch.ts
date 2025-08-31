@@ -36,9 +36,9 @@ export function registerPatchRecipe(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateRecipeRequestBody = parsedRequestJsonBody.data;
@@ -47,15 +47,15 @@ export function registerPatchRecipe(app: Hono) {
             where: and(
                 eq(
                     recipes.nameOfTheRecipe,
-                    safeUpdateRecipeRequestBody.nameOfTheRecipe
+                    safeUpdateRecipeRequestBody.nameOfTheRecipe,
                 ),
-                eq(recipes.userId, safeUserId)
+                eq(recipes.userId, safeUserId),
             ),
         });
         if (!recipeFromDb) {
             return c.json(
                 ApiResponse.error("Recipe not found"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -77,7 +77,7 @@ export function registerPatchRecipe(app: Hono) {
                     recipeFromDb.generalDescriptionOfTheRecipe || undefined,
                 whenIsItConsumed: recipeFromDb.whenIsItConsumed
                     ? recipeFromDb.whenIsItConsumed.map(
-                          (val) => val as MealTimingEnum
+                          (val) => val as MealTimingEnum,
                       )
                     : undefined,
             },
@@ -88,9 +88,9 @@ export function registerPatchRecipe(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid recipe data",
-                    updateRecipeEvent.error.errors
+                    updateRecipeEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeUpdateRecipeEvent = updateRecipeEvent.data;
@@ -102,7 +102,7 @@ export function registerPatchRecipe(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update recipe", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
@@ -119,15 +119,15 @@ export function registerPatchRecipe(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to update recipe version", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Recipe updated successfully",
-                safeUpdateRecipeEvent
-            )
+                safeUpdateRecipeEvent,
+            ),
         );
     });
 }

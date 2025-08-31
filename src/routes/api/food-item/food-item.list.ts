@@ -29,14 +29,14 @@ export function registerListFoodItems(app: Hono) {
                     unitCount: units.length,
                     hasUnits: units.length > 0,
                 };
-            })
+            }),
         );
 
         return c.json(
             ApiResponse.success(
                 "Food items retrieved successfully",
-                foodItemsWithUnitCounts
-            )
+                foodItemsWithUnitCounts,
+            ),
         );
     });
 
@@ -54,18 +54,18 @@ export function registerListFoodItems(app: Hono) {
             // Note: This is a simplified search - in production you'd want proper full-text search
             const searchResults = await dbQuery;
             const filtered = searchResults.filter((item) =>
-                item.name.toLowerCase().includes(query.toLowerCase())
+                item.name.toLowerCase().includes(query.toLowerCase()),
             );
 
             return c.json(
-                ApiResponse.success("Food items search results", filtered)
+                ApiResponse.success("Food items search results", filtered),
             );
         }
 
         const results = await dbQuery.orderBy(foodItems.name);
 
         return c.json(
-            ApiResponse.success("Food items retrieved successfully", results)
+            ApiResponse.success("Food items retrieved successfully", results),
         );
     });
 }

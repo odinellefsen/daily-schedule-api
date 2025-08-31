@@ -13,14 +13,14 @@ export function registerListFoodItemUnits(app: Hono) {
         const foodItemFromDb = await db.query.foodItems.findFirst({
             where: and(
                 eq(foodItems.id, foodItemId),
-                eq(foodItems.userId, safeUserId)
+                eq(foodItems.userId, safeUserId),
             ),
         });
 
         if (!foodItemFromDb) {
             return c.json(
                 ApiResponse.error("Food item not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -47,8 +47,8 @@ export function registerListFoodItemUnits(app: Hono) {
         return c.json(
             ApiResponse.success(
                 "Food item units retrieved successfully",
-                unitsWithFoodItem
-            )
+                unitsWithFoodItem,
+            ),
         );
     });
 
@@ -79,8 +79,8 @@ export function registerListFoodItemUnits(app: Hono) {
         return c.json(
             ApiResponse.success(
                 "All food item units retrieved successfully",
-                unitsWithFoodItems
-            )
+                unitsWithFoodItems,
+            ),
         );
     });
 }

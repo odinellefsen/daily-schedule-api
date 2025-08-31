@@ -20,7 +20,7 @@ transformer.post("/", async (c) => {
         if (secret !== zodEnv.FLOWCORE_WEBHOOK_API_KEY) {
             return c.json(
                 ApiResponse.error("Secret key is incorrect"),
-                StatusCodes.UNAUTHORIZED
+                StatusCodes.UNAUTHORIZED,
             );
         }
 
@@ -30,7 +30,7 @@ transformer.post("/", async (c) => {
             {
                 message: "Event processed ✅",
             },
-            200
+            200,
         );
     } catch (error) {
         console.error("Error processing event", { error });
@@ -39,7 +39,7 @@ transformer.post("/", async (c) => {
                 error: "Failed to process event",
                 message: (error as Error).message,
             },
-            500
+            500,
         );
     }
 });

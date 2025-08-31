@@ -30,9 +30,9 @@ export function registerCreateFoodItem(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item data",
-                    parsedJsonBody.error.errors
+                    parsedJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateFoodItemJsonBody = parsedJsonBody.data;
@@ -43,13 +43,13 @@ export function registerCreateFoodItem(app: Hono) {
             .where(
                 and(
                     eq(foodItems.name, safeCreateFoodItemJsonBody.foodItemName),
-                    eq(foodItems.userId, safeUserId)
-                )
+                    eq(foodItems.userId, safeUserId),
+                ),
             );
         if (existingFoodItem.length > 0) {
             return c.json(
                 ApiResponse.error("Food item with name already exists"),
-                StatusCodes.CONFLICT
+                StatusCodes.CONFLICT,
             );
         }
 
@@ -65,9 +65,9 @@ export function registerCreateFoodItem(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item data",
-                    createFoodItemEvent.error.errors
+                    createFoodItemEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateFoodItemEvent = createFoodItemEvent.data;
@@ -79,15 +79,15 @@ export function registerCreateFoodItem(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to create food item", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Food item created successfully",
-                safeCreateFoodItemEvent
-            )
+                safeCreateFoodItemEvent,
+            ),
         );
     });
 }

@@ -16,8 +16,8 @@ export const Weekday = z.enum([
     "sunday",
 ]);
 
-// Domain-agnostic habit schema supporting both text and domain-linked habits
-export const habitSchema = z.object({
+// Base habit schema without validation
+const baseHabitSchema = z.object({
     id: z.string().uuid().optional(),
     userId: z.string(),
     name: z.string().min(1).max(100), // Habit title/name
@@ -40,39 +40,72 @@ export const habitSchema = z.object({
     monthlyDay: z.number().int().min(1).max(31).optional(),
     preferredTime: HHMM.optional(),
 });
-// .superRefine((val, ctx) => {
-//     if (val.recurrenceType === "weekly") {
-//         if (!val.weekDays?.length) {
-//             ctx.addIssue({
-//                 code: z.ZodIssueCode.custom,
-//                 path: ["weekDays"],
-//                 message:
-//                     "weekDays is required and must be non-empty for weekly habits",
-//             });
-//         }
-//     }
 
-//     // If domain is specified, entityId is required
-//     if (val.domain && !val.entityId) {
-//         ctx.addIssue({
-//             code: z.ZodIssueCode.custom,
-//             path: ["entityId"],
-//             message: "entityId is required when domain is specified",
-//         });
-//     }
+// Domain-agnostic habit schema with validation
+export const habitSchema = baseHabitSchema.superRefine((val, ctx) => {
+    if (val.recurrenceType === "weekly") {
+        if (!val.weekDays?.length) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["weekDays"],
+                message:
+                    "weekDays is required and must be non-empty for weekly habits",
+            });
+        }
+    }
 
-//     // If entityId is specified, domain is required
-//     if (val.entityId && !val.domain) {
-//         ctx.addIssue({
-//             code: z.ZodIssueCode.custom,
-//             path: ["domain"],
-//             message: "domain is required when entityId is specified",
-//         });
-//     }
-// });
+    // If domain is specified, entityId is required
+    if (val.domain && !val.entityId) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["entityId"],
+            message: "entityId is required when domain is specified",
+        });
+    }
+
+    // If entityId is specified, domain is required
+    if (val.entityId && !val.domain) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["domain"],
+            message: "domain is required when entityId is specified",
+        });
+    }
+});
 
 // Single habit creation schema
-export const createHabitSchema = habitSchema.omit({ id: true });
+export const createHabitSchema = baseHabitSchema
+    .omit({ id: true })
+    .superRefine((val, ctx) => {
+        if (val.recurrenceType === "weekly") {
+            if (!val.weekDays?.length) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["weekDays"],
+                    message:
+                        "weekDays is required and must be non-empty for weekly habits",
+                });
+            }
+        }
+
+        // If domain is specified, entityId is required
+        if (val.domain && !val.entityId) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["entityId"],
+                message: "entityId is required when domain is specified",
+            });
+        }
+
+        // If entityId is specified, domain is required
+        if (val.entityId && !val.domain) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["domain"],
+                message: "domain is required when entityId is specified",
+            });
+        }
+    });
 
 // Batch habit creation schema for domain-linked habits (e.g., meal instructions)
 export const batchHabitCreationSchema = z.object({
@@ -103,9 +136,40 @@ export const batchHabitCreationSchema = z.object({
 export const habitCreatedSchema = habitSchema;
 export const habitsCreatedSchema = batchHabitCreationSchema; // Batch creation event
 
-export const habitUpdatedSchema = habitSchema.extend({
-    oldValues: habitSchema,
-});
+export const habitUpdatedSchema = baseHabitSchema
+    .extend({
+        oldValues: baseHabitSchema,
+    })
+    .superRefine((val, ctx) => {
+        if (val.recurrenceType === "weekly") {
+            if (!val.weekDays?.length) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["weekDays"],
+                    message:
+                        "weekDays is required and must be non-empty for weekly habits",
+                });
+            }
+        }
+
+        // If domain is specified, entityId is required
+        if (val.domain && !val.entityId) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["entityId"],
+                message: "entityId is required when domain is specified",
+            });
+        }
+
+        // If entityId is specified, domain is required
+        if (val.entityId && !val.domain) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["domain"],
+                message: "domain is required when entityId is specified",
+            });
+        }
+    });
 
 export const habitArchivedSchema = z.object({
     id: z.string().uuid(),

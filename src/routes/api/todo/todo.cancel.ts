@@ -25,7 +25,7 @@ export function registerCancelTodo(app: Hono) {
         if (!parsed.success) {
             return c.json(
                 ApiResponse.error("Invalid todo data", parsed.error.errors),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const { id, reasonForCancelling } = parsed.data;
@@ -37,7 +37,7 @@ export function registerCancelTodo(app: Hono) {
         if (!todoFromDb || todoFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Todo not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -53,9 +53,9 @@ export function registerCancelTodo(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid todo cancelled data",
-                    eventParsed.error.errors
+                    eventParsed.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
 
@@ -66,12 +66,15 @@ export function registerCancelTodo(app: Hono) {
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to cancel todo", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
-            ApiResponse.success("Todo cancelled successfully", eventParsed.data)
+            ApiResponse.success(
+                "Todo cancelled successfully",
+                eventParsed.data,
+            ),
         );
     });
 }

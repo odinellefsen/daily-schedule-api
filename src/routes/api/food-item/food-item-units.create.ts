@@ -21,7 +21,7 @@ const createFoodItemUnitRequestSchema = foodItemUnitSchema
             foodItemUnitSchema.shape.units.element.omit({
                 id: true,
                 source: true,
-            })
+            }),
         ),
     });
 
@@ -36,9 +36,9 @@ export function registerCreateFoodItemUnits(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item unit data",
-                    parsedJsonBodyRequest.error.errors
+                    parsedJsonBodyRequest.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateFoodItemUnitJsonBody = parsedJsonBodyRequest.data;
@@ -46,14 +46,14 @@ export function registerCreateFoodItemUnits(app: Hono) {
         const relatedFoodItem = await db.query.foodItems.findFirst({
             where: and(
                 eq(foodItems.name, safeCreateFoodItemUnitJsonBody.foodItemName),
-                eq(foodItems.userId, safeUserId)
+                eq(foodItems.userId, safeUserId),
             ),
         });
 
         if (!relatedFoodItem) {
             return c.json(
                 ApiResponse.error("Food item does not exist"),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
 
@@ -72,9 +72,9 @@ export function registerCreateFoodItemUnits(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid food item unit data",
-                    createdFoodItemUnitEvent.error.errors
+                    createdFoodItemUnitEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeCreateFoodItemUnitEvent = createdFoodItemUnitEvent.data;
@@ -84,20 +84,20 @@ export function registerCreateFoodItemUnits(app: Hono) {
                 "food-item.v0/food-item.units.created.v0",
                 {
                     data: safeCreateFoodItemUnitEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to create food item units", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Food item units created successfully",
-                safeCreateFoodItemUnitEvent
-            )
+                safeCreateFoodItemUnitEvent,
+            ),
         );
     });
 }

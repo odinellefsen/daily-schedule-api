@@ -13,7 +13,7 @@ import { recipes } from "../../db/schemas";
 export async function handleRecipeCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof recipeSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -29,7 +29,7 @@ export async function handleRecipeCreated(
 export async function handleRecipeUpdated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof recipeUpdateSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -47,7 +47,7 @@ export async function handleRecipeUpdated(
 export async function handleRecipeArchived(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof recipeArchiveSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 
@@ -57,7 +57,7 @@ export async function handleRecipeArchived(
 export async function handleRecipeVersionUpdated(
     event: Omit<FlowcoreEvent, "payload"> & {
         payload: z.infer<typeof recipeVersionSchema>;
-    }
+    },
 ) {
     const { payload } = event;
 

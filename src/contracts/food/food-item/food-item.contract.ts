@@ -18,12 +18,12 @@ export const foodItemSchema = z.object({
                 .max(30, "Category level must be less than 30 characters")
                 .regex(
                     /^[a-zA-Z0-9\s\-_]+$/,
-                    "Category can only contain letters, numbers, spaces, hyphens, and underscores"
-                )
+                    "Category can only contain letters, numbers, spaces, hyphens, and underscores",
+                ),
         )
         .min(
             1,
-            "if foodItemCategoryHierarchy is NOT undefined, then you must have atleast 1 string in the array"
+            "if foodItemCategoryHierarchy is NOT undefined, then you must have atleast 1 string in the array",
         )
         .max(5, "Maximum 5 category levels allowed")
         .optional(),

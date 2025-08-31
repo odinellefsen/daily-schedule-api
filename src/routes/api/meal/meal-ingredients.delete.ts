@@ -26,9 +26,9 @@ export function registerDeleteMealIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal ingredients data",
-                    parsedRequestJsonBody.error.errors
+                    parsedRequestJsonBody.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeDeleteMealIngredientsRequestBody = parsedRequestJsonBody.data;
@@ -41,7 +41,7 @@ export function registerDeleteMealIngredients(app: Hono) {
         if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error("Meal not found or access denied"),
-                StatusCodes.NOT_FOUND
+                StatusCodes.NOT_FOUND,
             );
         }
 
@@ -58,9 +58,9 @@ export function registerDeleteMealIngredients(app: Hono) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal ingredients archived data",
-                    mealIngredientsArchivedEvent.error.errors
+                    mealIngredientsArchivedEvent.error.errors,
                 ),
-                StatusCodes.BAD_REQUEST
+                StatusCodes.BAD_REQUEST,
             );
         }
         const safeMealIngredientsArchivedEvent =
@@ -71,20 +71,20 @@ export function registerDeleteMealIngredients(app: Hono) {
                 "meal.v0/meal-ingredients.archived.v0",
                 {
                     data: safeMealIngredientsArchivedEvent,
-                }
+                },
             );
         } catch (error) {
             return c.json(
                 ApiResponse.error("Failed to archive meal ingredients", error),
-                StatusCodes.SERVER_ERROR
+                StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
             ApiResponse.success(
                 "Meal ingredients archived successfully",
-                safeMealIngredientsArchivedEvent
-            )
+                safeMealIngredientsArchivedEvent,
+            ),
         );
     });
 }
