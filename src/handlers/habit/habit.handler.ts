@@ -97,7 +97,7 @@ export async function handleHabitUpdated(
             monthlyDay: payload.monthlyDay,
             preferredTime: payload.preferredTime,
         })
-        .where(eq(habits.id, payload.id));
+        .where(eq(habits.id, payload.id!));
 }
 
 export async function handleHabitArchived(
