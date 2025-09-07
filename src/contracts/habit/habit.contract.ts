@@ -133,43 +133,42 @@ export const batchHabitCreationSchema = z.object({
 });
 
 // Event schemas
-export const habitCreatedSchema = habitSchema;
+export const habitCreatedSchema = baseHabitSchema;
 export const habitsCreatedSchema = batchHabitCreationSchema; // Batch creation event
 
-export const habitUpdatedSchema = baseHabitSchema
-    .extend({
-        oldValues: baseHabitSchema,
-    })
-    .superRefine((val, ctx) => {
-        if (val.recurrenceType === "weekly") {
-            if (!val.weekDays?.length) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ["weekDays"],
-                    message:
-                        "weekDays is required and must be non-empty for weekly habits",
-                });
-            }
-        }
+export const habitUpdatedSchema = baseHabitSchema.extend({
+    oldValues: baseHabitSchema,
+});
+// .superRefine((val, ctx) => {
+//     if (val.recurrenceType === "weekly") {
+//         if (!val.weekDays?.length) {
+//             ctx.addIssue({
+//                 code: z.ZodIssueCode.custom,
+//                 path: ["weekDays"],
+//                 message:
+//                     "weekDays is required and must be non-empty for weekly habits",
+//             });
+//         }
+//     }
 
-        // If domain is specified, entityId is required
-        if (val.domain && !val.entityId) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["entityId"],
-                message: "entityId is required when domain is specified",
-            });
-        }
+//     // If domain is specified, entityId is required
+//     if (val.domain && !val.entityId) {
+//         ctx.addIssue({
+//             code: z.ZodIssueCode.custom,
+//             path: ["entityId"],
+//             message: "entityId is required when domain is specified",
+//         });
+//     }
 
-        // If entityId is specified, domain is required
-        if (val.entityId && !val.domain) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["domain"],
-                message: "domain is required when entityId is specified",
-            });
-        }
-    });
+//     // If entityId is specified, domain is required
+//     if (val.entityId && !val.domain) {
+//         ctx.addIssue({
+//             code: z.ZodIssueCode.custom,
+//             path: ["domain"],
+//             message: "domain is required when entityId is specified",
+//         });
+//     }
+// });
 
 export const habitArchivedSchema = z.object({
     id: z.string().uuid(),
