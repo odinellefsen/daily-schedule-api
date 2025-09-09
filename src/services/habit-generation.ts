@@ -307,26 +307,49 @@ export async function generateMissingHabitTodos(
             errors: [] as Array<{ habitId: string; error: string }>,
         };
 
-        // Process each habit
-        for (const habit of dueHabits) {
-            try {
-                await generateTodoForHabit(habit, targetDate);
-                results.success++;
-            } catch (error) {
-                const errorMessage =
-                    error instanceof Error ? error.message : String(error);
-                console.error(
-                    `Failed to generate todo for habit ${habit.id}:`,
-                    error,
-                );
+        // Process habits in parallel with controlled concurrency
+        // This improves performance significantly for users with many habits
+        // Example: 20 habits processed in ~4 batches instead of 20 sequential calls
+        const BATCH_SIZE = 5; // Process up to 5 habits simultaneously
 
-                results.failed++;
-                results.errors.push({
-                    habitId: habit.id,
-                    error: errorMessage,
-                });
+        for (let i = 0; i < dueHabits.length; i += BATCH_SIZE) {
+            const batch = dueHabits.slice(i, i + BATCH_SIZE);
 
-                // Continue with other habits even if one fails
+            // Process batch in parallel
+            const batchPromises = batch.map(async (habit) => {
+                try {
+                    await generateTodoForHabit(habit, targetDate);
+                    return { success: true, habitId: habit.id };
+                } catch (error) {
+                    const errorMessage =
+                        error instanceof Error ? error.message : String(error);
+                    console.error(
+                        `Failed to generate todo for habit ${habit.id}:`,
+                        error,
+                    );
+
+                    return {
+                        success: false,
+                        habitId: habit.id,
+                        error: errorMessage,
+                    };
+                }
+            });
+
+            // Wait for batch to complete
+            const batchResults = await Promise.all(batchPromises);
+
+            // Update results
+            for (const result of batchResults) {
+                if (result.success) {
+                    results.success++;
+                } else {
+                    results.failed++;
+                    results.errors.push({
+                        habitId: result.habitId,
+                        error: result.error!,
+                    });
+                }
             }
         }
 
