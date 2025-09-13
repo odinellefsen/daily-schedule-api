@@ -160,17 +160,61 @@ function shouldGenerateForDate(habit: Habit, targetDate: string): boolean {
 }
 
 /**
- * Create or get existing occurrence for an instruction habit
+ * Create or get existing occurrence for a domain instance (e.g., meal, workout)
+ * This creates ONE occurrence per domain entity per date
  */
-async function upsertOccurrence(data: {
+async function upsertDomainOccurrence(data: {
     userId: string;
-    domain?: string;
-    entityId?: string;
-    subEntityId?: string;
+    domain: string;
+    entityId: string;
+    entityName?: string;
     targetDate: string;
-    habitId: string;
 }): Promise<{ id: string }> {
-    // Try to find existing occurrence
+    // Try to find existing occurrence for this domain instance
+    const existing = await db.query.occurrences.findFirst({
+        where: and(
+            eq(occurrences.userId, data.userId),
+            eq(occurrences.domain, data.domain),
+            eq(occurrences.entityId, data.entityId),
+            eq(occurrences.targetDate, data.targetDate),
+        ),
+    });
+
+    if (existing) {
+        return existing;
+    }
+
+    // Create new domain occurrence
+    const newOccurrence = {
+        id: crypto.randomUUID(),
+        userId: data.userId,
+        domain: data.domain,
+        entityId: data.entityId,
+        subEntityId: null, // Domain occurrences don't have subEntity
+        targetDate: data.targetDate,
+        habitId: null, // Domain occurrences aren't linked to specific habits
+        status: "planned" as const,
+    };
+
+    await db.insert(occurrences).values(newOccurrence);
+
+    console.log(
+        `Created domain occurrence for ${data.domain} ${data.entityId} on ${data.targetDate}`,
+    );
+
+    return newOccurrence;
+}
+
+/**
+ * Create or get existing occurrence for a standalone habit
+ * This maintains the original 1:1 habit-to-occurrence relationship for simple habits
+ */
+async function upsertStandaloneOccurrence(data: {
+    userId: string;
+    habitId: string;
+    targetDate: string;
+}): Promise<{ id: string }> {
+    // Try to find existing occurrence for this habit
     const existing = await db.query.occurrences.findFirst({
         where: and(
             eq(occurrences.userId, data.userId),
@@ -183,13 +227,13 @@ async function upsertOccurrence(data: {
         return existing;
     }
 
-    // Create new occurrence
+    // Create new standalone occurrence
     const newOccurrence = {
         id: crypto.randomUUID(),
         userId: data.userId,
-        domain: data.domain,
-        entityId: data.entityId,
-        subEntityId: data.subEntityId,
+        domain: null, // Standalone habits have no domain
+        entityId: null,
+        subEntityId: null,
         targetDate: data.targetDate,
         habitId: data.habitId,
         status: "planned" as const,
@@ -200,10 +244,86 @@ async function upsertOccurrence(data: {
 }
 
 /**
- * Generate a single todo for a habit
- * Enhanced with proper error handling and validation
+ * Generate todos for a group of domain habits (e.g., all meal instruction habits)
+ * Creates ONE occurrence per domain instance, with all todos linking to it
  */
-async function generateTodoForHabit(
+async function generateTodosForDomainGroup(
+    domainHabits: Habit[],
+    targetDate: string,
+): Promise<void> {
+    if (domainHabits.length === 0) return;
+
+    const firstHabit = domainHabits[0];
+
+    // Validate all habits belong to same domain instance
+    const domain = firstHabit.domain!;
+    const entityId = firstHabit.entityId!;
+    const userId = firstHabit.userId;
+
+    for (const habit of domainHabits) {
+        if (
+            habit.domain !== domain ||
+            habit.entityId !== entityId ||
+            habit.userId !== userId
+        ) {
+            throw new Error(
+                `Mismatched domain group: expected ${domain}/${entityId} but got ${habit.domain}/${habit.entityId}`,
+            );
+        }
+    }
+
+    // Create ONE occurrence for the entire domain instance (e.g., "Breakfast on Jan 15")
+    const occurrence = await upsertDomainOccurrence({
+        userId,
+        domain,
+        entityId,
+        entityName: firstHabit.entityName ?? undefined,
+        targetDate,
+    });
+
+    // Generate todos for all habits, linking them to the same occurrence
+    const todoPromises = domainHabits.map(async (habit) => {
+        // Calculate scheduling timestamp for this specific habit
+        const scheduledFor = calculateScheduledFor(
+            targetDate,
+            habit.preferredTime || undefined,
+            habit.timezone || undefined,
+        );
+
+        // Create todo event
+        const todoEvent: TodoGeneratedType = {
+            userId: habit.userId,
+            habitId: habit.id,
+            occurrenceId: occurrence.id,
+            title: habit.name,
+            dueDate: targetDate,
+            preferredTime: habit.preferredTime || undefined,
+            scheduledFor: scheduledFor.toISOString(),
+            timezone: habit.timezone || undefined,
+            domain: habit.domain ?? undefined,
+            entityId: habit.entityId ?? undefined,
+            subEntityId: habit.subEntityId ?? undefined,
+        };
+
+        // Emit the event through Flowcore
+        await FlowcorePathways.write("todo.v0/todo.generated.v0", {
+            data: todoEvent,
+        });
+    });
+
+    // Wait for all todos to be generated
+    await Promise.all(todoPromises);
+
+    console.log(
+        `Successfully generated ${domainHabits.length} todos for ${domain} ${entityId} on ${targetDate}`,
+    );
+}
+
+/**
+ * Generate todo for a standalone habit (no domain)
+ * Creates one occurrence per habit (traditional approach)
+ */
+async function generateTodoForStandaloneHabit(
     habit: Habit,
     targetDate: string,
 ): Promise<void> {
@@ -222,14 +342,11 @@ async function generateTodoForHabit(
             );
         }
 
-        // Create or get occurrence for this habit
-        const occurrence = await upsertOccurrence({
+        // Create occurrence for this standalone habit
+        const occurrence = await upsertStandaloneOccurrence({
             userId: habit.userId,
-            domain: habit.domain ?? undefined,
-            entityId: habit.entityId ?? undefined,
-            subEntityId: habit.subEntityId ?? undefined,
-            targetDate,
             habitId: habit.id,
+            targetDate,
         });
 
         // Calculate the precise scheduling timestamp
@@ -307,18 +424,59 @@ export async function generateMissingHabitTodos(
             errors: [] as Array<{ habitId: string; error: string }>,
         };
 
-        // Process habits in parallel with controlled concurrency
-        // This improves performance significantly for users with many habits
-        // Example: 20 habits processed in ~4 batches instead of 20 sequential calls
+        // Group habits by domain instance for proper occurrence creation
+        const domainGroups = new Map<string, Habit[]>();
+        const standaloneHabits: Habit[] = [];
+
+        for (const habit of dueHabits) {
+            if (habit.domain && habit.entityId) {
+                // Group domain habits by domain + entityId (e.g., "meal-123", "workout-456")
+                const groupKey = `${habit.domain}-${habit.entityId}`;
+                if (!domainGroups.has(groupKey)) {
+                    domainGroups.set(groupKey, []);
+                }
+                domainGroups.get(groupKey)!.push(habit);
+            } else {
+                // Standalone habits (no domain)
+                standaloneHabits.push(habit);
+            }
+        }
+
+        // Process domain groups - one occurrence per domain instance
+        for (const [groupKey, groupHabits] of Array.from(
+            domainGroups.entries(),
+        )) {
+            try {
+                await generateTodosForDomainGroup(groupHabits, targetDate);
+                results.success += groupHabits.length;
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : String(error);
+                console.error(
+                    `Failed to generate todos for domain group ${groupKey}:`,
+                    error,
+                );
+
+                results.failed += groupHabits.length;
+                for (const habit of groupHabits) {
+                    results.errors.push({
+                        habitId: habit.id,
+                        error: errorMessage,
+                    });
+                }
+            }
+        }
+
+        // Process standalone habits in parallel batches
         const BATCH_SIZE = 5; // Process up to 5 habits simultaneously
 
-        for (let i = 0; i < dueHabits.length; i += BATCH_SIZE) {
-            const batch = dueHabits.slice(i, i + BATCH_SIZE);
+        for (let i = 0; i < standaloneHabits.length; i += BATCH_SIZE) {
+            const batch = standaloneHabits.slice(i, i + BATCH_SIZE);
 
             // Process batch in parallel
             const batchPromises = batch.map(async (habit) => {
                 try {
-                    await generateTodoForHabit(habit, targetDate);
+                    await generateTodoForStandaloneHabit(habit, targetDate);
                     return { success: true, habitId: habit.id };
                 } catch (error) {
                     const errorMessage =
