@@ -9,7 +9,7 @@ import { and, eq } from "drizzle-orm";
 import type { TodoGeneratedType } from "../contracts/todo";
 import { db } from "../db";
 import type { Habit } from "../db/schemas";
-import { habits, occurrences } from "../db/schemas";
+import { habits, occurrences, todos } from "../db/schemas";
 import { FlowcorePathways } from "../utils/flowcore";
 
 /**
@@ -161,27 +161,27 @@ function shouldGenerateForDate(habit: Habit, targetDate: string): boolean {
 
 /**
  * Create or get existing occurrence for a domain instance (e.g., meal, workout)
- * This creates ONE occurrence per domain entity per date
+ * This creates ONE occurrence per domain entity (no date constraint)
  */
 async function upsertDomainOccurrence(data: {
     userId: string;
     domain: string;
     entityId: string;
     entityName?: string;
-    targetDate: string;
 }): Promise<{ id: string }> {
     // Try to find existing occurrence for this domain instance
-    const existing = await db.query.occurrences.findFirst({
+    // Check if any todos exist for this domain instance first
+    const existingTodo = await db.query.todos.findFirst({
         where: and(
-            eq(occurrences.userId, data.userId),
-            eq(occurrences.domain, data.domain),
-            eq(occurrences.entityId, data.entityId),
-            eq(occurrences.targetDate, data.targetDate),
+            eq(todos.userId, data.userId),
+            eq(todos.domain, data.domain),
+            eq(todos.entityId, data.entityId),
         ),
     });
 
-    if (existing) {
-        return existing;
+    if (existingTodo?.occurrenceId) {
+        // Return the existing occurrence
+        return { id: existingTodo.occurrenceId };
     }
 
     // Create new domain occurrence
@@ -191,7 +191,6 @@ async function upsertDomainOccurrence(data: {
         domain: data.domain,
         entityId: data.entityId,
         subEntityId: null, // Domain occurrences don't have subEntity
-        targetDate: data.targetDate,
         habitId: null, // Domain occurrences aren't linked to specific habits
         status: "planned" as const,
     };
@@ -199,7 +198,7 @@ async function upsertDomainOccurrence(data: {
     await db.insert(occurrences).values(newOccurrence);
 
     console.log(
-        `Created domain occurrence for ${data.domain} ${data.entityId} on ${data.targetDate}`,
+        `Created domain occurrence for ${data.domain} ${data.entityId}`,
     );
 
     return newOccurrence;
@@ -214,17 +213,19 @@ async function upsertStandaloneOccurrence(data: {
     habitId: string;
     targetDate: string;
 }): Promise<{ id: string }> {
-    // Try to find existing occurrence for this habit
-    const existing = await db.query.occurrences.findFirst({
+    // Try to find existing occurrence for this habit on this date
+    // Check if any todos exist for this habit on this date
+    const existingTodo = await db.query.todos.findFirst({
         where: and(
-            eq(occurrences.userId, data.userId),
-            eq(occurrences.habitId, data.habitId),
-            eq(occurrences.targetDate, data.targetDate),
+            eq(todos.userId, data.userId),
+            eq(todos.habitId, data.habitId),
+            eq(todos.dueDate, data.targetDate),
         ),
     });
 
-    if (existing) {
-        return existing;
+    if (existingTodo?.occurrenceId) {
+        // Return the existing occurrence
+        return { id: existingTodo.occurrenceId };
     }
 
     // Create new standalone occurrence
@@ -234,7 +235,6 @@ async function upsertStandaloneOccurrence(data: {
         domain: null, // Standalone habits have no domain
         entityId: null,
         subEntityId: null,
-        targetDate: data.targetDate,
         habitId: data.habitId,
         status: "planned" as const,
     };
@@ -272,13 +272,12 @@ async function generateTodosForDomainGroup(
         }
     }
 
-    // Create ONE occurrence for the entire domain instance (e.g., "Breakfast on Jan 15")
+    // Create ONE occurrence for the entire domain instance (e.g., "Breakfast")
     const occurrence = await upsertDomainOccurrence({
         userId,
         domain,
         entityId,
         entityName: firstHabit.entityName ?? undefined,
-        targetDate,
     });
 
     // Generate todos for all habits, linking them to the same occurrence

@@ -37,15 +37,24 @@ export async function getMealProgressForDate(
     userId: string,
     targetDate: string,
 ): Promise<MealProgressForDate> {
-    // 1. Find occurrence for this meal on this date
-    const occurrence = await db.query.occurrences.findFirst({
+    // 1. Find occurrence for this meal by checking if any todos exist
+    let occurrence = null;
+
+    // First, try to find any todo for this meal to get the occurrence
+    const mealTodo = await db.query.todos.findFirst({
         where: and(
-            eq(occurrences.userId, userId),
-            eq(occurrences.domain, "meal"),
-            eq(occurrences.entityId, mealId),
-            eq(occurrences.targetDate, targetDate),
+            eq(todos.userId, userId),
+            eq(todos.domain, "meal"),
+            eq(todos.entityId, mealId),
         ),
     });
+
+    if (mealTodo?.occurrenceId) {
+        // Get the actual occurrence
+        occurrence = await db.query.occurrences.findFirst({
+            where: eq(occurrences.id, mealTodo.occurrenceId),
+        });
+    }
 
     // 2. Get all meal instructions
     const instructions = await db.query.mealInstructions.findMany({
@@ -154,18 +163,23 @@ export async function getMealsProgressForDate(
     userId: string,
     targetDate: string,
 ): Promise<MealProgressForDate[]> {
-    // Find all occurrences for this user and date
-    const dayOccurrences = await db.query.occurrences.findMany({
+    // Find all todos for meals on this date to discover meal occurrences
+    const mealTodosForDate = await db.query.todos.findMany({
         where: and(
-            eq(occurrences.userId, userId),
-            eq(occurrences.domain, "meal"),
-            eq(occurrences.targetDate, targetDate),
+            eq(todos.userId, userId),
+            eq(todos.domain, "meal"),
+            eq(todos.dueDate, targetDate),
         ),
     });
 
+    // Get unique meal entity IDs
+    const uniqueMealIds = Array.from(
+        new Set(mealTodosForDate.map((todo) => todo.entityId).filter(Boolean)),
+    );
+
     // Get progress for each meal
-    const progressPromises = dayOccurrences.map((occurrence) =>
-        getMealProgressForDate(occurrence.entityId!, userId, targetDate),
+    const progressPromises = uniqueMealIds.map((mealId) =>
+        getMealProgressForDate(mealId!, userId, targetDate),
     );
 
     return Promise.all(progressPromises);

@@ -15,7 +15,6 @@ export interface MealOccurrenceDetails {
         userId: string;
         domain: string;
         entityId: string;
-        targetDate: string;
         status: string;
         createdAt: Date;
     };
@@ -203,7 +202,6 @@ export function registerMealOccurrence(app: Hono) {
                     userId: occurrence.userId,
                     domain: occurrence.domain!,
                     entityId: occurrence.entityId!,
-                    targetDate: occurrence.targetDate,
                     status: occurrence.status,
                     createdAt: occurrence.createdAt,
                 },

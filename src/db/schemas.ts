@@ -162,7 +162,6 @@ export const occurrences = pgTable("occurrences", {
     entityId: uuid("entity_id"), // e.g., mealId, workoutId
     subEntityId: uuid("sub_entity_id"), // e.g., instructionId, exerciseId
 
-    targetDate: text("target_date").notNull(), // YYYY-MM-DD when habit should happen
     habitId: uuid("habit_id").references(() => habits.id),
     status: text("status").notNull().default("planned"), // planned, active, completed, cancelled
     createdAt: timestamp("created_at").notNull().defaultNow(),
