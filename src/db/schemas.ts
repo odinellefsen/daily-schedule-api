@@ -184,3 +184,10 @@ export type NewHabit = typeof habits.$inferInsert;
 
 export type Occurrence = typeof occurrences.$inferSelect;
 export type NewOccurrence = typeof occurrences.$inferInsert;
+
+export type {
+    HabitSubEntityOffset,
+    NewHabitSubEntityOffset,
+} from "./habit-sub-entity-offsets.schema";
+// Re-export habit sub-entity offsets
+export { habitSubEntityOffsets } from "./habit-sub-entity-offsets.schema";
