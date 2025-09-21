@@ -6,7 +6,6 @@ import type {
     habitArchivedSchema,
     habitCreatedSchema,
     habitsCreatedSchema,
-    habitUpdatedSchema,
 } from "../../contracts/habit/habit.contract";
 import { db } from "../../db";
 import { habits } from "../../db/schemas";
@@ -69,35 +68,6 @@ export async function handleHabitsCreated(
 
     // Insert all habits in a single transaction
     await db.insert(habits).values(habitRecords);
-}
-
-export async function handleHabitUpdated(
-    event: Omit<FlowcoreEvent, "payload"> & {
-        payload: z.infer<typeof habitUpdatedSchema>;
-    },
-) {
-    const { payload } = event;
-
-    await db
-        .update(habits)
-        .set({
-            name: payload.name,
-            description: payload.description,
-            isActive: payload.isActive,
-            domain: payload.domain,
-            entityId: payload.entityId,
-            entityName: payload.entityName,
-            subEntityId: payload.subEntityId,
-            subEntityName: payload.subEntityName,
-            recurrenceType: payload.recurrenceType,
-            recurrenceInterval: payload.recurrenceInterval,
-            startDate: payload.startDate,
-            timezone: payload.timezone,
-            weekDays: payload.weekDays,
-            monthlyDay: payload.monthlyDay,
-            preferredTime: payload.preferredTime,
-        })
-        .where(eq(habits.id, payload.id!));
 }
 
 export async function handleHabitArchived(

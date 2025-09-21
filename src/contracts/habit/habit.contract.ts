@@ -41,9 +41,6 @@ const baseHabitSchema = z.object({
     preferredTime: HHMM.optional(),
 });
 
-// Domain-agnostic habit schema with validation
-export const habitSchema = baseHabitSchema;
-
 // Single habit creation schema
 export const createHabitSchema = baseHabitSchema.omit({ id: true });
 
@@ -76,10 +73,6 @@ export const batchHabitCreationSchema = z.object({
 export const habitCreatedSchema = baseHabitSchema;
 export const habitsCreatedSchema = batchHabitCreationSchema; // Batch creation event
 
-export const habitUpdatedSchema = baseHabitSchema.extend({
-    oldValues: baseHabitSchema,
-});
-
 export const habitArchivedSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),
@@ -87,10 +80,9 @@ export const habitArchivedSchema = z.object({
 });
 
 // Type exports
-export type HabitType = z.infer<typeof habitSchema>;
+export type HabitType = z.infer<typeof baseHabitSchema>;
 export type CreateHabitType = z.infer<typeof createHabitSchema>;
 export type BatchHabitCreationType = z.infer<typeof batchHabitCreationSchema>;
 export type HabitCreatedType = z.infer<typeof habitCreatedSchema>;
 export type HabitsCreatedType = z.infer<typeof habitsCreatedSchema>;
-export type HabitUpdatedType = z.infer<typeof habitUpdatedSchema>;
 export type HabitArchivedType = z.infer<typeof habitArchivedSchema>;
