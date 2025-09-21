@@ -47,6 +47,4 @@ export const habitArchivedSchema = z.object({
 });
 
 // Type exports
-export type BatchHabitCreationType = z.infer<typeof batchHabitCreationSchema>;
-export type HabitsCreatedType = z.infer<typeof habitsCreatedSchema>;
 export type HabitArchivedType = z.infer<typeof habitArchivedSchema>;
