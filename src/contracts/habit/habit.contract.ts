@@ -21,14 +21,10 @@ export const batchHabitCreationSchema = z.object({
     userId: z.string(),
     domain: z.string(), // e.g., "meal"
     entityId: z.string().uuid(), // e.g., mealId
-    entityName: z.string().min(1).max(100), // e.g., meal name
     habits: z
         .array(
             z.object({
-                name: z.string().min(1).max(100), // Habit name/title
-                description: z.string().min(1).max(250).optional(),
                 subEntityId: z.string().uuid().optional(), // e.g., instructionId
-                subEntityName: z.string().max(100).optional(), // e.g., instruction text
                 recurrenceType: z.enum(["daily", "weekly"]),
                 recurrenceInterval: z.number().int().positive().default(1),
                 startDate: YMD,

@@ -131,16 +131,12 @@ export const foodItemUnits = pgTable("food_item_units", {
 export const habits = pgTable("habits", {
     id: uuid("id").primaryKey(),
     userId: text("user_id").notNull(),
-    name: text("name").notNull(),
-    description: text("description"),
     isActive: boolean("is_active").notNull().default(true),
 
     // Domain reference (optional - for domain-linked habits)
     domain: text("domain"), // e.g., "meal", "workout", "reading"
     entityId: uuid("entity_id"), // e.g., mealId, workoutId
-    entityName: text("entity_name"), // e.g., meal name for display
     subEntityId: uuid("sub_entity_id"), // e.g., instructionId, exerciseId
-    subEntityName: text("sub_entity_name"), // e.g., instruction text for display
 
     // Recurrence configuration
     recurrenceType: text("recurrence_type").notNull(),
