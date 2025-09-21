@@ -17,7 +17,7 @@ export const Weekday = z.enum([
 ]);
 
 // Batch habit creation schema for domain-linked habits (e.g., meal instructions)
-export const batchHabitCreationSchema = z.object({
+export const complexHabitCreationSchema = z.object({
     userId: z.string(),
     domain: z.string(), // e.g., "meal"
     entityId: z.string().uuid(), // e.g., mealId
@@ -38,7 +38,7 @@ export const batchHabitCreationSchema = z.object({
 });
 
 // Event schemas
-export const habitsCreatedSchema = batchHabitCreationSchema; // Batch creation event
+export const habitsCreatedSchema = complexHabitCreationSchema; // Batch creation event
 
 export const habitArchivedSchema = z.object({
     id: z.string().uuid(),
