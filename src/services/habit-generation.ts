@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import {
     differenceInCalendarDays,
     differenceInCalendarWeeks,
@@ -9,7 +8,7 @@ import { and, eq } from "drizzle-orm";
 import type { TodoGeneratedType } from "../contracts/todo";
 import { db } from "../db";
 import type { Habit } from "../db/schemas";
-import { habits, occurrences, todos } from "../db/schemas";
+import { habits } from "../db/schemas";
 import { FlowcorePathways } from "../utils/flowcore";
 
 /**
@@ -160,92 +159,7 @@ function shouldGenerateForDate(habit: Habit, targetDate: string): boolean {
 }
 
 /**
- * Create or get existing occurrence for a domain instance (e.g., meal, workout)
- * This creates ONE occurrence per domain entity (no date constraint)
- */
-async function upsertDomainOccurrence(data: {
-    userId: string;
-    domain: string;
-    entityId: string;
-    entityName?: string;
-}): Promise<{ id: string }> {
-    // Try to find existing occurrence for this domain instance
-    // Check if any todos exist for this domain instance first
-    const existingTodo = await db.query.todos.findFirst({
-        where: and(
-            eq(todos.userId, data.userId),
-            eq(todos.domain, data.domain),
-            eq(todos.entityId, data.entityId),
-        ),
-    });
-
-    if (existingTodo?.occurrenceId) {
-        // Return the existing occurrence
-        return { id: existingTodo.occurrenceId };
-    }
-
-    // Create new domain occurrence
-    const newOccurrence = {
-        id: crypto.randomUUID(),
-        userId: data.userId,
-        domain: data.domain,
-        entityId: data.entityId,
-        subEntityId: null, // Domain occurrences don't have subEntity
-        habitId: null, // Domain occurrences aren't linked to specific habits
-        status: "planned" as const,
-    };
-
-    await db.insert(occurrences).values(newOccurrence);
-
-    console.log(
-        `Created domain occurrence for ${data.domain} ${data.entityId}`,
-    );
-
-    return newOccurrence;
-}
-
-/**
- * Create or get existing occurrence for a standalone habit
- * This maintains the original 1:1 habit-to-occurrence relationship for simple habits
- */
-async function upsertStandaloneOccurrence(data: {
-    userId: string;
-    habitId: string;
-    targetDate: string;
-}): Promise<{ id: string }> {
-    // Try to find existing occurrence for this habit on this date
-    // Check if any todos exist for this habit on this date
-    const existingTodo = await db.query.todos.findFirst({
-        where: and(
-            eq(todos.userId, data.userId),
-            eq(todos.habitId, data.habitId),
-            eq(todos.dueDate, data.targetDate),
-        ),
-    });
-
-    if (existingTodo?.occurrenceId) {
-        // Return the existing occurrence
-        return { id: existingTodo.occurrenceId };
-    }
-
-    // Create new standalone occurrence
-    const newOccurrence = {
-        id: crypto.randomUUID(),
-        userId: data.userId,
-        domain: null, // Standalone habits have no domain
-        entityId: null,
-        subEntityId: null,
-        habitId: data.habitId,
-        status: "planned" as const,
-    };
-
-    await db.insert(occurrences).values(newOccurrence);
-    return newOccurrence;
-}
-
-/**
  * Generate todos for a group of domain habits (e.g., all meal instruction habits)
- * Creates ONE occurrence per domain instance, with all todos linking to it
  */
 async function generateTodosForDomainGroup(
     domainHabits: Habit[],
@@ -272,15 +186,7 @@ async function generateTodosForDomainGroup(
         }
     }
 
-    // Create ONE occurrence for the entire domain instance (e.g., "Breakfast")
-    const occurrence = await upsertDomainOccurrence({
-        userId,
-        domain,
-        entityId,
-        entityName: firstHabit.entityName ?? undefined,
-    });
-
-    // Generate todos for all habits, linking them to the same occurrence
+    // Generate todos for all habits
     const todoPromises = domainHabits.map(async (habit) => {
         // Calculate scheduling timestamp for this specific habit
         const scheduledFor = calculateScheduledFor(
@@ -293,7 +199,6 @@ async function generateTodosForDomainGroup(
         const todoEvent: TodoGeneratedType = {
             userId: habit.userId,
             habitId: habit.id,
-            occurrenceId: occurrence.id,
             title: habit.name,
             dueDate: targetDate,
             preferredTime: habit.preferredTime || undefined,
@@ -320,7 +225,6 @@ async function generateTodosForDomainGroup(
 
 /**
  * Generate todo for a standalone habit (no domain)
- * Creates one occurrence per habit (traditional approach)
  */
 async function generateTodoForStandaloneHabit(
     habit: Habit,
@@ -341,13 +245,6 @@ async function generateTodoForStandaloneHabit(
             );
         }
 
-        // Create occurrence for this standalone habit
-        const occurrence = await upsertStandaloneOccurrence({
-            userId: habit.userId,
-            habitId: habit.id,
-            targetDate,
-        });
-
         // Calculate the precise scheduling timestamp
         const scheduledFor = calculateScheduledFor(
             targetDate,
@@ -359,7 +256,6 @@ async function generateTodoForStandaloneHabit(
         const todoEvent: TodoGeneratedType = {
             userId: habit.userId,
             habitId: habit.id,
-            occurrenceId: occurrence.id,
             title: habit.name,
             dueDate: targetDate,
             preferredTime: habit.preferredTime || undefined,

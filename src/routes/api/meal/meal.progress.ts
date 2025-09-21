@@ -108,8 +108,10 @@ export function registerMealProgress(app: Hono) {
                         completedMeals: todayProgress.filter(
                             (meal) => meal.progress.percentComplete === 100,
                         ).length,
-                        activeOccurrences: todayProgress.filter(
-                            (meal) => meal.occurrence?.status === "active",
+                        inProgressMeals: todayProgress.filter(
+                            (meal) =>
+                                meal.progress.percentComplete > 0 &&
+                                meal.progress.percentComplete < 100,
                         ).length,
                         nextTasks: todayProgress
                             .filter((meal) => meal.progress.nextInstruction)

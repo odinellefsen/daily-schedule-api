@@ -91,7 +91,6 @@ export const todos = pgTable("todos", {
 
     // Simplified habit system fields
     habitId: uuid("habit_id").references(() => habits.id),
-    occurrenceId: uuid("occurrence_id").references(() => occurrences.id),
 
     // Domain-agnostic reference (simplified)
     domain: text("domain"), // e.g., "meal", "workout", null for text habits
@@ -153,20 +152,6 @@ export const habits = pgTable("habits", {
     preferredTime: text("preferred_time"),
 });
 
-export const occurrences = pgTable("occurrences", {
-    id: uuid("id").primaryKey(),
-    userId: text("user_id").notNull(),
-
-    // Domain-agnostic reference
-    domain: text("domain"), // e.g., "meal", "workout", null for text habits
-    entityId: uuid("entity_id"), // e.g., mealId, workoutId
-    subEntityId: uuid("sub_entity_id"), // e.g., instructionId, exerciseId
-
-    habitId: uuid("habit_id").references(() => habits.id),
-    status: text("status").notNull().default("planned"), // planned, active, completed, cancelled
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
 
@@ -181,6 +166,3 @@ export type NewTodo = typeof todos.$inferInsert;
 
 export type Habit = typeof habits.$inferSelect;
 export type NewHabit = typeof habits.$inferInsert;
-
-export type Occurrence = typeof occurrences.$inferSelect;
-export type NewOccurrence = typeof occurrences.$inferInsert;

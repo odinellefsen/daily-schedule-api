@@ -12,7 +12,6 @@ export const todoGeneratedSchema = z.object({
 
     // Habit system linkage
     habitId: z.string().uuid(),
-    occurrenceId: z.string().uuid(),
 
     // Domain-agnostic reference (optional for plain text habits)
     domain: z.string().optional(), // e.g., "meal", "workout", null for text habits

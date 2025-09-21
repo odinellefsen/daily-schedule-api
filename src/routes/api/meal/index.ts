@@ -3,7 +3,6 @@ import { requireAuth } from "../../../middleware/auth";
 import { registerCreateMeal } from "./meal.create";
 import { registerDeleteMeal } from "./meal.delete";
 import { registerListMeals } from "./meal.list";
-import { registerMealOccurrence } from "./meal.occurrence";
 import { registerMealProgress } from "./meal.progress";
 import { registerCreateMealIngredients } from "./meal-ingredients.create";
 import { registerDeleteMealIngredients } from "./meal-ingredients.delete";
@@ -27,6 +26,5 @@ registerCreateMealInstructions(meal);
 registerDeleteMealInstructions(meal);
 registerPatchMealInstructions(meal);
 registerMealProgress(meal);
-registerMealOccurrence(meal);
 
 export default meal;
