@@ -16,34 +16,6 @@ export const Weekday = z.enum([
     "sunday",
 ]);
 
-// Base habit schema without validation
-const baseHabitSchema = z.object({
-    id: z.string().uuid().optional(),
-    userId: z.string(),
-    name: z.string().min(1).max(100), // Habit title/name
-    description: z.string().min(1).max(250).optional(),
-    isActive: z.boolean().default(true),
-
-    // Domain reference (optional - for domain-linked habits like meal instructions)
-    domain: z.string().optional(), // e.g., "meal", "workout", "reading", etc.
-    entityId: z.string().uuid().optional(), // e.g., mealId, workoutId
-    entityName: z.string().max(100).optional(), // e.g., meal name for display
-    subEntityId: z.string().uuid().optional(), // e.g., instructionId, exerciseId
-    subEntityName: z.string().max(100).optional(), // e.g., instruction text for display
-
-    // Recurrence configuration
-    recurrenceType: z.enum(["daily", "weekly"]),
-    recurrenceInterval: z.number().int().positive().default(1),
-    startDate: YMD,
-    timezone: z.string().optional(),
-    weekDays: z.array(Weekday).optional(),
-    monthlyDay: z.number().int().min(1).max(31).optional(),
-    preferredTime: HHMM.optional(),
-});
-
-// Single habit creation schema
-export const createHabitSchema = baseHabitSchema.omit({ id: true });
-
 // Batch habit creation schema for domain-linked habits (e.g., meal instructions)
 export const batchHabitCreationSchema = z.object({
     userId: z.string(),
@@ -79,8 +51,6 @@ export const habitArchivedSchema = z.object({
 });
 
 // Type exports
-export type HabitType = z.infer<typeof baseHabitSchema>;
-export type CreateHabitType = z.infer<typeof createHabitSchema>;
 export type BatchHabitCreationType = z.infer<typeof batchHabitCreationSchema>;
 export type HabitsCreatedType = z.infer<typeof habitsCreatedSchema>;
 export type HabitArchivedType = z.infer<typeof habitArchivedSchema>;
