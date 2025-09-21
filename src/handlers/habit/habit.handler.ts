@@ -4,39 +4,10 @@ import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import type {
     habitArchivedSchema,
-    habitCreatedSchema,
     habitsCreatedSchema,
 } from "../../contracts/habit/habit.contract";
 import { db } from "../../db";
 import { habits } from "../../db/schemas";
-
-export async function handleHabitCreated(
-    event: Omit<FlowcoreEvent, "payload"> & {
-        payload: z.infer<typeof habitCreatedSchema>;
-    },
-) {
-    const { payload } = event;
-
-    await db.insert(habits).values({
-        id: payload.id || crypto.randomUUID(),
-        userId: payload.userId,
-        name: payload.name,
-        description: payload.description,
-        isActive: payload.isActive,
-        domain: payload.domain,
-        entityId: payload.entityId,
-        entityName: payload.entityName,
-        subEntityId: payload.subEntityId,
-        subEntityName: payload.subEntityName,
-        recurrenceType: payload.recurrenceType,
-        recurrenceInterval: payload.recurrenceInterval,
-        startDate: payload.startDate,
-        timezone: payload.timezone,
-        weekDays: payload.weekDays,
-        monthlyDay: payload.monthlyDay,
-        preferredTime: payload.preferredTime,
-    });
-}
 
 export async function handleHabitsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {

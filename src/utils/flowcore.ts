@@ -37,7 +37,6 @@ import {
 import { recipeVersionSchema } from "../contracts/food/recipe/recipe-version.contract";
 import {
     habitArchivedSchema,
-    habitCreatedSchema,
     habitsCreatedSchema,
 } from "../contracts/habit/habit.contract";
 import {
@@ -61,7 +60,6 @@ import {
 } from "../handlers/food-item/food-item-units.handler";
 import {
     handleHabitArchived,
-    handleHabitCreated,
     handleHabitsCreated,
 } from "../handlers/habit/habit.handler";
 import {
@@ -314,12 +312,6 @@ export const FlowcorePathways = new PathwaysBuilder({
     })
     .register({
         flowType: "habit.v0",
-        eventType: "habit.created.v0",
-        retryDelayMs: 10000,
-        schema: habitCreatedSchema,
-    })
-    .register({
-        flowType: "habit.v0",
         eventType: "habits.created.v0",
         retryDelayMs: 10000,
         schema: habitsCreatedSchema,
@@ -399,7 +391,6 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled)
     .handle("todo.v0/todo.relations.updated.v0", handleTodoRelationsUpdated)
     .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
-    .handle("habit.v0/habit.created.v0", handleHabitCreated)
     .handle("habit.v0/habits.created.v0", handleHabitsCreated)
     .handle("habit.v0/habit.archived.v0", handleHabitArchived);
 

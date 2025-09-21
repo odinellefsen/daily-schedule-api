@@ -70,7 +70,6 @@ export const batchHabitCreationSchema = z.object({
 });
 
 // Event schemas
-export const habitCreatedSchema = baseHabitSchema;
 export const habitsCreatedSchema = batchHabitCreationSchema; // Batch creation event
 
 export const habitArchivedSchema = z.object({
@@ -83,6 +82,5 @@ export const habitArchivedSchema = z.object({
 export type HabitType = z.infer<typeof baseHabitSchema>;
 export type CreateHabitType = z.infer<typeof createHabitSchema>;
 export type BatchHabitCreationType = z.infer<typeof batchHabitCreationSchema>;
-export type HabitCreatedType = z.infer<typeof habitCreatedSchema>;
 export type HabitsCreatedType = z.infer<typeof habitsCreatedSchema>;
 export type HabitArchivedType = z.infer<typeof habitArchivedSchema>;
