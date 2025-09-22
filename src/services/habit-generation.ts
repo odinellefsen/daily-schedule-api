@@ -1,14 +1,11 @@
-import {
-    differenceInCalendarDays,
-    differenceInCalendarWeeks,
-    parseISO,
-} from "date-fns";
+import crypto from "node:crypto";
+import { parseISO } from "date-fns";
 import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { and, eq } from "drizzle-orm";
 import type { TodoGeneratedType } from "../contracts/todo";
 import { db } from "../db";
 import type { Habit } from "../db/schemas";
-import { habits } from "../db/schemas";
+import { habitSubEntities, habits, habitTriggers } from "../db/schemas";
 import { FlowcorePathways } from "../utils/flowcore";
 
 /**
@@ -80,118 +77,101 @@ function getWeekdayFromDate(dateStr: string, timezone?: string): string {
 }
 
 /**
- * Get all habits that should generate todos for the given date
+ * Get all habit triggers that should fire for the given date
  */
-async function selectDueHabits(
+async function selectTriggersForDate(
     userId: string,
     targetDate: string,
-): Promise<Habit[]> {
-    const allActiveHabits = await db.query.habits.findMany({
-        where: and(eq(habits.userId, userId), eq(habits.isActive, true)),
+): Promise<
+    Array<{
+        trigger: {
+            id: string;
+            habitId: string;
+            triggerSubEntityId: string | null;
+            triggerWeekday: string;
+        };
+        habit: Habit;
+        subEntities: Array<{
+            id: string;
+            habitId: string;
+            subEntityId: string | null;
+            subEntityName: string;
+            scheduledWeekday: string;
+            scheduledTime: string | null;
+            isMainEvent: boolean;
+        }>;
+    }>
+> {
+    const weekday = getWeekdayFromDate(targetDate);
+
+    // Find all triggers that should fire today for weekly habits
+    const triggers = await db.query.habitTriggers.findMany({
+        where: eq(habitTriggers.triggerWeekday, weekday),
     });
 
-    return allActiveHabits.filter((habit) =>
-        shouldGenerateForDate(habit, targetDate),
-    );
-}
+    // Get habits and subEntities for each trigger
+    const triggersWithSubEntities = [];
+    for (const trigger of triggers) {
+        // Get the habit for this trigger
+        const habit = await db.query.habits.findFirst({
+            where: and(
+                eq(habits.id, trigger.habitId),
+                eq(habits.userId, userId),
+                eq(habits.isActive, true),
+                eq(habits.recurrenceType, "weekly"),
+            ),
+        });
 
-/**
- * Check if a habit should generate todos for the given date
- * Uses timezone-aware date calculations and proper calendar date handling
- */
-function shouldGenerateForDate(habit: Habit, targetDate: string): boolean {
-    const timezone = habit.timezone || "UTC";
+        if (!habit) continue; // Skip if habit doesn't match user/active criteria
 
-    try {
-        // Parse dates in user's timezone context (noon to avoid DST edge cases)
-        const targetDateInTz = zonedTimeToUtc(`${targetDate} 12:00`, timezone);
-        const startDateInTz = zonedTimeToUtc(
-            `${habit.startDate} 12:00`,
-            timezone,
-        );
+        const subEntities = await db.query.habitSubEntities.findMany({
+            where: eq(habitSubEntities.habitId, habit.id),
+            orderBy: habitSubEntities.scheduledWeekday,
+        });
 
-        // Don't generate for dates before the habit start date
-        if (targetDateInTz < startDateInTz) {
-            return false;
-        }
-
-        switch (habit.recurrenceType) {
-            case "daily": {
-                // Use calendar days difference, not time-based difference
-                const daysDiff = differenceInCalendarDays(
-                    targetDateInTz,
-                    startDateInTz,
-                );
-                return (
-                    daysDiff >= 0 && daysDiff % habit.recurrenceInterval === 0
-                );
-            }
-
-            case "weekly": {
-                // First check if this weekday is included
-                const weekday = getWeekdayFromDate(targetDate, timezone);
-                if (!habit.weekDays?.includes(weekday)) {
-                    return false;
-                }
-
-                // Then check if it's the right week based on interval
-                const weeksDiff = differenceInCalendarWeeks(
-                    targetDateInTz,
-                    startDateInTz,
-                );
-                return (
-                    weeksDiff >= 0 && weeksDiff % habit.recurrenceInterval === 0
-                );
-            }
-
-            default:
-                console.warn(
-                    `Unknown recurrence type: ${habit.recurrenceType}`,
-                );
-                return false;
-        }
-    } catch (error) {
-        console.error(
-            `Error checking recurrence for habit ${habit.id}: ${error}`,
-        );
-        return false;
+        triggersWithSubEntities.push({
+            trigger,
+            habit,
+            subEntities,
+        });
     }
+
+    return triggersWithSubEntities;
 }
 
 /**
- * Generate todos for a group of domain habits (e.g., all meal instruction habits)
+ * Generate todos for a habit instance (all subEntities for one habit)
  */
-async function generateTodosForDomainGroup(
-    domainHabits: Habit[],
-    targetDate: string,
+async function generateHabitInstance(
+    habit: Habit,
+    subEntities: Array<{
+        id: string;
+        habitId: string;
+        subEntityId: string | null;
+        subEntityName: string;
+        scheduledWeekday: string;
+        scheduledTime: string | null;
+        isMainEvent: boolean;
+    }>,
+    triggerDate: string,
 ): Promise<void> {
-    if (domainHabits.length === 0) return;
+    const instanceId = crypto.randomUUID();
+    const todoEvents: TodoGeneratedType[] = [];
 
-    const firstHabit = domainHabits[0];
+    // Generate todos for all subEntities in this habit instance
+    for (const subEntity of subEntities) {
+        // Calculate the actual scheduled date for this subEntity
+        const scheduledDate = calculateScheduledDateForSubEntity(
+            triggerDate,
+            habit.targetWeekday,
+            subEntity.scheduledWeekday,
+            habit.timezone || undefined,
+        );
 
-    // Validate all habits belong to same domain instance
-    const domain = firstHabit.domain!;
-    const entityId = firstHabit.entityId!;
-    const userId = firstHabit.userId;
-
-    for (const habit of domainHabits) {
-        if (
-            habit.domain !== domain ||
-            habit.entityId !== entityId ||
-            habit.userId !== userId
-        ) {
-            throw new Error(
-                `Mismatched domain group: expected ${domain}/${entityId} but got ${habit.domain}/${habit.entityId}`,
-            );
-        }
-    }
-
-    // Generate todos for all habits
-    const todoPromises = domainHabits.map(async (habit) => {
-        // Calculate scheduling timestamp for this specific habit
+        const scheduledTime = subEntity.scheduledTime || "09:00";
         const scheduledFor = calculateScheduledFor(
-            targetDate,
-            habit.preferredTime || undefined,
+            scheduledDate,
+            scheduledTime,
             habit.timezone || undefined,
         );
 
@@ -199,92 +179,69 @@ async function generateTodosForDomainGroup(
         const todoEvent: TodoGeneratedType = {
             userId: habit.userId,
             habitId: habit.id,
-            title: habit.name,
-            dueDate: targetDate,
-            preferredTime: habit.preferredTime || undefined,
+            instanceId,
+            title: subEntity.isMainEvent
+                ? `Complete ${habit.entityName}`
+                : `${subEntity.subEntityName} for ${habit.entityName}`,
+            dueDate: scheduledDate,
+            preferredTime: scheduledTime,
             scheduledFor: scheduledFor.toISOString(),
             timezone: habit.timezone || undefined,
-            domain: habit.domain ?? undefined,
-            entityId: habit.entityId ?? undefined,
-            subEntityId: habit.subEntityId ?? undefined,
+            domain: habit.domain,
+            entityId: habit.entityId,
+            subEntityId: subEntity.subEntityId || undefined,
         };
 
-        // Emit the event through Flowcore
-        await FlowcorePathways.write("todo.v0/todo.generated.v0", {
-            data: todoEvent,
-        });
+        todoEvents.push(todoEvent);
+    }
+
+    // Batch write all todos for this instance
+    await FlowcorePathways.write("todo.v0/todo.generated.v0", {
+        batch: true,
+        data: todoEvents,
     });
 
-    // Wait for all todos to be generated
-    await Promise.all(todoPromises);
-
     console.log(
-        `Successfully generated ${domainHabits.length} todos for ${domain} ${entityId} on ${targetDate}`,
+        `Successfully generated ${todoEvents.length} todos for habit instance ${habit.entityName}`,
     );
 }
 
 /**
- * Generate todo for a standalone habit (no domain)
+ * Calculate the actual scheduled date for a subEntity based on trigger date
  */
-async function generateTodoForStandaloneHabit(
-    habit: Habit,
-    targetDate: string,
-): Promise<void> {
-    try {
-        // Validate habit has required fields
-        if (!habit.id || !habit.userId || !habit.name) {
-            throw new Error(
-                `Invalid habit data: missing required fields for habit ${habit.id}`,
-            );
-        }
+function calculateScheduledDateForSubEntity(
+    triggerDate: string,
+    _targetWeekday: string,
+    subEntityWeekday: string,
+    timezone?: string,
+): string {
+    const weekdays = [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+    ];
+    const subEntityDay = weekdays.indexOf(subEntityWeekday);
+    const triggerDay = getWeekdayFromDate(triggerDate, timezone);
+    const triggerDayIndex = weekdays.indexOf(triggerDay);
 
-        // Validate targetDate format
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
-            throw new Error(
-                `Invalid targetDate format: ${targetDate}. Expected YYYY-MM-DD`,
-            );
-        }
+    // Calculate offset from trigger to subEntity
+    let offset = subEntityDay - triggerDayIndex;
+    if (offset < 0) offset += 7; // Handle week wraparound
 
-        // Calculate the precise scheduling timestamp
-        const scheduledFor = calculateScheduledFor(
-            targetDate,
-            habit.preferredTime || undefined,
-            habit.timezone || undefined,
-        );
+    // Add offset days to trigger date
+    const triggerDateObj = parseISO(`${triggerDate}T12:00:00.000Z`);
+    const scheduledDateObj = new Date(triggerDateObj);
+    scheduledDateObj.setDate(scheduledDateObj.getDate() + offset);
 
-        // Create the todo event with proper validation
-        const todoEvent: TodoGeneratedType = {
-            userId: habit.userId,
-            habitId: habit.id,
-            title: habit.name,
-            dueDate: targetDate,
-            preferredTime: habit.preferredTime || undefined,
-            scheduledFor: scheduledFor.toISOString(),
-            timezone: habit.timezone || undefined,
-            domain: habit.domain ?? undefined,
-            entityId: habit.entityId ?? undefined,
-            subEntityId: habit.subEntityId ?? undefined,
-        };
-
-        // Emit the event through Flowcore
-        await FlowcorePathways.write("todo.v0/todo.generated.v0", {
-            data: todoEvent,
-        });
-
-        console.log(
-            `Successfully generated todo for habit ${habit.id} on ${targetDate}`,
-        );
-    } catch (error) {
-        console.error(
-            `Failed to generate todo for habit ${habit.id} on ${targetDate}:`,
-            error,
-        );
-        throw error; // Re-throw to allow caller to handle
-    }
+    return scheduledDateObj.toISOString().split("T")[0]; // Return YYYY-MM-DD
 }
 
 /**
- * Core habit generation service with enhanced error handling and logging
+ * Core habit generation service for weekly habits with trigger-based generation
  */
 export async function generateMissingHabitTodos(
     userId: string,
@@ -307,11 +264,14 @@ export async function generateMissingHabitTodos(
         }
 
         console.log(
-            `Starting habit todo generation for user ${userId} on ${targetDate}`,
+            `Starting weekly habit todo generation for user ${userId} on ${targetDate}`,
         );
 
-        const dueHabits = await selectDueHabits(userId, targetDate);
-        console.log(`Found ${dueHabits.length} habits due for ${targetDate}`);
+        // Find all triggers that should fire today
+        const triggersToFire = await selectTriggersForDate(userId, targetDate);
+        console.log(
+            `Found ${triggersToFire.length} habit triggers for ${targetDate}`,
+        );
 
         const results = {
             success: 0,
@@ -319,95 +279,30 @@ export async function generateMissingHabitTodos(
             errors: [] as Array<{ habitId: string; error: string }>,
         };
 
-        // Group habits by domain instance for proper occurrence creation
-        const domainGroups = new Map<string, Habit[]>();
-        const standaloneHabits: Habit[] = [];
-
-        for (const habit of dueHabits) {
-            if (habit.domain && habit.entityId) {
-                // Group domain habits by domain + entityId (e.g., "meal-123", "workout-456")
-                const groupKey = `${habit.domain}-${habit.entityId}`;
-                if (!domainGroups.has(groupKey)) {
-                    domainGroups.set(groupKey, []);
-                }
-                domainGroups.get(groupKey)!.push(habit);
-            } else {
-                // Standalone habits (no domain)
-                standaloneHabits.push(habit);
-            }
-        }
-
-        // Process domain groups - one occurrence per domain instance
-        for (const [groupKey, groupHabits] of Array.from(
-            domainGroups.entries(),
-        )) {
+        // Process each trigger to generate habit instances
+        for (const { habit, subEntities } of triggersToFire) {
             try {
-                await generateTodosForDomainGroup(groupHabits, targetDate);
-                results.success += groupHabits.length;
+                await generateHabitInstance(habit, subEntities, targetDate);
+                results.success++;
+                console.log(`Generated habit instance for ${habit.entityName}`);
             } catch (error) {
                 const errorMessage =
                     error instanceof Error ? error.message : String(error);
                 console.error(
-                    `Failed to generate todos for domain group ${groupKey}:`,
+                    `Failed to generate habit instance for ${habit.entityName}:`,
                     error,
                 );
 
-                results.failed += groupHabits.length;
-                for (const habit of groupHabits) {
-                    results.errors.push({
-                        habitId: habit.id,
-                        error: errorMessage,
-                    });
-                }
-            }
-        }
-
-        // Process standalone habits in parallel batches
-        const BATCH_SIZE = 5; // Process up to 5 habits simultaneously
-
-        for (let i = 0; i < standaloneHabits.length; i += BATCH_SIZE) {
-            const batch = standaloneHabits.slice(i, i + BATCH_SIZE);
-
-            // Process batch in parallel
-            const batchPromises = batch.map(async (habit) => {
-                try {
-                    await generateTodoForStandaloneHabit(habit, targetDate);
-                    return { success: true, habitId: habit.id };
-                } catch (error) {
-                    const errorMessage =
-                        error instanceof Error ? error.message : String(error);
-                    console.error(
-                        `Failed to generate todo for habit ${habit.id}:`,
-                        error,
-                    );
-
-                    return {
-                        success: false,
-                        habitId: habit.id,
-                        error: errorMessage,
-                    };
-                }
-            });
-
-            // Wait for batch to complete
-            const batchResults = await Promise.all(batchPromises);
-
-            // Update results
-            for (const result of batchResults) {
-                if (result.success) {
-                    results.success++;
-                } else {
-                    results.failed++;
-                    results.errors.push({
-                        habitId: result.habitId,
-                        error: result.error!,
-                    });
-                }
+                results.failed++;
+                results.errors.push({
+                    habitId: habit.id,
+                    error: errorMessage,
+                });
             }
         }
 
         console.log(
-            `Habit todo generation completed: ${results.success} successful, ${results.failed} failed`,
+            `Weekly habit generation completed: ${results.success} successful, ${results.failed} failed`,
         );
         return results;
     } catch (error) {

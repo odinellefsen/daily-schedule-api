@@ -1,5 +1,5 @@
 import type { Hono } from "hono";
-import { complexHabitCreationSchema } from "../../../contracts/habit/habit.contract";
+import { weeklyHabitCreationSchema } from "../../../contracts/habit/habit.contract";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -9,7 +9,7 @@ export function registerCreateHabit(app: Hono) {
         const safeUserId = c.userId!;
 
         const rawJsonBody = await c.req.json();
-        const parsedJsonBody = complexHabitCreationSchema.safeParse({
+        const parsedJsonBody = weeklyHabitCreationSchema.safeParse({
             ...rawJsonBody,
             userId: safeUserId,
         });
@@ -40,7 +40,7 @@ export function registerCreateHabit(app: Hono) {
         return c.json(
             ApiResponse.success("Batch habits created successfully", {
                 domain: safeBatchHabitData.domain,
-                habitCount: safeBatchHabitData.habits.length,
+                subEntityCount: safeBatchHabitData.subEntities.length,
             }),
             StatusCodes.CREATED,
         );

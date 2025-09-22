@@ -122,6 +122,7 @@ export async function handleTodoGenerated(
 
             // Simplified habit system fields
             habitId: payload.habitId,
+            instanceId: payload.instanceId,
             domain: payload.domain,
             entityId: payload.entityId,
             subEntityId: payload.subEntityId,

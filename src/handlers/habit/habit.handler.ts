@@ -7,7 +7,7 @@ import type {
     habitsCreatedSchema,
 } from "../../contracts/habit/habit.contract";
 import { db } from "../../db";
-import { habits } from "../../db/schemas";
+import { habitSubEntities, habits, habitTriggers } from "../../db/schemas";
 
 export async function handleHabitsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
@@ -15,26 +15,97 @@ export async function handleHabitsCreated(
     },
 ) {
     const { payload } = event;
+    const habitId = crypto.randomUUID();
 
-    // Create multiple habit records from the batch
-    const habitRecords = payload.habits.map((habitData) => ({
-        id: crypto.randomUUID(),
+    // 1. Create main habit record
+    const habitRecord = {
+        id: habitId,
         userId: payload.userId,
-        isActive: true,
         domain: payload.domain,
         entityId: payload.entityId,
-        subEntityId: habitData.subEntityId,
-        recurrenceType: habitData.recurrenceType,
-        recurrenceInterval: habitData.recurrenceInterval,
-        startDate: habitData.startDate,
-        timezone: habitData.timezone,
-        weekDays: habitData.weekDays,
-        monthlyDay: undefined, // Not supported in batch creation yet
-        preferredTime: habitData.preferredTime,
+        entityName: payload.entityName,
+        recurrenceType: payload.recurrenceType,
+        recurrenceInterval: payload.recurrenceInterval,
+        targetWeekday: payload.targetWeekday,
+        startDate: payload.startDate,
+        timezone: payload.timezone,
+        isActive: true,
+    };
+
+    // 2. Calculate trigger (subEntity with biggest offset from target weekday)
+    const triggerSubEntity = findTriggerSubEntity(
+        payload.targetWeekday,
+        payload.subEntities,
+    );
+
+    // 3. Create habit trigger record
+    const triggerRecord = {
+        id: crypto.randomUUID(),
+        habitId,
+        triggerSubEntityId: triggerSubEntity.subEntityId || null,
+        triggerWeekday: triggerSubEntity.scheduledWeekday,
+    };
+
+    // 4. Create all subEntity records
+    const subEntityRecords = payload.subEntities.map((subEntity) => ({
+        id: crypto.randomUUID(),
+        habitId,
+        subEntityId: subEntity.subEntityId || null,
+        subEntityName: subEntity.subEntityName,
+        scheduledWeekday: subEntity.scheduledWeekday,
+        scheduledTime: subEntity.scheduledTime || null,
+        isMainEvent: subEntity.isMainEvent,
     }));
 
-    // Insert all habits in a single transaction
-    await db.insert(habits).values(habitRecords);
+    // 5. Insert all records in a transaction
+    await db.transaction(async (tx) => {
+        await tx.insert(habits).values(habitRecord);
+        await tx.insert(habitTriggers).values(triggerRecord);
+        await tx.insert(habitSubEntities).values(subEntityRecords);
+    });
+}
+
+/**
+ * Find the subEntity with the biggest offset (earliest in the week) to use as trigger
+ */
+function findTriggerSubEntity(
+    targetWeekday: string,
+    subEntities: Array<{
+        subEntityId?: string;
+        scheduledWeekday: string;
+        subEntityName: string;
+        scheduledTime?: string;
+        isMainEvent?: boolean;
+    }>,
+) {
+    const weekdays = [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+    ];
+    const targetDay = weekdays.indexOf(targetWeekday);
+
+    let maxOffset = -1;
+    let triggerSubEntity = subEntities[0]; // fallback
+
+    for (const subEntity of subEntities) {
+        const subEntityDay = weekdays.indexOf(subEntity.scheduledWeekday);
+
+        // Calculate days before target (positive = earlier in week)
+        let offset = targetDay - subEntityDay;
+        if (offset < 0) offset += 7; // Handle week wraparound
+
+        if (offset > maxOffset) {
+            maxOffset = offset;
+            triggerSubEntity = subEntity;
+        }
+    }
+
+    return triggerSubEntity;
 }
 
 export async function handleHabitArchived(

@@ -91,6 +91,7 @@ export const todos = pgTable("todos", {
 
     // Simplified habit system fields
     habitId: uuid("habit_id").references(() => habits.id),
+    instanceId: uuid("instance_id"), // Groups related todos together
 
     // Domain-agnostic reference (simplified)
     domain: text("domain"), // e.g., "meal", "workout", null for text habits
@@ -131,21 +132,37 @@ export const foodItemUnits = pgTable("food_item_units", {
 export const habits = pgTable("habits", {
     id: uuid("id").primaryKey(),
     userId: text("user_id").notNull(),
-    isActive: boolean("is_active").notNull().default(true),
-
-    // Domain reference (optional - for domain-linked habits)
-    domain: text("domain"), // e.g., "meal", "workout", "reading"
-    entityId: uuid("entity_id"), // e.g., mealId, workoutId
-    subEntityId: uuid("sub_entity_id"), // e.g., instructionId, exerciseId
-
-    // Recurrence configuration
-    recurrenceType: text("recurrence_type").notNull(),
-    recurrenceInterval: integer("recurrence_interval").notNull(),
+    domain: text("domain").notNull(), // e.g., "meal", "workout"
+    entityId: uuid("entity_id").notNull(), // e.g., mealId, workoutId
+    entityName: text("entity_name").notNull(), // e.g., "Breakfast"
+    recurrenceType: text("recurrence_type").notNull(), // "weekly" only for now
+    recurrenceInterval: integer("recurrence_interval").notNull().default(1),
+    targetWeekday: text("target_weekday").notNull(), // when main event happens
     startDate: text("start_date").notNull(), // YYYY-MM-DD
     timezone: text("timezone"),
-    weekDays: text("week_days").array(),
-    monthlyDay: integer("monthly_day"),
-    preferredTime: text("preferred_time"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const habitTriggers = pgTable("habit_triggers", {
+    id: uuid("id").primaryKey(),
+    habitId: uuid("habit_id")
+        .references(() => habits.id, { onDelete: "cascade" })
+        .notNull(),
+    triggerSubEntityId: uuid("trigger_sub_entity_id"), // null if main event is trigger
+    triggerWeekday: text("trigger_weekday").notNull(), // earliest day to start generation
+});
+
+export const habitSubEntities = pgTable("habit_subentities", {
+    id: uuid("id").primaryKey(),
+    habitId: uuid("habit_id")
+        .references(() => habits.id, { onDelete: "cascade" })
+        .notNull(),
+    subEntityId: uuid("sub_entity_id"), // null for main event
+    subEntityName: text("sub_entity_name").notNull(),
+    scheduledWeekday: text("scheduled_weekday").notNull(),
+    scheduledTime: text("scheduled_time"), // HH:MM
+    isMainEvent: boolean("is_main_event").notNull().default(false),
 });
 
 export type Recipe = typeof recipes.$inferSelect;
@@ -162,3 +179,9 @@ export type NewTodo = typeof todos.$inferInsert;
 
 export type Habit = typeof habits.$inferSelect;
 export type NewHabit = typeof habits.$inferInsert;
+
+export type HabitTrigger = typeof habitTriggers.$inferSelect;
+export type NewHabitTrigger = typeof habitTriggers.$inferInsert;
+
+export type HabitSubEntity = typeof habitSubEntities.$inferSelect;
+export type NewHabitSubEntity = typeof habitSubEntities.$inferInsert;
