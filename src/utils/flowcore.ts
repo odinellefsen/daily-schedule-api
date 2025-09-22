@@ -58,10 +58,7 @@ import {
     handleFoodItemUnitsDeleted,
     handleFoodItemUnitsUpdated,
 } from "../handlers/food-item/food-item-units.handler";
-import {
-    handleHabitArchived,
-    handleHabitsCreated,
-} from "../handlers/habit/habit.handler";
+import { handleHabitsCreated } from "../handlers/habit/habit.handler";
 import {
     handleMealArchived,
     handleMealCreated,
@@ -391,8 +388,7 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled)
     .handle("todo.v0/todo.relations.updated.v0", handleTodoRelationsUpdated)
     .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
-    .handle("habit.v0/habits.created.v0", handleHabitsCreated)
-    .handle("habit.v0/habit.archived.v0", handleHabitArchived);
+    .handle("habit.v0/habits.created.v0", handleHabitsCreated);
 
 // Combined handler for recipe version events
 FlowcorePathways.handle("recipe.v0/recipe-version.v0", async (event) => {

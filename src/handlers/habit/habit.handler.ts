@@ -31,7 +31,7 @@ export async function handleHabitsCreated(
     };
 
     // 2. Calculate trigger (subEntity with biggest offset from target weekday)
-    const triggerSubEntity = findTriggerSubEntity(
+    const triggerSubEntity = findTriggerSubEntityForWeekRecurrenceType(
         payload.targetWeekday,
         payload.subEntities,
     );
@@ -64,7 +64,7 @@ export async function handleHabitsCreated(
 /**
  * Find the subEntity with the biggest offset (earliest in the week) to use as trigger
  */
-function findTriggerSubEntity(
+function findTriggerSubEntityForWeekRecurrenceType(
     targetWeekday: string,
     subEntities: Array<{
         subEntityId?: string;
@@ -100,18 +100,4 @@ function findTriggerSubEntity(
     }
 
     return triggerSubEntity;
-}
-
-export async function handleHabitArchived(
-    event: Omit<FlowcoreEvent, "payload"> & {
-        payload: z.infer<typeof habitArchivedSchema>;
-    },
-) {
-    const { payload } = event;
-
-    // For now, just mark as inactive - could implement soft delete later
-    await db
-        .update(habits)
-        .set({ isActive: false })
-        .where(eq(habits.id, payload.id));
 }
