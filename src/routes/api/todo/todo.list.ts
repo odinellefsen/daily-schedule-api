@@ -109,6 +109,17 @@ export function registerListTodos(app: Hono) {
     app.get("/", async (c) => {
         const safeUserId = c.userId!;
 
+        // LAZY GENERATION: Generate missing habit todos for today when listing all todos
+        const userTimezone = c.req.header("X-Timezone") || "UTC";
+        const todayDate = getCurrentDateInTimezone(userTimezone);
+
+        try {
+            await generateMissingHabitTodos(safeUserId, todayDate);
+        } catch (error) {
+            console.error("Failed to generate habit todos:", error);
+            // Continue even if habit generation fails
+        }
+
         const allTodos = await db
             .select()
             .from(todos)
