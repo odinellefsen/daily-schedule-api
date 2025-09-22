@@ -27,11 +27,10 @@ CREATE TABLE "habit_triggers" (
 CREATE TABLE "habit_subentities" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"habit_id" uuid NOT NULL,
+	"entity_id" uuid,
 	"sub_entity_id" uuid,
-	"sub_entity_name" text NOT NULL,
 	"scheduled_weekday" text NOT NULL,
-	"scheduled_time" text,
-	"is_main_event" boolean DEFAULT false NOT NULL
+	"scheduled_time" text
 );
 
 -- Add foreign key constraints

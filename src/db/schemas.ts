@@ -156,10 +156,10 @@ export const habitSubEntities = pgTable("habit_subentities", {
     habitId: uuid("habit_id")
         .references(() => habits.id, { onDelete: "cascade" })
         .notNull(),
-    subEntityId: uuid("sub_entity_id"), // null for main event
+    entityId: uuid("entity_id"),
+    subEntityId: uuid("sub_entity_id"), // reference to sub entity (e.g., instructionId)
     scheduledWeekday: text("scheduled_weekday").notNull(),
     scheduledTime: text("scheduled_time"), // HH:MM
-    isMainEvent: boolean("is_main_event").notNull().default(false),
 });
 
 export type Recipe = typeof recipes.$inferSelect;

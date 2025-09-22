@@ -70,7 +70,6 @@ function findTriggerSubEntity(
         subEntityId?: string;
         scheduledWeekday: string;
         scheduledTime?: string;
-        isMainEvent?: boolean;
     }>,
 ) {
     const weekdays = [
