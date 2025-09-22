@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import type { FlowcoreEvent } from "@flowcore/pathways";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
@@ -26,9 +27,27 @@ export async function handleTodoCreated(
         description: payload.description,
         completed: payload.completed,
         scheduledFor: payload.scheduledFor
-            ? new Date(payload.scheduledFor)
+            ? (() => {
+                  const date = new Date(payload.scheduledFor);
+                  if (Number.isNaN(date.getTime())) {
+                      throw new Error(
+                          `Invalid scheduledFor date: ${payload.scheduledFor}`,
+                      );
+                  }
+                  return date;
+              })()
             : null,
-        completedAt: payload.completedAt ? new Date(payload.completedAt) : null,
+        completedAt: payload.completedAt
+            ? (() => {
+                  const date = new Date(payload.completedAt);
+                  if (Number.isNaN(date.getTime())) {
+                      throw new Error(
+                          `Invalid completedAt date: ${payload.completedAt}`,
+                      );
+                  }
+                  return date;
+              })()
+            : null,
         relations: payload.relations ? JSON.stringify(payload.relations) : null,
     });
 }
@@ -55,7 +74,15 @@ export async function handleTodoCompleted(
         .update(todos)
         .set({
             completed: true,
-            completedAt: new Date(payload.completedAt),
+            completedAt: (() => {
+                const date = new Date(payload.completedAt);
+                if (Number.isNaN(date.getTime())) {
+                    throw new Error(
+                        `Invalid completedAt date: ${payload.completedAt}`,
+                    );
+                }
+                return date;
+            })(),
         })
         .where(eq(todos.id, payload.id));
 
@@ -106,6 +133,12 @@ export async function handleTodoGenerated(
     // Generate new UUID for the todo
     const todoId = crypto.randomUUID();
 
+    // Validate scheduledFor date
+    const scheduledForDate = new Date(payload.scheduledFor);
+    if (Number.isNaN(scheduledForDate.getTime())) {
+        throw new Error(`Invalid scheduledFor date: ${payload.scheduledFor}`);
+    }
+
     // UPSERT the todo (simplified structure)
     await db
         .insert(todos)
@@ -117,7 +150,7 @@ export async function handleTodoGenerated(
             dueDate: payload.dueDate,
             preferredTime: payload.preferredTime || null,
             completed: false,
-            scheduledFor: new Date(payload.scheduledFor),
+            scheduledFor: scheduledForDate,
             completedAt: null,
 
             // Simplified habit system fields

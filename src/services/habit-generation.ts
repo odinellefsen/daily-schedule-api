@@ -18,8 +18,26 @@ function calculateScheduledFor(
     // Default time if not specified (9:00 AM)
     const timeToUse = preferredTime || "09:00";
 
+    // Validate inputs
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+        throw new Error(
+            `Invalid dueDate format: ${dueDate}. Expected YYYY-MM-DD`,
+        );
+    }
+
+    if (!/^\d{2}:\d{2}$/.test(timeToUse)) {
+        throw new Error(`Invalid time format: ${timeToUse}. Expected HH:MM`);
+    }
+
     // Simple UTC date creation
-    const utcDate = parseISO(`${dueDate}T${timeToUse}:00.000Z`);
+    const dateTimeString = `${dueDate}T${timeToUse}:00.000Z`;
+    const utcDate = parseISO(dateTimeString);
+
+    // Validate the resulting date
+    if (Number.isNaN(utcDate.getTime())) {
+        throw new Error(`Invalid date created from: ${dateTimeString}`);
+    }
+
     return utcDate;
 }
 
@@ -27,8 +45,20 @@ function calculateScheduledFor(
  * Get weekday from date string, timezone-aware
  */
 function getWeekdayFromDate(dateStr: string): string {
+    // Validate input format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
+    }
+
     // Simple UTC date parsing
-    const date = parseISO(`${dateStr}T12:00:00.000Z`);
+    const dateTimeString = `${dateStr}T12:00:00.000Z`;
+    const date = parseISO(dateTimeString);
+
+    // Validate the resulting date
+    if (Number.isNaN(date.getTime())) {
+        throw new Error(`Invalid date created from: ${dateTimeString}`);
+    }
+
     const weekdays = [
         "sunday",
         "monday",
@@ -194,6 +224,13 @@ function calculateScheduledDateForSubEntity(
     _targetWeekday: string,
     subEntityWeekday: string,
 ): string {
+    // Validate inputs
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(triggerDate)) {
+        throw new Error(
+            `Invalid triggerDate format: ${triggerDate}. Expected YYYY-MM-DD`,
+        );
+    }
+
     const weekdays = [
         "sunday",
         "monday",
@@ -203,9 +240,17 @@ function calculateScheduledDateForSubEntity(
         "friday",
         "saturday",
     ];
+
     const subEntityDay = weekdays.indexOf(subEntityWeekday);
+    if (subEntityDay === -1) {
+        throw new Error(`Invalid subEntityWeekday: ${subEntityWeekday}`);
+    }
+
     const triggerDay = getWeekdayFromDate(triggerDate);
     const triggerDayIndex = weekdays.indexOf(triggerDay);
+    if (triggerDayIndex === -1) {
+        throw new Error(`Invalid triggerDay: ${triggerDay}`);
+    }
 
     // Calculate offset from trigger to subEntity
     let offset = subEntityDay - triggerDayIndex;
@@ -213,8 +258,21 @@ function calculateScheduledDateForSubEntity(
 
     // Add offset days to trigger date
     const triggerDateObj = parseISO(`${triggerDate}T12:00:00.000Z`);
+    if (Number.isNaN(triggerDateObj.getTime())) {
+        throw new Error(
+            `Invalid trigger date created from: ${triggerDate}T12:00:00.000Z`,
+        );
+    }
+
     const scheduledDateObj = new Date(triggerDateObj);
     scheduledDateObj.setDate(scheduledDateObj.getDate() + offset);
+
+    // Validate the resulting date
+    if (Number.isNaN(scheduledDateObj.getTime())) {
+        throw new Error(
+            `Invalid scheduled date calculated from triggerDate: ${triggerDate}, offset: ${offset}`,
+        );
+    }
 
     return scheduledDateObj.toISOString().split("T")[0]; // Return YYYY-MM-DD
 }
