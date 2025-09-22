@@ -95,10 +95,8 @@ async function selectTriggersForDate(
             id: string;
             habitId: string;
             subEntityId: string | null;
-            subEntityName: string;
             scheduledWeekday: string;
             scheduledTime: string | null;
-            isMainEvent: boolean;
         }>;
     }>
 > {
@@ -148,10 +146,8 @@ async function generateHabitInstance(
         id: string;
         habitId: string;
         subEntityId: string | null;
-        subEntityName: string;
         scheduledWeekday: string;
         scheduledTime: string | null;
-        isMainEvent: boolean;
     }>,
     triggerDate: string,
 ): Promise<void> {
@@ -180,9 +176,7 @@ async function generateHabitInstance(
             userId: habit.userId,
             habitId: habit.id,
             instanceId,
-            title: subEntity.isMainEvent
-                ? `Complete ${habit.entityName}`
-                : `${subEntity.subEntityName} for ${habit.entityName}`,
+            title: "to be implemented",
             dueDate: scheduledDate,
             preferredTime: scheduledTime,
             scheduledFor: scheduledFor.toISOString(),
@@ -200,10 +194,6 @@ async function generateHabitInstance(
         batch: true,
         data: todoEvents,
     });
-
-    console.log(
-        `Successfully generated ${todoEvents.length} todos for habit instance ${habit.entityName}`,
-    );
 }
 
 /**
@@ -284,12 +274,12 @@ export async function generateMissingHabitTodos(
             try {
                 await generateHabitInstance(habit, subEntities, targetDate);
                 results.success++;
-                console.log(`Generated habit instance for ${habit.entityName}`);
+                console.log(`Generated habit instance for ${habit.entityId}`);
             } catch (error) {
                 const errorMessage =
                     error instanceof Error ? error.message : String(error);
                 console.error(
-                    `Failed to generate habit instance for ${habit.entityName}:`,
+                    `Failed to generate habit instance for ${habit.entityId}:`,
                     error,
                 );
 

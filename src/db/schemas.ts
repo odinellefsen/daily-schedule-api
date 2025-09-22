@@ -134,9 +134,7 @@ export const habits = pgTable("habits", {
     userId: text("user_id").notNull(),
     domain: text("domain").notNull(), // e.g., "meal", "workout"
     entityId: uuid("entity_id").notNull(), // e.g., mealId, workoutId
-    entityName: text("entity_name").notNull(), // e.g., "Breakfast"
     recurrenceType: text("recurrence_type").notNull(), // "weekly" only for now
-    recurrenceInterval: integer("recurrence_interval").notNull().default(1),
     targetWeekday: text("target_weekday").notNull(), // when main event happens
     startDate: text("start_date").notNull(), // YYYY-MM-DD
     timezone: text("timezone"),
@@ -159,7 +157,6 @@ export const habitSubEntities = pgTable("habit_subentities", {
         .references(() => habits.id, { onDelete: "cascade" })
         .notNull(),
     subEntityId: uuid("sub_entity_id"), // null for main event
-    subEntityName: text("sub_entity_name").notNull(),
     scheduledWeekday: text("scheduled_weekday").notNull(),
     scheduledTime: text("scheduled_time"), // HH:MM
     isMainEvent: boolean("is_main_event").notNull().default(false),

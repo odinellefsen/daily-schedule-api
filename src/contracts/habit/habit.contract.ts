@@ -21,11 +21,9 @@ export const weeklyHabitCreationSchema = z.object({
     userId: z.string(),
     domain: z.string(), // e.g., "meal"
     entityId: z.string().uuid(), // e.g., mealId
-    entityName: z.string(), // e.g., "Breakfast"
 
     // Main habit configuration (weekly only)
     recurrenceType: z.literal("weekly"),
-    recurrenceInterval: z.number().int().positive().default(1),
     targetWeekday: Weekday, // When the main event should happen
     startDate: YMD,
     timezone: z.string().optional(),
@@ -35,10 +33,8 @@ export const weeklyHabitCreationSchema = z.object({
         .array(
             z.object({
                 subEntityId: z.string().uuid().optional(), // null for main event
-                subEntityName: z.string(),
                 scheduledWeekday: Weekday,
                 scheduledTime: HHMM.optional(),
-                isMainEvent: z.boolean().default(false),
             }),
         )
         .min(1),

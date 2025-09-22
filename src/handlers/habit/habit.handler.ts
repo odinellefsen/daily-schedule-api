@@ -23,9 +23,7 @@ export async function handleHabitsCreated(
         userId: payload.userId,
         domain: payload.domain,
         entityId: payload.entityId,
-        entityName: payload.entityName,
         recurrenceType: payload.recurrenceType,
-        recurrenceInterval: payload.recurrenceInterval,
         targetWeekday: payload.targetWeekday,
         startDate: payload.startDate,
         timezone: payload.timezone,
@@ -51,10 +49,8 @@ export async function handleHabitsCreated(
         id: crypto.randomUUID(),
         habitId,
         subEntityId: subEntity.subEntityId || null,
-        subEntityName: subEntity.subEntityName,
         scheduledWeekday: subEntity.scheduledWeekday,
         scheduledTime: subEntity.scheduledTime || null,
-        isMainEvent: subEntity.isMainEvent,
     }));
 
     // 5. Insert all records in a transaction
@@ -73,7 +69,6 @@ function findTriggerSubEntity(
     subEntities: Array<{
         subEntityId?: string;
         scheduledWeekday: string;
-        subEntityName: string;
         scheduledTime?: string;
         isMainEvent?: boolean;
     }>,
