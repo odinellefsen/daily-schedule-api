@@ -87,9 +87,5 @@ dataCore:
     habit.v0:
       description: "Instruction habit data collection for daily scheduler"
       eventTypes:
-        habits.created.v0:
+        complex-habit.created.v0:
           description: "Batch instruction habits created event"
-        habit.updated.v0:
-          description: "Instruction habit updated event"
-        habit.archived.v0:
-          description: "Instruction habit archived event"

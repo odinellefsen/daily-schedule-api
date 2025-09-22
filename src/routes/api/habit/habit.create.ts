@@ -27,7 +27,7 @@ export function registerCreateHabit(app: Hono) {
         const safeBatchHabitData = parsedJsonBody.data;
 
         try {
-            await FlowcorePathways.write("habit.v0/habits.created.v0", {
+            await FlowcorePathways.write("habit.v0/complex-habit.created.v0", {
                 data: safeBatchHabitData,
             });
         } catch (error) {

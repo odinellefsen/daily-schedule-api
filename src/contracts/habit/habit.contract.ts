@@ -41,12 +41,3 @@ export const weeklyHabitCreationSchema = z.object({
 
 // Event schemas
 export const habitsCreatedSchema = weeklyHabitCreationSchema;
-
-export const habitArchivedSchema = z.object({
-    id: z.string().uuid(),
-    userId: z.string(),
-    archivedAt: z.string().datetime(),
-});
-
-// Type exports
-export type HabitArchivedType = z.infer<typeof habitArchivedSchema>;

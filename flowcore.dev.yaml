@@ -64,9 +64,6 @@ development:
       dataCore: daily-schedule
       flowType: habit.v0
       events:
-        - habit.created.v0
-        - habits.created.v0
-        - habit.updated.v0
-        - habit.archived.v0
+        - complex-habit.created.v0
       endpoints:
        - ""
