@@ -1,11 +1,7 @@
 import crypto from "node:crypto";
 import type { FlowcoreEvent } from "@flowcore/pathways";
-import { eq } from "drizzle-orm";
 import type { z } from "zod";
-import type {
-    habitArchivedSchema,
-    habitsCreatedSchema,
-} from "../../contracts/habit/habit.contract";
+import type { habitsCreatedSchema } from "../../contracts/habit/habit.contract";
 import { db } from "../../db";
 import { habitSubEntities, habits, habitTriggers } from "../../db/schemas";
 
@@ -25,8 +21,8 @@ export async function handleHabitsCreated(
         entityId: payload.entityId,
         recurrenceType: payload.recurrenceType,
         targetWeekday: payload.targetWeekday,
+        targetTime: payload.targetTime || null,
         startDate: payload.startDate,
-        timezone: payload.timezone,
         isActive: true,
     };
 

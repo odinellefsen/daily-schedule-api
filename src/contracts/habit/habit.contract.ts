@@ -25,8 +25,8 @@ export const weeklyHabitCreationSchema = z.object({
     // Main habit configuration (so far only weekly)
     recurrenceType: z.literal("weekly"),
     targetWeekday: Weekday, // When the main event should happen
+    targetTime: HHMM.optional(), // HH:MM when main event should happen
     startDate: YMD,
-    timezone: z.string().optional(),
 
     subEntities: z
         .array(

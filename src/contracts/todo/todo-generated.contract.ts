@@ -8,7 +8,6 @@ export const todoGeneratedSchema = z.object({
     dueDate: YMD, // YYYY-MM-DD
     preferredTime: HHMM.optional(), // HH:MM
     scheduledFor: z.string().datetime(), // UTC timestamp for precise scheduling
-    timezone: z.string().optional(), // User's timezone context
 
     // Habit system linkage
     habitId: z.string().uuid(),

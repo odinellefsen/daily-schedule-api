@@ -1,6 +1,5 @@
 import crypto from "node:crypto";
 import { parseISO } from "date-fns";
-import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { and, eq } from "drizzle-orm";
 import type { TodoGeneratedType } from "../contracts/todo";
 import { db } from "../db";
@@ -15,65 +14,31 @@ import { FlowcorePathways } from "../utils/flowcore";
 function calculateScheduledFor(
     dueDate: string, // YYYY-MM-DD
     preferredTime: string | undefined, // HH:MM
-    timezone: string | undefined, // IANA timezone
 ): Date {
     // Default time if not specified (9:00 AM)
     const timeToUse = preferredTime || "09:00";
-    const timezoneToUse = timezone || "UTC";
 
-    try {
-        // Combine date and time in user's timezone
-        const dateTimeString = `${dueDate} ${timeToUse}`;
-
-        // Convert to UTC using proper timezone handling
-        return zonedTimeToUtc(dateTimeString, timezoneToUse);
-    } catch (error) {
-        console.error(`Error calculating scheduledFor: ${error}`);
-        // Fallback to UTC if timezone conversion fails
-        const utcDate = parseISO(`${dueDate}T${timeToUse}:00.000Z`);
-        return utcDate;
-    }
+    // Simple UTC date creation
+    const utcDate = parseISO(`${dueDate}T${timeToUse}:00.000Z`);
+    return utcDate;
 }
 
 /**
  * Get weekday from date string, timezone-aware
  */
-function getWeekdayFromDate(dateStr: string, timezone?: string): string {
-    const timezoneToUse = timezone || "UTC";
-
-    try {
-        // Parse date in the specified timezone
-        const zonedDate = utcToZonedTime(
-            parseISO(`${dateStr}T12:00:00.000Z`),
-            timezoneToUse,
-        );
-        const weekdays = [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-        ];
-        return weekdays[zonedDate.getDay()];
-    } catch (error) {
-        console.error(
-            `Error getting weekday for ${dateStr} in ${timezoneToUse}: ${error}`,
-        );
-        // Fallback to UTC
-        const date = parseISO(`${dateStr}T12:00:00.000Z`);
-        const weekdays = [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-        ];
-        return weekdays[date.getDay()];
-    }
+function getWeekdayFromDate(dateStr: string): string {
+    // Simple UTC date parsing
+    const date = parseISO(`${dateStr}T12:00:00.000Z`);
+    const weekdays = [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+    ];
+    return weekdays[date.getDay()];
 }
 
 /**
@@ -161,26 +126,23 @@ async function generateHabitInstance(
             triggerDate,
             habit.targetWeekday,
             subEntity.scheduledWeekday,
-            habit.timezone || undefined,
         );
 
         const scheduledTime = subEntity.scheduledTime || "09:00";
         const scheduledFor = calculateScheduledFor(
             scheduledDate,
             scheduledTime,
-            habit.timezone || undefined,
         );
 
-        // Create todo event
+        // Create todo event for subEntity
         const todoEvent: TodoGeneratedType = {
             userId: habit.userId,
             habitId: habit.id,
             instanceId,
-            title: "to be implemented",
+            title: "to be implemented - subEntity",
             dueDate: scheduledDate,
             preferredTime: scheduledTime,
             scheduledFor: scheduledFor.toISOString(),
-            timezone: habit.timezone || undefined,
             domain: habit.domain,
             entityId: habit.entityId,
             subEntityId: subEntity.subEntityId || undefined,
@@ -188,6 +150,34 @@ async function generateHabitInstance(
 
         todoEvents.push(todoEvent);
     }
+
+    // Create todo for the main habit event (the actual goal)
+    const mainEventDate = calculateScheduledDateForSubEntity(
+        triggerDate,
+        habit.targetWeekday,
+        habit.targetWeekday, // Main event happens on target weekday
+    );
+
+    const mainEventTime = habit.targetTime || "09:00";
+    const mainEventScheduledFor = calculateScheduledFor(
+        mainEventDate,
+        mainEventTime,
+    );
+
+    const mainEventTodo: TodoGeneratedType = {
+        userId: habit.userId,
+        habitId: habit.id,
+        instanceId,
+        title: "to be implemented - main event",
+        dueDate: mainEventDate,
+        preferredTime: mainEventTime,
+        scheduledFor: mainEventScheduledFor.toISOString(),
+        domain: habit.domain,
+        entityId: habit.entityId,
+        subEntityId: undefined, // Main event has no subEntityId
+    };
+
+    todoEvents.push(mainEventTodo);
 
     // Batch write all todos for this instance
     await FlowcorePathways.write("todo.v0/todo.generated.v0", {
@@ -203,7 +193,6 @@ function calculateScheduledDateForSubEntity(
     triggerDate: string,
     _targetWeekday: string,
     subEntityWeekday: string,
-    timezone?: string,
 ): string {
     const weekdays = [
         "sunday",
@@ -215,7 +204,7 @@ function calculateScheduledDateForSubEntity(
         "saturday",
     ];
     const subEntityDay = weekdays.indexOf(subEntityWeekday);
-    const triggerDay = getWeekdayFromDate(triggerDate, timezone);
+    const triggerDay = getWeekdayFromDate(triggerDate);
     const triggerDayIndex = weekdays.indexOf(triggerDay);
 
     // Calculate offset from trigger to subEntity

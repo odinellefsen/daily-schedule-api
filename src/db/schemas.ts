@@ -136,8 +136,8 @@ export const habits = pgTable("habits", {
     entityId: uuid("entity_id").notNull(), // e.g., mealId, workoutId
     recurrenceType: text("recurrence_type").notNull(), // "weekly" only for now
     targetWeekday: text("target_weekday").notNull(), // when main event happens
+    targetTime: text("target_time"), // HH:MM when main event should happen
     startDate: text("start_date").notNull(), // YYYY-MM-DD
-    timezone: text("timezone"),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
