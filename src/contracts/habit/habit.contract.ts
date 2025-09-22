@@ -18,6 +18,7 @@ export const Weekday = z.enum([
 
 // Batch habit creation schema for domain-linked habits (e.g., meal instructions)
 export const complexHabitCreationSchema = z.object({
+    id: z.string().uuid(),
     userId: z.string(),
     domain: z.string(), // e.g., "meal"
     entityId: z.string().uuid(), // e.g., mealId
