@@ -132,19 +132,20 @@ export function registerListRecipes(app: Hono) {
                     recipe.nameOfTheRecipe
                         .toLowerCase()
                         .includes(query.toLowerCase()) ||
-                    (recipe.generalDescriptionOfTheRecipe &&
-                        recipe.generalDescriptionOfTheRecipe
-                            .toLowerCase()
-                            .includes(query.toLowerCase())),
+                    (recipe.generalDescriptionOfTheRecipe
+                        ? recipe.generalDescriptionOfTheRecipe
+                              .toLowerCase()
+                              .includes(query.toLowerCase())
+                        : false),
             );
         }
 
         // Filter by meal timing
         if (mealTiming) {
-            userRecipes = userRecipes.filter(
-                (recipe) =>
-                    recipe.whenIsItConsumed &&
-                    recipe.whenIsItConsumed.includes(mealTiming),
+            userRecipes = userRecipes.filter((recipe) =>
+                recipe.whenIsItConsumed
+                    ? recipe.whenIsItConsumed.includes(mealTiming)
+                    : false,
             );
         }
 
