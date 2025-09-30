@@ -1,8 +1,11 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
 import {
+    foodItems,
+    foodItemUnits,
     recipeIngredients,
+    recipeInstructionFoodItemUnits,
     recipeInstructions,
     recipes,
 } from "../../../db/schemas";
@@ -80,6 +83,45 @@ export function registerListRecipes(app: Hono) {
             .where(eq(recipeInstructions.recipeId, recipeId))
             .orderBy(recipeInstructions.instructionNumber);
 
+        // Get instruction food item units
+
+        const instructionFoodItemUnits = await db
+            .select()
+            .from(recipeInstructionFoodItemUnits)
+            .where(
+                inArray(
+                    recipeInstructionFoodItemUnits.recipeInstructionId,
+                    instructions.map((instruction) => instruction.id),
+                ),
+            );
+
+        // get food item units
+
+        const foodItemUnitsFromDb = await db
+            .select()
+            .from(foodItemUnits)
+            .where(
+                inArray(
+                    foodItemUnits.id,
+                    instructionFoodItemUnits.map(
+                        (instructionFoodItemUnit) =>
+                            instructionFoodItemUnit.foodItemUnitId,
+                    ),
+                ),
+            );
+
+        const foodItemsFromDb = await db
+            .select()
+            .from(foodItems)
+            .where(
+                inArray(
+                    foodItems.id,
+                    foodItemUnitsFromDb.map(
+                        (foodItemUnit) => foodItemUnit.foodItemId,
+                    ),
+                ),
+            );
+
         // Get recipe ingredients
         const ingredients = await db
             .select()
@@ -93,11 +135,38 @@ export function registerListRecipes(app: Hono) {
                 recipeFromDb.generalDescriptionOfTheRecipe,
             whenIsItConsumed: recipeFromDb.whenIsItConsumed,
             version: recipeFromDb.version,
-            instructions: instructions.map((instruction) => ({
-                id: instruction.id,
-                instruction: instruction.instruction,
-                instructionNumber: instruction.instructionNumber,
-            })),
+            instructions: instructions.map((instruction) => {
+                // Find food item units for this instruction
+                const instructionFoodUnits = instructionFoodItemUnits
+                    .filter(
+                        (ifiu) => ifiu.recipeInstructionId === instruction.id,
+                    )
+                    .map((ifiu) => {
+                        // Find the corresponding food item unit
+                        const foodItemUnit = foodItemUnitsFromDb.find(
+                            (fiu) => fiu.id === ifiu.foodItemUnitId,
+                        );
+                        // Find the corresponding food item
+                        const foodItem = foodItemsFromDb.find(
+                            (fi) => fi.id === foodItemUnit?.foodItemId,
+                        );
+
+                        return {
+                            quantity: ifiu.quantity,
+                            calories: foodItemUnit?.calories || 0,
+                            unitOfMeasurement:
+                                foodItemUnit?.unitOfMeasurement || "",
+                            foodItemName: foodItem?.name || "",
+                        };
+                    });
+
+                return {
+                    id: instruction.id,
+                    instruction: instruction.instruction,
+                    instructionNumber: instruction.instructionNumber,
+                    foodItemUnits: instructionFoodUnits,
+                };
+            }),
             ingredients: ingredients.map((ingredient) => ({
                 id: ingredient.id,
                 ingredientText: ingredient.ingredientText,
