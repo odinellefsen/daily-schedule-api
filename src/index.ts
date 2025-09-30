@@ -8,7 +8,12 @@ export const app = new Hono();
 app.use(
     "/*",
     cors({
-        origin: ["https://flowday.io", "https://www.flowday.io"],
+        origin: [
+            "https://flowday.io",
+            "https://www.flowday.io",
+            "http://localhost:3000",
+            "http://localhost:3001",
+        ],
         allowHeaders: ["Content-Type", "Authorization"],
         allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         maxAge: 86400,
