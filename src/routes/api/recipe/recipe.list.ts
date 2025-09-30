@@ -93,7 +93,7 @@ export function registerListRecipes(app: Hono) {
                 recipeFromDb.generalDescriptionOfTheRecipe,
             whenIsItConsumed: recipeFromDb.whenIsItConsumed,
             version: recipeFromDb.version,
-            steps: instructions.map((instruction) => ({
+            instructions: instructions.map((instruction) => ({
                 id: instruction.id,
                 instruction: instruction.instruction,
                 instructionNumber: instruction.instructionNumber,
