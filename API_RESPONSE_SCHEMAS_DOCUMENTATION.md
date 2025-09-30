@@ -336,10 +336,16 @@ All API endpoints return responses in a standardized format:
     generalDescriptionOfTheRecipe?: string,
     whenIsItConsumed?: Array<"BREAKFAST" | "LUNCH" | "DINNER" | "SNACK">,
     version: number,
-    steps: Array<{
+    instructions: Array<{
       id: string, // UUID
       instruction: string,
-      instructionNumber: number
+      instructionNumber: number,
+      foodItemUnits: Array<{
+        quantity: number,
+        calories: number,
+        unitOfMeasurement: string,
+        foodItemName: string
+      }>
     }>,
     ingredients: Array<{
       id: string, // UUID
