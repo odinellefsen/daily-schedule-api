@@ -74,7 +74,7 @@ export function registerListRecipes(app: Hono) {
         }
 
         // Get recipe steps
-        const steps = await db
+        const instructions = await db
             .select()
             .from(recipeInstructions)
             .where(eq(recipeInstructions.recipeId, recipeId))
@@ -93,17 +93,17 @@ export function registerListRecipes(app: Hono) {
                 recipeFromDb.generalDescriptionOfTheRecipe,
             whenIsItConsumed: recipeFromDb.whenIsItConsumed,
             version: recipeFromDb.version,
-            steps: steps.map((step) => ({
-                id: step.id,
-                instruction: step.instruction,
-                instructionNumber: step.instructionNumber,
+            steps: instructions.map((instruction) => ({
+                id: instruction.id,
+                instruction: instruction.instruction,
+                instructionNumber: instruction.instructionNumber,
             })),
             ingredients: ingredients.map((ingredient) => ({
                 id: ingredient.id,
                 ingredientText: ingredient.ingredientText,
             })),
             metadata: {
-                stepCount: steps.length,
+                stepCount: instructions.length,
                 ingredientCount: ingredients.length,
                 estimatedTotalTime: null, // Could calculate from step durations
             },
