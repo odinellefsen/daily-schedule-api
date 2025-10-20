@@ -84,7 +84,6 @@ export function registerListRecipes(app: Hono) {
             .orderBy(recipeInstructions.instructionNumber);
 
         // Get instruction food item units
-
         const instructionFoodItemUnits = await db
             .select()
             .from(recipeInstructionFoodItemUnits)
@@ -96,7 +95,6 @@ export function registerListRecipes(app: Hono) {
             );
 
         // get food item units
-
         const foodItemUnitsFromDb = await db
             .select()
             .from(foodItemUnits)
