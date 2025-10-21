@@ -38,12 +38,8 @@ development:
         - meal.created.v0
         - meal.updated.v0
         - meal.archived.v0
-        - meal-instructions.created.v0
-        - meal-instructions.updated.v0
-        - meal-instructions.archived.v0
-        - meal-ingredients.created.v0
-        - meal-ingredients.updated.v0
-        - meal-ingredients.archived.v0
+        - meal-recipe.attached.v0
+        - meal-recipe.detached.v0
       endpoints:
        - ""
     todo:

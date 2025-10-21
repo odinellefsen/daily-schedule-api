@@ -53,18 +53,10 @@ dataCore:
           description: "Meal metadata updated event"
         meal.archived.v0:
           description: "Meal archived event"
-        meal-instructions.created.v0:
-          description: "Meal instructions created event"
-        meal-instructions.updated.v0:
-          description: "Meal instructions updated event"
-        meal-instructions.archived.v0:
-          description: "Meal instructions archived event"
-        meal-ingredients.created.v0:
-          description: "Meal ingredients created event"
-        meal-ingredients.updated.v0:
-          description: "Meal ingredients updated event"
-        meal-ingredients.archived.v0:
-          description: "Meal ingredients archived event"
+        meal-recipe.attached.v0:
+          description: "Recipe attached to meal event"
+        meal-recipe.detached.v0:
+          description: "Recipe detached from meal event"
     todo.v0:
       description: "Todo data collection for daily scheduler"
       eventTypes:
