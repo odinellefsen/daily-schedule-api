@@ -1,5 +1,8 @@
+import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { weeklyHabitCreationSchema } from "../../../contracts/habit/habit.contract";
+import { db } from "../../../db";
+import { mealInstructions } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -23,8 +26,15 @@ export function registerCreateHabit(app: Hono) {
                 StatusCodes.BAD_REQUEST,
             );
         }
-
         const safeBatchHabitData = parsedJsonBody.data;
+
+        const mealInstructionsForEntity = await db
+            .select()
+            .from(mealInstructions)
+            .where(eq(mealInstructions.mealId, safeBatchHabitData.entityId))
+            .orderBy(mealInstructions.instructionNumber);
+
+        console.log(mealInstructionsForEntity);
 
         try {
             await FlowcorePathways.write("habit.v0/complex-habit.created.v0", {
