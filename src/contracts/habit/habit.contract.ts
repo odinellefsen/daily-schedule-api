@@ -31,6 +31,7 @@ export const weeklyHabitCreationSchema = z.object({
     subEntities: z
         .array(
             z.object({
+                // as in instructions in a meal recipe
                 subEntityId: z.string().uuid().optional(),
                 scheduledWeekday: Weekday,
                 scheduledTime: HHMM.optional(),
