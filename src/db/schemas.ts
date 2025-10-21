@@ -7,7 +7,6 @@ import {
     timestamp,
     uuid,
 } from "drizzle-orm/pg-core";
-import type { mealSteps } from "../../drizzle/schema";
 
 export const recipes = pgTable("recipes", {
     id: uuid("id").primaryKey(),
@@ -49,29 +48,17 @@ export const meals = pgTable("meals", {
     id: uuid("id").primaryKey(),
     userId: text("user_id").notNull(),
     mealName: text("meal_name").notNull(),
-    recipes: text("recipes").notNull(), // JSON array of recipe instances
 });
 
-export const mealIngredients = pgTable("meal_ingredients", {
+export const mealRecipes = pgTable("meal_recipes", {
     id: uuid("id").primaryKey(),
     mealId: uuid("meal_id")
         .notNull()
         .references(() => meals.id, { onDelete: "cascade" }),
-    recipeId: uuid("recipe_id"), // if the meal ingredient is from a recipe instance, we store the recipe id here.
-    ingredientText: text("ingredient_text").notNull(),
-});
-
-export const mealInstructions = pgTable("meal_instructions", {
-    id: uuid("id").primaryKey(),
-    mealId: uuid("meal_id")
-        .notNull()
-        .references(() => meals.id, { onDelete: "cascade" }),
-    originalRecipeId: uuid("original_recipe_id"), // if the meal step is from a recipe instance, we store the recipe id here.
-    originalRecipeInstructionId: uuid("original_recipe_step_id"), // if the meal step is from a recipe instance, we store the original recipe step id here.
-    instruction: text("instruction").notNull(),
-    instructionNumber: integer("instruction_number").notNull(),
-    estimatedDurationMinutes: integer("estimated_duration_minutes"),
-    foodItemUnitsUsedInStep: text("ingredients_used_in_step"), // JSON array
+    recipeId: uuid("recipe_id").notNull(), // Reference only, no FK due to event sourcing
+    recipeVersion: integer("recipe_version").notNull(), // Snapshot version for historical accuracy
+    orderInMeal: integer("order_in_meal").notNull().default(0), // Order of recipes in the meal
+    addedAt: timestamp("added_at").notNull().defaultNow(),
 });
 
 export const todos = pgTable("todos", {
@@ -164,8 +151,8 @@ export type NewRecipe = typeof recipes.$inferInsert;
 export type Meal = typeof meals.$inferSelect;
 export type NewMeal = typeof meals.$inferInsert;
 
-export type MealStep = typeof mealSteps.$inferSelect;
-export type NewMealStep = typeof mealSteps.$inferInsert;
+export type MealRecipe = typeof mealRecipes.$inferSelect;
+export type NewMealRecipe = typeof mealRecipes.$inferInsert;
 
 export type Todo = typeof todos.$inferSelect;
 export type NewTodo = typeof todos.$inferInsert;

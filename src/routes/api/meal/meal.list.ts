@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
-import { mealInstructions, meals } from "../../../db/schemas";
+import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 
 export function registerListMeals(app: Hono) {
@@ -13,17 +13,25 @@ export function registerListMeals(app: Hono) {
             .from(meals)
             .where(eq(meals.userId, safeUserId));
 
-        const mealsWithRecipes = userMeals.map((meal) => ({
-            id: meal.id,
-            mealName: meal.mealName,
-            recipes: JSON.parse(meal.recipes),
-        }));
+        const mealsData = await Promise.all(
+            userMeals.map(async (meal) => {
+                // Get recipes attached to this meal
+                const mealRecipesData = await db
+                    .select()
+                    .from(mealRecipes)
+                    .where(eq(mealRecipes.mealId, meal.id))
+                    .orderBy(mealRecipes.orderInMeal);
+
+                return {
+                    id: meal.id,
+                    mealName: meal.mealName,
+                    recipeCount: mealRecipesData.length,
+                };
+            }),
+        );
 
         return c.json(
-            ApiResponse.success(
-                "Meals retrieved successfully",
-                mealsWithRecipes,
-            ),
+            ApiResponse.success("Meals retrieved successfully", mealsData),
         );
     });
 
@@ -42,44 +50,43 @@ export function registerListMeals(app: Hono) {
             );
         }
 
-        // Get meal steps
-        const steps = await db
+        // Get all recipes attached to this meal
+        const mealRecipesData = await db
             .select()
-            .from(mealInstructions)
-            .where(eq(mealInstructions.mealId, mealId))
-            .orderBy(mealInstructions.instructionNumber);
+            .from(mealRecipes)
+            .where(eq(mealRecipes.mealId, mealId))
+            .orderBy(mealRecipes.orderInMeal);
 
-        const recipes = JSON.parse(mealFromDb.recipes);
+        // Fetch all instructions for all recipes in this meal
+        const allInstructions = [];
+        for (const mealRecipe of mealRecipesData) {
+            const instructions = await db
+                .select()
+                .from(recipeInstructions)
+                .where(eq(recipeInstructions.recipeId, mealRecipe.recipeId))
+                .orderBy(recipeInstructions.instructionNumber);
+
+            for (const inst of instructions) {
+                allInstructions.push({
+                    id: inst.id,
+                    recipeId: mealRecipe.recipeId,
+                    instruction: inst.instruction,
+                    instructionNumber: inst.instructionNumber,
+                });
+            }
+        }
 
         const fullMeal = {
             id: mealFromDb.id,
             mealName: mealFromDb.mealName,
-            recipes: recipes,
-            steps: steps.map((step) => ({
-                id: step.id,
-                recipeId: step.originalRecipeId,
-                originalRecipeInstructionId: step.originalRecipeInstructionId,
-                instruction: step.instruction,
-                instructionNumber: step.instructionNumber,
-                estimatedDurationMinutes: step.estimatedDurationMinutes,
-                foodItemUnitsUsedInStep: step.foodItemUnitsUsedInStep
-                    ? JSON.parse(step.foodItemUnitsUsedInStep)
-                    : null,
+            recipes: mealRecipesData.map((mr) => ({
+                mealRecipeId: mr.id,
+                recipeId: mr.recipeId,
+                recipeVersion: mr.recipeVersion,
+                orderInMeal: mr.orderInMeal,
             })),
-            progress: {
-                completed: steps.length,
-                total: steps.length,
-                percentage:
-                    steps.length > 0
-                        ? Math.round((steps.length / steps.length) * 100)
-                        : 0,
-            },
-            estimatedTimeRemaining: steps
-                .filter((step) => !step.estimatedDurationMinutes)
-                .reduce(
-                    (sum, step) => sum + (step.estimatedDurationMinutes || 0),
-                    0,
-                ),
+            instructions: allInstructions,
+            instructionCount: allInstructions.length,
         };
 
         return c.json(

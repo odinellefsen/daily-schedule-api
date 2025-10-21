@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
-import { mealInstructions, todos } from "../db/schemas";
+import { mealRecipes, recipeInstructions, todos } from "../db/schemas";
 
 export interface MealProgressForDate {
     mealId: string;
@@ -9,7 +9,7 @@ export interface MealProgressForDate {
         id: string;
         instruction: string;
         instructionNumber: number;
-        estimatedDurationMinutes: number | null;
+        recipeId: string;
         isCompleted: boolean;
         completedAt: Date | null;
         todoId: string | null;
@@ -19,7 +19,6 @@ export interface MealProgressForDate {
         completedInstructions: number;
         percentComplete: number;
         nextInstruction: string | null;
-        estimatedTimeRemaining: number;
     };
 }
 
@@ -31,13 +30,31 @@ export async function getMealProgressForDate(
     userId: string,
     targetDate: string,
 ): Promise<MealProgressForDate> {
-    // 1. Get all meal instructions
-    const instructions = await db.query.mealInstructions.findMany({
-        where: eq(mealInstructions.mealId, mealId),
-        orderBy: mealInstructions.instructionNumber,
-    });
+    // 1. Get all recipes attached to this meal
+    const mealRecipesData = await db
+        .select()
+        .from(mealRecipes)
+        .where(eq(mealRecipes.mealId, mealId))
+        .orderBy(mealRecipes.orderInMeal);
 
-    // 2. Find completed todos for this meal on this date
+    // 2. Fetch all instructions for all recipes in this meal
+    const allInstructions = [];
+    for (const mealRecipe of mealRecipesData) {
+        const instructions = await db
+            .select()
+            .from(recipeInstructions)
+            .where(eq(recipeInstructions.recipeId, mealRecipe.recipeId))
+            .orderBy(recipeInstructions.instructionNumber);
+
+        for (const inst of instructions) {
+            allInstructions.push({
+                ...inst,
+                recipeId: mealRecipe.recipeId,
+            });
+        }
+    }
+
+    // 3. Find completed todos for this meal on this date
     const completedTodos = await db.query.todos.findMany({
         where: and(
             eq(todos.userId, userId),
@@ -48,7 +65,7 @@ export async function getMealProgressForDate(
         ),
     });
 
-    // 3. Map completed todos to instruction completions
+    // 4. Map completed todos to instruction completions
     const completedInstructionIds = new Set(
         completedTodos.map((todo) => todo.subEntityId).filter(Boolean),
     );
@@ -57,8 +74,8 @@ export async function getMealProgressForDate(
         completedTodos.map((todo) => [todo.subEntityId, todo]),
     );
 
-    // 4. Calculate progress for each instruction
-    const instructionsWithProgress = instructions.map((inst) => {
+    // 5. Calculate progress for each instruction
+    const instructionsWithProgress = allInstructions.map((inst) => {
         const isCompleted = completedInstructionIds.has(inst.id);
         const todo = todoByInstructionId.get(inst.id);
 
@@ -66,37 +83,35 @@ export async function getMealProgressForDate(
             id: inst.id,
             instruction: inst.instruction,
             instructionNumber: inst.instructionNumber,
-            estimatedDurationMinutes: inst.estimatedDurationMinutes,
+            recipeId: inst.recipeId,
             isCompleted,
             completedAt: todo?.completedAt || null,
             todoId: todo?.id || null,
         };
     });
 
-    // 5. Calculate overall progress
+    // 6. Calculate overall progress
     const completedCount = instructionsWithProgress.filter(
         (inst) => inst.isCompleted,
     ).length;
     const nextInstruction = instructionsWithProgress.find(
         (inst) => !inst.isCompleted,
     );
-    const estimatedTimeRemaining = instructionsWithProgress
-        .filter((inst) => !inst.isCompleted && inst.estimatedDurationMinutes)
-        .reduce((sum, inst) => sum + (inst.estimatedDurationMinutes || 0), 0);
 
     return {
         mealId,
         targetDate,
         instructions: instructionsWithProgress,
         progress: {
-            totalInstructions: instructions.length,
+            totalInstructions: allInstructions.length,
             completedInstructions: completedCount,
             percentComplete:
-                instructions.length > 0
-                    ? Math.round((completedCount / instructions.length) * 100)
+                allInstructions.length > 0
+                    ? Math.round(
+                          (completedCount / allInstructions.length) * 100,
+                      )
                     : 0,
             nextInstruction: nextInstruction?.instruction || null,
-            estimatedTimeRemaining,
         },
     };
 }

@@ -13,12 +13,6 @@ export const meals = pgTable("meals", {
     id: uuid().primaryKey().notNull(),
     userId: text("user_id").notNull(),
     mealName: text("meal_name").notNull(),
-    scheduledToBeEatenAt: timestamp("scheduled_to_be_eaten_at", {
-        mode: "string",
-    }),
-    hasMealBeenConsumed: boolean("has_meal_been_consumed")
-        .default(false)
-        .notNull(),
     recipes: text().notNull(),
 });
 

@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { weeklyHabitCreationSchema } from "../../../contracts/habit/habit.contract";
 import { db } from "../../../db";
-import { mealInstructions } from "../../../db/schemas";
+import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -51,33 +51,70 @@ export function registerCreateHabit(app: Hono) {
         if (safeBatchHabitData.domain !== "meal") {
             return c.json(
                 ApiResponse.error(
-                    "Invalid domain for batch habits, currently only support for meal domain",
-                    `Expected domain 'meal', got '${safeBatchHabitData.domain}'`,
+                    "Unsupported domain for batch habits",
+                    `Expected domain 'meal', got '${safeBatchHabitData.domain}'. Only meal domain is currently supported.`,
                 ),
                 StatusCodes.BAD_REQUEST,
             );
         }
 
-        // Fetch all meal instructions for this meal
-        const mealInstructionsForEntity = await db
-            .select()
-            .from(mealInstructions)
-            .where(eq(mealInstructions.mealId, safeBatchHabitData.entityId))
-            .orderBy(mealInstructions.instructionNumber);
+        // Validate meal exists
+        const mealFromDb = await db.query.meals.findFirst({
+            where: eq(meals.id, safeBatchHabitData.entityId),
+        });
 
-        if (mealInstructionsForEntity.length === 0) {
+        if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
                 ApiResponse.error(
                     "Invalid meal entity",
-                    `No meal instructions found for meal ${safeBatchHabitData.entityId}`,
+                    `Meal ${safeBatchHabitData.entityId} not found or access denied`,
+                ),
+                StatusCodes.NOT_FOUND,
+            );
+        }
+
+        // Fetch all recipes attached to this meal
+        const mealRecipesForEntity = await db
+            .select()
+            .from(mealRecipes)
+            .where(eq(mealRecipes.mealId, safeBatchHabitData.entityId))
+            .orderBy(mealRecipes.orderInMeal);
+
+        if (mealRecipesForEntity.length === 0) {
+            return c.json(
+                ApiResponse.error(
+                    "No recipes attached to meal",
+                    `Meal ${safeBatchHabitData.entityId} has no recipes. Attach recipes using POST /api/meal/:id/recipes before creating a habit.`,
                 ),
                 StatusCodes.BAD_REQUEST,
             );
         }
 
-        // Validate that all provided subEntityIds exist in the meal instructions
+        // Fetch all instructions for all recipes in this meal
+        const allInstructions = [];
+        for (const mealRecipe of mealRecipesForEntity) {
+            const instructions = await db
+                .select()
+                .from(recipeInstructions)
+                .where(eq(recipeInstructions.recipeId, mealRecipe.recipeId))
+                .orderBy(recipeInstructions.instructionNumber);
+
+            allInstructions.push(...instructions);
+        }
+
+        if (allInstructions.length === 0) {
+            return c.json(
+                ApiResponse.error(
+                    "No instructions found",
+                    `None of the recipes attached to meal ${safeBatchHabitData.entityId} have instructions`,
+                ),
+                StatusCodes.BAD_REQUEST,
+            );
+        }
+
+        // Validate that all provided subEntityIds exist in the recipe instructions
         const validInstructionIds = new Set(
-            mealInstructionsForEntity.map((instr) => instr.id),
+            allInstructions.map((instr) => instr.id),
         );
         const providedSubEntityIds = safeBatchHabitData.subEntities
             .map((se) => se.subEntityId)
@@ -88,7 +125,7 @@ export function registerCreateHabit(app: Hono) {
                 return c.json(
                     ApiResponse.error(
                         "Invalid subEntityId",
-                        `Instruction ${subEntityId} not found in meal ${safeBatchHabitData.entityId}`,
+                        `Instruction ${subEntityId} not found in meal's recipes`,
                     ),
                     StatusCodes.BAD_REQUEST,
                 );
@@ -99,7 +136,7 @@ export function registerCreateHabit(app: Hono) {
         const configuredInstructionIds = new Set(providedSubEntityIds);
 
         // Add unconfigured instructions - they happen at the same time as the main event
-        const unconfiguredInstructions = mealInstructionsForEntity.filter(
+        const unconfiguredInstructions = allInstructions.filter(
             (instr) => !configuredInstructionIds.has(instr.id),
         );
 
@@ -119,7 +156,7 @@ export function registerCreateHabit(app: Hono) {
         ];
 
         console.log(
-            `Habit creation: ${safeBatchHabitData.subEntities.length} user-configured, ${additionalSubEntities.length} auto-added`,
+            `Habit creation [meal]: ${safeBatchHabitData.subEntities.length} user-configured, ${additionalSubEntities.length} auto-added from ${mealRecipesForEntity.length} recipes`,
         );
 
         try {

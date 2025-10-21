@@ -20,7 +20,6 @@ export async function handleMealCreated(
         id: payload.id,
         userId: payload.userId,
         mealName: payload.mealName,
-        recipes: JSON.stringify(payload.recipes),
     });
 }
 
@@ -31,13 +30,15 @@ export async function handleMealUpdated(
 ) {
     const { payload } = event;
 
-    await db
-        .update(meals)
-        .set({
-            mealName: payload.mealName,
-            recipes: JSON.stringify(payload.recipes),
-        })
-        .where(eq(meals.id, payload.id));
+    const updateData: Record<string, unknown> = {};
+
+    if (payload.mealName !== undefined) {
+        updateData.mealName = payload.mealName;
+    }
+
+    if (Object.keys(updateData).length > 0) {
+        await db.update(meals).set(updateData).where(eq(meals.id, payload.id));
+    }
 }
 
 export async function handleMealArchived(
