@@ -20,10 +20,6 @@ export async function handleMealCreated(
         id: payload.id,
         userId: payload.userId,
         mealName: payload.mealName,
-        scheduledToBeEatenAt: payload.scheduledToBeEatenAt
-            ? new Date(payload.scheduledToBeEatenAt)
-            : null,
-        hasMealBeenConsumed: payload.hasMealBeenConsumed,
         recipes: JSON.stringify(payload.recipes),
     });
 }
@@ -39,10 +35,6 @@ export async function handleMealUpdated(
         .update(meals)
         .set({
             mealName: payload.mealName,
-            scheduledToBeEatenAt: payload.scheduledToBeEatenAt
-                ? new Date(payload.scheduledToBeEatenAt)
-                : null,
-            hasMealBeenConsumed: payload.hasMealBeenConsumed,
             recipes: JSON.stringify(payload.recipes),
         })
         .where(eq(meals.id, payload.id));

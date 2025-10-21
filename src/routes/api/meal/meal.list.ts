@@ -16,7 +16,6 @@ export function registerListMeals(app: Hono) {
         const mealsWithRecipes = userMeals.map((meal) => ({
             id: meal.id,
             mealName: meal.mealName,
-            hasMealBeenConsumed: meal.hasMealBeenConsumed,
             recipes: JSON.parse(meal.recipes),
         }));
 
@@ -55,7 +54,6 @@ export function registerListMeals(app: Hono) {
         const fullMeal = {
             id: mealFromDb.id,
             mealName: mealFromDb.mealName,
-            hasMealBeenConsumed: mealFromDb.hasMealBeenConsumed,
             recipes: recipes,
             steps: steps.map((step) => ({
                 id: step.id,

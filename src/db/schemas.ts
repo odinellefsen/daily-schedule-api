@@ -49,9 +49,6 @@ export const meals = pgTable("meals", {
     id: uuid("id").primaryKey(),
     userId: text("user_id").notNull(),
     mealName: text("meal_name").notNull(),
-    hasMealBeenConsumed: boolean("has_meal_been_consumed")
-        .notNull()
-        .default(false),
     recipes: text("recipes").notNull(), // JSON array of recipe instances
 });
 

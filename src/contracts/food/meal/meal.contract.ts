@@ -7,8 +7,6 @@ export const mealSchema = z.object({
         .string()
         .min(1, "Meal name is required")
         .max(100, "Meal name must be less than 100 characters"),
-    scheduledToBeEatenAt: z.string().datetime().optional(),
-    hasMealBeenConsumed: z.boolean().default(false),
     recipes: z
         .array(
             z.object({

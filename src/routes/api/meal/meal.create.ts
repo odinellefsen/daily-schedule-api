@@ -81,8 +81,6 @@ export function registerCreateMeal(app: Hono) {
             id: crypto.randomUUID(),
             userId: safeUserId,
             mealName: safeCreateMealJsonBody.mealName,
-            scheduledToBeEatenAt: safeCreateMealJsonBody.scheduledToBeEatenAt,
-            hasMealBeenConsumed: false,
             recipes: recipeInstances,
         };
 
