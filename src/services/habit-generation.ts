@@ -289,11 +289,7 @@ export async function generateMissingHabitTodos(
     errors: Array<{ habitId: string; error: string }>;
 }> {
     try {
-        // Validate inputs
-        if (!userId) {
-            throw new Error("userId is required");
-        }
-
+        // Validate targetDate format
         if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
             throw new Error(
                 `Invalid targetDate format: ${targetDate}. Expected YYYY-MM-DD`,
