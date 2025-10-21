@@ -54,8 +54,6 @@ export function registerDeleteMeal(app: Hono) {
             id: mealFromDb.id,
             userId: safeUserId,
             mealName: mealFromDb.mealName,
-            scheduledToBeEatenAt:
-                mealFromDb.scheduledToBeEatenAt?.toISOString(),
             hasMealBeenConsumed: mealFromDb.hasMealBeenConsumed,
             recipes: JSON.parse(mealFromDb.recipes),
             reasonForArchiving: "User requested deletion",

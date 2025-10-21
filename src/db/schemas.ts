@@ -49,7 +49,6 @@ export const meals = pgTable("meals", {
     id: uuid("id").primaryKey(),
     userId: text("user_id").notNull(),
     mealName: text("meal_name").notNull(),
-    scheduledToBeEatenAt: timestamp("scheduled_to_be_eaten_at"),
     hasMealBeenConsumed: boolean("has_meal_been_consumed")
         .notNull()
         .default(false),
