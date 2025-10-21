@@ -110,7 +110,7 @@ _No request schema - query parameters only_
 ```typescript
 const weeklyHabitCreationSchema = z.object({
     userId: z.string(),
-    domain: z.string(), // e.g., "meal"
+    domain: z.string(), // e.g., "meal" (currently only "meal" is supported)
     entityId: z.string().uuid(), // e.g., mealId
 
     // Main habit configuration (so far only weekly)
@@ -130,7 +130,7 @@ const weeklyHabitCreationSchema = z.object({
     subEntities: z
         .array(
             z.object({
-                subEntityId: z.string().uuid().optional(),
+                subEntityId: z.string().uuid().optional(), // recipe instruction ID for meal domain
                 scheduledWeekday: z.enum([
                     "monday",
                     "tuesday",
@@ -146,6 +146,14 @@ const weeklyHabitCreationSchema = z.object({
         .min(1),
 });
 ```
+
+**Notes:**
+
+- For the meal domain, `subEntityId` refers to recipe instruction IDs
+- Unconfigured instructions are automatically added, scheduled 30 minutes before
+  the main event
+- The endpoint validates that all provided `subEntityId`s exist in the meal's
+  attached recipes
 
 ---
 
@@ -318,15 +326,6 @@ const createMealRequestSchema = z.object({
         .string()
         .min(1, "Meal name min length is 1")
         .max(100, "Meal name max length is 100"),
-    scheduledToBeEatenAt: z.string().datetime().optional(),
-    recipes: z
-        .array(
-            z.object({
-                recipeId: z.string().uuid(),
-            }),
-        )
-        .min(1)
-        .max(20),
 });
 ```
 
@@ -341,10 +340,6 @@ const deleteMealRequestSchema = z.object({
 });
 ```
 
-### GET /api/meal/week - List Weekly Meals
-
-_No request schema - query parameters only_
-
 ### GET /api/meal/ - List All Meals
 
 _No request schema - query parameters only_
@@ -357,111 +352,21 @@ _No request schema - path parameters only_
 
 _No request schema - path parameters only (date format: YYYY-MM-DD)_
 
-### GET /api/meal/progress/:date - Get All Meals Progress for Date
-
-_No request schema - path parameters only (date format: YYYY-MM-DD)_
-
-### GET /api/meal/progress/today - Get Today's Meal Progress
-
-_No request schema_
-
-### POST /api/meal/ingredients - Create Meal Ingredients
+### POST /api/meal/:mealId/recipes - Attach Recipe to Meal
 
 ```typescript
-const createMealIngredientsRequestSchema = z.object({
-    mealId: z.string().uuid(),
-    ingredients: z.array(
-        z.object({
-            id: z.string().uuid(),
-            ingredientText: z
-                .string()
-                .min(1, "Ingredient text is required")
-                .max(150, "Ingredient text must be less than 150 characters"),
-        }),
-    ),
+const attachRecipeRequestSchema = z.object({
+    recipeId: z.string().uuid(),
 });
 ```
 
-### DELETE /api/meal/ingredients - Delete Meal Ingredients
+### DELETE /api/meal/:mealId/recipes/:mealRecipeId - Detach Recipe from Meal
 
-```typescript
-const deleteMealIngredientsRequestSchema = z.object({
-    mealId: z.string().uuid(),
-});
-```
+_No request schema - path parameters only_
 
-### PATCH /api/meal/ingredients - Update Meal Ingredients
+### GET /api/meal/:mealId/recipes - List Meal Recipes
 
-```typescript
-const updateMealIngredientsRequestSchema = z.object({
-    mealId: z.string().uuid(),
-    ingredients: z
-        .array(
-            z.object({
-                id: z.string().uuid(),
-                ingredientText: z.string().min(1).max(150),
-            }),
-        )
-        .min(1)
-        .max(100),
-});
-```
-
-### POST /api/meal/instructions - Create Meal Instructions
-
-```typescript
-const createMealInstructionsRequestSchema = z.object({
-    mealId: z.string().uuid(),
-    stepByStepInstructions: z
-        .array(
-            z.object({
-                stepInstruction: z.string().min(1).max(250),
-                foodItemUnitsUsedInStep: z
-                    .array(
-                        z.object({
-                            foodItemUnitId: z.string().uuid(),
-                            foodItemId: z.string().uuid(),
-                            quantityOfFoodItemUnit: z
-                                .number()
-                                .positive()
-                                .max(1_000_000)
-                                .default(1),
-                        }),
-                    )
-                    .optional(),
-            }),
-        )
-        .min(1)
-        .max(30),
-});
-```
-
-### DELETE /api/meal/instructions - Delete Meal Instructions
-
-```typescript
-const deleteMealInstructionsRequestSchema = z.object({
-    mealId: z.string().uuid(),
-});
-```
-
-### PATCH /api/meal/instructions - Update Meal Instructions
-
-```typescript
-const updateMealInstructionsRequestSchema = z.object({
-    mealId: z.string().uuid(),
-    stepByStepInstructions: z.array(
-        z.object({
-            id: z.string().uuid(),
-            instructionNumber: z.number().int(),
-            stepInstruction: z.string().min(1).max(250),
-            isStepCompleted: z.boolean().default(false),
-            estimatedDurationMinutes: z.number().int().positive().optional(),
-            assignedToDate: z.string().date().optional(),
-            todoId: z.string().uuid().optional(),
-        }),
-    ),
-});
-```
+_No request schema - path parameters only_
 
 ---
 
