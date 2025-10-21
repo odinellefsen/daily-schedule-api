@@ -14,13 +14,7 @@ import {
 } from "../contracts/food/food-item";
 import {
     mealArchiveSchema,
-    mealIngredientsArchiveSchema,
-    mealIngredientsSchema,
-    mealIngredientsUpdateSchema,
-    mealInstructionsArchiveSchema,
-    mealInstructionsUpdateSchema,
     mealSchema,
-    mealStepByStepInstructionsSchema,
     mealUpdateSchema,
 } from "../contracts/food/meal";
 import {
@@ -61,16 +55,6 @@ import {
     handleMealCreated,
     handleMealUpdated,
 } from "../handlers/meal/meal.handler";
-import {
-    handleMealIngredientsArchived,
-    handleMealIngredientsCreated,
-    handleMealIngredientsUpdated,
-} from "../handlers/meal/meal-ingredients.handler";
-import {
-    handleMealInstructionsArchived,
-    handleMealInstructionsCreated,
-    handleMealInstructionsUpdated,
-} from "../handlers/meal/meal-instructions.handler";
 import {
     handleRecipeArchived,
     handleRecipeCreated,
@@ -221,42 +205,6 @@ export const FlowcorePathways = new PathwaysBuilder({
         schema: mealArchiveSchema,
     })
     .register({
-        flowType: "meal.v0",
-        eventType: "meal-instructions.created.v0",
-        retryDelayMs: 10000,
-        schema: mealStepByStepInstructionsSchema,
-    })
-    .register({
-        flowType: "meal.v0",
-        eventType: "meal-instructions.updated.v0",
-        retryDelayMs: 10000,
-        schema: mealInstructionsUpdateSchema,
-    })
-    .register({
-        flowType: "meal.v0",
-        eventType: "meal-instructions.archived.v0",
-        retryDelayMs: 10000,
-        schema: mealInstructionsArchiveSchema,
-    })
-    .register({
-        flowType: "meal.v0",
-        eventType: "meal-ingredients.created.v0",
-        retryDelayMs: 10000,
-        schema: mealIngredientsSchema,
-    })
-    .register({
-        flowType: "meal.v0",
-        eventType: "meal-ingredients.updated.v0",
-        retryDelayMs: 10000,
-        schema: mealIngredientsUpdateSchema,
-    })
-    .register({
-        flowType: "meal.v0",
-        eventType: "meal-ingredients.archived.v0",
-        retryDelayMs: 10000,
-        schema: mealIngredientsArchiveSchema,
-    })
-    .register({
         flowType: "todo.v0",
         eventType: "todo.created.v0",
         retryDelayMs: 10000,
@@ -355,24 +303,6 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle("meal.v0/meal.created.v0", handleMealCreated)
     .handle("meal.v0/meal.updated.v0", handleMealUpdated)
     .handle("meal.v0/meal.archived.v0", handleMealArchived)
-    .handle(
-        "meal.v0/meal-instructions.created.v0",
-        handleMealInstructionsCreated,
-    )
-    .handle(
-        "meal.v0/meal-instructions.updated.v0",
-        handleMealInstructionsUpdated,
-    )
-    .handle(
-        "meal.v0/meal-instructions.archived.v0",
-        handleMealInstructionsArchived,
-    )
-    .handle("meal.v0/meal-ingredients.created.v0", handleMealIngredientsCreated)
-    .handle("meal.v0/meal-ingredients.updated.v0", handleMealIngredientsUpdated)
-    .handle(
-        "meal.v0/meal-ingredients.archived.v0",
-        handleMealIngredientsArchived,
-    )
     .handle("todo.v0/todo.created.v0", handleTodoCreated)
     .handle("todo.v0/todo.archived.v0", handleTodoArchived)
     .handle("todo.v0/todo.completed.v0", handleTodoCompleted)
