@@ -13,14 +13,16 @@ import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
 export function registerMealRecipes(app: Hono) {
-    // Attach a recipe to a meal
+    // Attach recipe(s) to a meal
     app.post("/:mealId/recipes", async (c) => {
         const safeUserId = c.userId!;
         const mealId = c.req.param("mealId");
 
         const rawJsonBody = await c.req.json();
         const requestSchema = z.object({
-            recipeId: z.string().uuid(),
+            recipeIds: z
+                .array(z.string().uuid())
+                .min(1, "At least one recipe ID is required"),
         });
 
         const parsedJsonBody = requestSchema.safeParse(rawJsonBody);
@@ -34,7 +36,7 @@ export function registerMealRecipes(app: Hono) {
             );
         }
 
-        const { recipeId } = parsedJsonBody.data;
+        const { recipeIds } = parsedJsonBody.data;
 
         // Verify meal exists and belongs to user
         const mealFromDb = await db.query.meals.findFirst({
@@ -48,17 +50,25 @@ export function registerMealRecipes(app: Hono) {
             );
         }
 
-        // Verify recipe exists and belongs to user
-        const recipeFromDb = await db.query.recipes.findFirst({
-            where: and(
-                eq(recipes.id, recipeId),
-                eq(recipes.userId, safeUserId),
+        // Verify all recipes exist and belong to user
+        const recipesFromDb = await Promise.all(
+            recipeIds.map((recipeId) =>
+                db.query.recipes.findFirst({
+                    where: and(
+                        eq(recipes.id, recipeId),
+                        eq(recipes.userId, safeUserId),
+                    ),
+                }),
             ),
-        });
+        );
 
-        if (!recipeFromDb) {
+        // Check if any recipe is missing
+        const missingRecipes = recipesFromDb.some((recipe) => !recipe);
+        if (missingRecipes) {
             return c.json(
-                ApiResponse.error("Recipe not found or access denied"),
+                ApiResponse.error(
+                    "One or more recipes not found or access denied",
+                ),
                 StatusCodes.NOT_FOUND,
             );
         }
@@ -74,11 +84,16 @@ export function registerMealRecipes(app: Hono) {
                 ? Math.max(...existingRecipes.map((r) => r.orderInMeal))
                 : -1;
 
+        // Build the recipes array with order
+        const recipesToAttach = recipesFromDb.map((recipe, index) => ({
+            recipeId: recipe!.id,
+            recipeVersion: recipe!.version,
+            orderInMeal: maxOrder + 1 + index,
+        }));
+
         const newMealRecipe: MealRecipeAttachType = {
             mealId,
-            recipeId,
-            recipeVersion: recipeFromDb.version,
-            orderInMeal: maxOrder + 1,
+            recipes: recipesToAttach,
         };
 
         const attachEvent = mealRecipeAttachSchema.safeParse(newMealRecipe);
@@ -98,15 +113,18 @@ export function registerMealRecipes(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to attach recipe to meal", error),
+                ApiResponse.error("Failed to attach recipes to meal", error),
                 StatusCodes.SERVER_ERROR,
             );
         }
 
         return c.json(
-            ApiResponse.success("Recipe attached to meal successfully", {
-                mealRecipe: attachEvent.data,
-            }),
+            ApiResponse.success(
+                `${recipeIds.length} recipe${recipeIds.length > 1 ? "s" : ""} attached to meal successfully`,
+                {
+                    mealRecipe: attachEvent.data,
+                },
+            ),
             StatusCodes.CREATED,
         );
     });
@@ -218,7 +236,6 @@ export function registerMealRecipes(app: Hono) {
                         ? mr.recipeVersion < recipe.version
                         : false,
                     orderInMeal: mr.orderInMeal,
-                    addedAt: mr.addedAt.toISOString(),
                 };
             }),
         );

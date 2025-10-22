@@ -25,12 +25,18 @@ export const mealArchiveSchema = z.object({
     reasonForArchiving: z.string().min(1, "Reason for archiving is required"),
 });
 
-// Schema for attaching a recipe to a meal
+// Schema for attaching recipe(s) to a meal
 export const mealRecipeAttachSchema = z.object({
     mealId: z.string().uuid(),
-    recipeId: z.string().uuid(),
-    recipeVersion: z.number().int().positive(),
-    orderInMeal: z.number().int().min(0),
+    recipes: z
+        .array(
+            z.object({
+                recipeId: z.string().uuid(),
+                recipeVersion: z.number().int().positive(),
+                orderInMeal: z.number().int().min(0),
+            }),
+        )
+        .min(1, "At least one recipe is required"),
 });
 
 // Schema for detaching a recipe from a meal

@@ -15,14 +15,16 @@ export async function handleMealRecipeAttached(
 ) {
     const { payload } = event;
 
-    await db.insert(mealRecipes).values({
+    // Insert all recipes in a single transaction
+    const values = payload.recipes.map((recipe) => ({
         id: crypto.randomUUID(),
         mealId: payload.mealId,
-        recipeId: payload.recipeId,
-        recipeVersion: payload.recipeVersion,
-        orderInMeal: payload.orderInMeal,
-        addedAt: new Date(),
-    });
+        recipeId: recipe.recipeId,
+        recipeVersion: recipe.recipeVersion,
+        orderInMeal: recipe.orderInMeal,
+    }));
+
+    await db.insert(mealRecipes).values(values);
 }
 
 export async function handleMealRecipeDetached(
