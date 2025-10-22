@@ -56,7 +56,6 @@ export const mealRecipes = pgTable("meal_recipes", {
         .notNull()
         .references(() => meals.id, { onDelete: "cascade" }),
     recipeId: uuid("recipe_id").notNull(), // Reference only, no FK due to event sourcing
-    recipeVersion: integer("recipe_version").notNull(), // Snapshot version for historical accuracy
     orderInMeal: integer("order_in_meal").notNull().default(0), // Order of recipes in the meal
 });
 

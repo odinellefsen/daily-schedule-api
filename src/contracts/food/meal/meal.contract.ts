@@ -32,7 +32,6 @@ export const mealRecipeAttachSchema = z.object({
         .array(
             z.object({
                 recipeId: z.string().uuid(),
-                recipeVersion: z.number().int().positive(),
                 orderInMeal: z.number().int().min(0),
             }),
         )

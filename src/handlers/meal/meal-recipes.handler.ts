@@ -20,7 +20,6 @@ export async function handleMealRecipeAttached(
         id: crypto.randomUUID(),
         mealId: payload.mealId,
         recipeId: recipe.recipeId,
-        recipeVersion: recipe.recipeVersion,
         orderInMeal: recipe.orderInMeal,
     }));
 

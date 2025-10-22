@@ -52,7 +52,6 @@ export function registerGetMeal(app: Hono) {
             recipes: mealRecipesData.map((mr) => ({
                 mealRecipeId: mr.id,
                 recipeId: mr.recipeId,
-                recipeVersion: mr.recipeVersion,
                 orderInMeal: mr.orderInMeal,
             })),
             instructions: allInstructions,

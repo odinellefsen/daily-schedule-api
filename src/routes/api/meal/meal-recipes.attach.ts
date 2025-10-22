@@ -85,7 +85,6 @@ export function registerAttachMealRecipes(app: Hono) {
         // Build the recipes array with order
         const recipesToAttach = recipesFromDb.map((recipe, index) => ({
             recipeId: recipe!.id,
-            recipeVersion: recipe!.version,
             orderInMeal: maxOrder + 1 + index,
         }));
 

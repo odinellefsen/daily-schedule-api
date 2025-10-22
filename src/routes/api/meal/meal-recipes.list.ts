@@ -42,11 +42,7 @@ export function registerListMealRecipes(app: Hono) {
                     recipeName: recipe?.nameOfTheRecipe || "Unknown Recipe",
                     recipeDescription:
                         recipe?.generalDescriptionOfTheRecipe || "",
-                    recipeVersion: mr.recipeVersion,
                     currentVersion: recipe?.version || 0,
-                    isOutdated: recipe
-                        ? mr.recipeVersion < recipe.version
-                        : false,
                     orderInMeal: mr.orderInMeal,
                 };
             }),
