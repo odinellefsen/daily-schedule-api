@@ -594,7 +594,6 @@ All API endpoints return responses in a standardized format:
     recipes: Array<{
       mealRecipeId: string, // UUID - junction table ID
       recipeId: string, // UUID
-      recipeVersion: number, // Snapshot version
       orderInMeal: number
     }>,
     instructions: Array<{
@@ -604,36 +603,6 @@ All API endpoints return responses in a standardized format:
       instructionNumber: number
     }>,
     instructionCount: number
-  }
-}
-```
-
-### GET /api/meal/:mealId/progress/:date - Get Meal Progress for Date
-
-**Success Response (200):**
-
-```typescript
-{
-  success: true,
-  message: "Progress for meal on {date}",
-  data: {
-    mealId: string, // UUID
-    targetDate: string, // YYYY-MM-DD
-    instructions: Array<{
-      id: string, // UUID - recipe instruction ID
-      instruction: string,
-      instructionNumber: number,
-      recipeId: string, // UUID
-      isCompleted: boolean,
-      completedAt: string | null, // ISO datetime
-      todoId: string | null // UUID
-    }>,
-    progress: {
-      totalInstructions: number,
-      completedInstructions: number,
-      percentComplete: number,
-      nextInstruction: string | null
-    }
   }
 }
 ```
@@ -651,7 +620,6 @@ All API endpoints return responses in a standardized format:
       mealId: string, // UUID
       recipes: Array<{
         recipeId: string, // UUID
-        recipeVersion: number, // Snapshot version at time of attachment
         orderInMeal: number // Position in the meal's recipe list
       }>
     }
@@ -692,11 +660,8 @@ All API endpoints return responses in a standardized format:
       recipeId: string, // UUID
       recipeName: string,
       recipeDescription: string,
-      recipeVersion: number, // Version attached to meal
       currentVersion: number, // Current version of the recipe
-      isOutdated: boolean, // True if recipeVersion < currentVersion
       orderInMeal: number,
-      addedAt: string // ISO datetime
     }>
   }
 }
