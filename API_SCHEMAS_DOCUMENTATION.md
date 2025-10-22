@@ -352,13 +352,25 @@ _No request schema - path parameters only_
 
 _No request schema - path parameters only (date format: YYYY-MM-DD)_
 
-### POST /api/meal/:mealId/recipes - Attach Recipe to Meal
+### POST /api/meal/:mealId/recipes - Attach Recipe(s) to Meal
 
 ```typescript
 const attachRecipeRequestSchema = z.object({
-    recipeId: z.string().uuid(),
+    recipeIds: z.array(z.string().uuid()).min(
+        1,
+        "At least one recipe ID is required",
+    ),
 });
 ```
+
+**Notes:**
+
+- Supports attaching multiple recipes at once by providing an array of recipe
+  IDs
+- All recipes will be validated for existence and user ownership before
+  attachment
+- Recipes are automatically ordered sequentially based on the current max order
+  in the meal
 
 ### DELETE /api/meal/:mealId/recipes/:mealRecipeId - Detach Recipe from Meal
 

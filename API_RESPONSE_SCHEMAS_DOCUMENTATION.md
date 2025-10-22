@@ -638,24 +638,33 @@ All API endpoints return responses in a standardized format:
 }
 ```
 
-### POST /api/meal/:mealId/recipes - Attach Recipe to Meal
+### POST /api/meal/:mealId/recipes - Attach Recipe(s) to Meal
 
 **Success Response (201):**
 
 ```typescript
 {
   success: true,
-  message: "Recipe attached to meal successfully",
+  message: "{count} recipe(s) attached to meal successfully",
   data: {
     mealRecipe: {
       mealId: string, // UUID
-      recipeId: string, // UUID
-      recipeVersion: number, // Snapshot version at time of attachment
-      orderInMeal: number // Position in the meal's recipe list
+      recipes: Array<{
+        recipeId: string, // UUID
+        recipeVersion: number, // Snapshot version at time of attachment
+        orderInMeal: number // Position in the meal's recipe list
+      }>
     }
   }
 }
 ```
+
+**Notes:**
+
+- The message dynamically adjusts based on the number of recipes attached
+  (singular vs. plural)
+- All recipes are attached in a single transaction with sequential ordering
+- Each recipe captures the current version at the time of attachment
 
 ### DELETE /api/meal/:mealId/recipes/:mealRecipeId - Detach Recipe from Meal
 
