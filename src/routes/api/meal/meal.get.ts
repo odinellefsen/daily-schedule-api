@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../../../db";
-import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
+import {
+    mealRecipes,
+    meals,
+    recipeIngredients,
+    recipeInstructions,
+} from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 
 export function registerGetMeal(app: Hono) {
@@ -28,8 +33,22 @@ export function registerGetMeal(app: Hono) {
             .orderBy(mealRecipes.orderInMeal);
 
         // Fetch all instructions for all recipes in this meal
+        const allIngredients = [];
         const allInstructions = [];
         for (const mealRecipe of mealRecipesData) {
+            const ingredients = await db
+                .select()
+                .from(recipeIngredients)
+                .where(eq(recipeIngredients.recipeId, mealRecipe.recipeId))
+                .orderBy(recipeIngredients.ingredientText);
+
+            for (const ingredient of ingredients) {
+                allIngredients.push({
+                    recipeId: mealRecipe.recipeId,
+                    ingredientText: ingredient.ingredientText,
+                });
+            }
+
             const instructions = await db
                 .select()
                 .from(recipeInstructions)
@@ -38,7 +57,6 @@ export function registerGetMeal(app: Hono) {
 
             for (const inst of instructions) {
                 allInstructions.push({
-                    id: inst.id,
                     recipeId: mealRecipe.recipeId,
                     instruction: inst.instruction,
                     instructionNumber: inst.instructionNumber,
@@ -50,12 +68,11 @@ export function registerGetMeal(app: Hono) {
             id: mealFromDb.id,
             mealName: mealFromDb.mealName,
             recipes: mealRecipesData.map((mr) => ({
-                mealRecipeId: mr.id,
                 recipeId: mr.recipeId,
                 orderInMeal: mr.orderInMeal,
             })),
             instructions: allInstructions,
-            instructionCount: allInstructions.length,
+            ingredients: allIngredients,
         };
 
         return c.json(
