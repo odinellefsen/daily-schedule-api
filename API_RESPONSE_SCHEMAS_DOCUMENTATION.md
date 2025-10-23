@@ -592,17 +592,18 @@ All API endpoints return responses in a standardized format:
     id: string, // UUID
     mealName: string,
     recipes: Array<{
-      mealRecipeId: string, // UUID - junction table ID
       recipeId: string, // UUID
       orderInMeal: number
     }>,
     instructions: Array<{
-      id: string, // UUID - recipe instruction ID
       recipeId: string, // UUID
       instruction: string,
       instructionNumber: number
     }>,
-    instructionCount: number
+    ingredients: Array<{
+      recipeId: string, // UUID
+      ingredientText: string
+    }>,
   }
 }
 ```
