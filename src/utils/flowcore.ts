@@ -17,7 +17,6 @@ import {
     mealRecipeAttachSchema,
     mealRecipeDetachSchema,
     mealSchema,
-    mealUpdateSchema,
 } from "../contracts/food/meal";
 import {
     recipeArchiveSchema,
@@ -52,11 +51,7 @@ import {
     handleFoodItemUnitsUpdated,
 } from "../handlers/food-item/food-item-units.handler";
 import { handleHabitsCreated } from "../handlers/habit/habit.handler";
-import {
-    handleMealArchived,
-    handleMealCreated,
-    handleMealUpdated,
-} from "../handlers/meal/meal.handler";
+import { handleMealCreated } from "../handlers/meal/meal.handler";
 import {
     handleMealRecipeAttached,
     handleMealRecipeDetached,
@@ -200,18 +195,6 @@ export const FlowcorePathways = new PathwaysBuilder({
     })
     .register({
         flowType: "meal.v0",
-        eventType: "meal.updated.v0",
-        retryDelayMs: 10000,
-        schema: mealUpdateSchema,
-    })
-    .register({
-        flowType: "meal.v0",
-        eventType: "meal.archived.v0",
-        retryDelayMs: 10000,
-        schema: mealArchiveSchema,
-    })
-    .register({
-        flowType: "meal.v0",
         eventType: "meal-recipe.attached.v0",
         retryDelayMs: 10000,
         schema: mealRecipeAttachSchema,
@@ -319,8 +302,6 @@ export const FlowcorePathways = new PathwaysBuilder({
         handleRecipeIngredientsArchived,
     )
     .handle("meal.v0/meal.created.v0", handleMealCreated)
-    .handle("meal.v0/meal.updated.v0", handleMealUpdated)
-    .handle("meal.v0/meal.archived.v0", handleMealArchived)
     .handle("meal.v0/meal-recipe.attached.v0", handleMealRecipeAttached)
     .handle("meal.v0/meal-recipe.detached.v0", handleMealRecipeDetached)
     .handle("todo.v0/todo.created.v0", handleTodoCreated)
