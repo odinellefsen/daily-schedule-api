@@ -13,7 +13,6 @@ import {
     foodItemUpdatedSchema,
 } from "../contracts/food/food-item";
 import {
-    mealArchiveSchema,
     mealRecipeAttachSchema,
     mealRecipeDetachSchema,
     mealSchema,
