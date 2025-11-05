@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { Hono } from "hono";
 import z from "zod";
 import {
@@ -49,23 +49,20 @@ export function registerAttachMealRecipes(app: Hono) {
         }
 
         // Verify all recipes exist and belong to user
-        const recipesFromDb = await Promise.all(
-            recipeIds.map((recipeId) =>
-                db.query.recipes.findFirst({
-                    where: and(
-                        eq(recipes.id, recipeId),
-                        eq(recipes.userId, safeUserId),
-                    ),
-                }),
+        const recipesFromDb = await db.query.recipes.findMany({
+            where: and(
+                inArray(recipes.id, recipeIds),
+                eq(recipes.userId, safeUserId),
             ),
-        );
-
-        // Check if any recipe is missing
-        const missingRecipes = recipesFromDb.some((recipe) => !recipe);
-        if (missingRecipes) {
+        });
+        if (recipesFromDb.length !== recipeIds.length) {
+            const missingRecipeIds = recipeIds.filter(
+                (id) => !recipesFromDb.some((r) => r.id === id),
+            );
             return c.json(
                 ApiResponse.error(
                     "One or more recipes not found or access denied",
+                    `Recipes ${missingRecipeIds.join(", ")} not found or access denied`,
                 ),
                 StatusCodes.NOT_FOUND,
             );
