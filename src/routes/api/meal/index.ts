@@ -4,7 +4,6 @@ import { registerCreateMeal } from "./meal.create";
 import { registerGetMeal } from "./meal.get";
 import { registerListMeals } from "./meal.list";
 import { registerAttachMealRecipes } from "./meal-recipes.attach";
-import { registerListMealRecipes } from "./meal-recipes.list";
 
 export const meal = new Hono();
 
@@ -15,6 +14,5 @@ registerCreateMeal(meal);
 registerListMeals(meal);
 registerGetMeal(meal);
 registerAttachMealRecipes(meal);
-registerListMealRecipes(meal);
 
 export default meal;
