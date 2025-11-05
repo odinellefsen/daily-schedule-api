@@ -329,17 +329,6 @@ const createMealRequestSchema = z.object({
 });
 ```
 
-### DELETE /api/meal/ - Delete Meal
-
-```typescript
-const deleteMealRequestSchema = z.object({
-    mealName: z
-        .string()
-        .min(1, "Meal name min length is 1")
-        .max(100, "Meal name max length is 100"),
-});
-```
-
 ### GET /api/meal/ - List All Meals
 
 _No request schema - query parameters only_
@@ -347,10 +336,6 @@ _No request schema - query parameters only_
 ### GET /api/meal/:mealId - Get Meal by ID
 
 _No request schema - path parameters only_
-
-### GET /api/meal/:mealId/progress/:date - Get Meal Progress for Date
-
-_No request schema - path parameters only (date format: YYYY-MM-DD)_
 
 ### POST /api/meal/:mealId/recipes - Attach Recipe(s) to Meal
 
@@ -371,14 +356,6 @@ const attachRecipeRequestSchema = z.object({
   attachment
 - Recipes are automatically ordered sequentially based on the current max order
   in the meal
-
-### DELETE /api/meal/:mealId/recipes/:mealRecipeId - Detach Recipe from Meal
-
-_No request schema - path parameters only_
-
-### GET /api/meal/:mealId/recipes - List Meal Recipes
-
-_No request schema - path parameters only_
 
 ---
 

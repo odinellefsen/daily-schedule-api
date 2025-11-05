@@ -539,27 +539,9 @@ All API endpoints return responses in a standardized format:
   data: {
     meal: {
       id: string, // UUID
-      userId: string,
       mealName: string
     },
-    message: "Meal created. Use POST /api/meal/:id/recipes to attach recipes."
-  }
-}
-```
-
-### DELETE /api/meal/ - Delete Meal
-
-**Success Response (200):**
-
-```typescript
-{
-  success: true,
-  message: "Meal archived successfully",
-  data: {
-    id: string, // UUID
-    userId: string,
-    mealName: string,
-    reasonForArchiving: string
+    message: "Meal created. Use POST /api/meal/:mealId/recipes to attach recipes."
   }
 }
 ```
@@ -634,17 +616,6 @@ All API endpoints return responses in a standardized format:
   (singular vs. plural)
 - All recipes are attached in a single transaction with sequential ordering
 - Each recipe captures the current version at the time of attachment
-
-### DELETE /api/meal/:mealId/recipes/:mealRecipeId - Detach Recipe from Meal
-
-**Success Response (200):**
-
-```typescript
-{
-  success: true,
-  message: "Recipe detached from meal successfully"
-}
-```
 
 ### GET /api/meal/:mealId/recipes - List Meal Recipes
 

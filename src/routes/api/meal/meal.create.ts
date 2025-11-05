@@ -58,9 +58,11 @@ export function registerCreateMeal(app: Hono) {
             );
         }
 
+        const { userId: _, ...createMeal } = safeCreateMealEvent;
+
         return c.json(
             ApiResponse.success("Meal created successfully", {
-                meal: safeCreateMealEvent,
+                meal: createMeal,
                 message:
                     "Meal created. Use POST /api/meal/:id/recipes to attach recipes.",
             }),
