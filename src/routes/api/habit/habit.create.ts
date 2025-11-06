@@ -31,10 +31,7 @@ export function registerCreateHabit(app: Hono) {
         const safeUserId = c.userId!;
 
         const rawJsonBody = await c.req.json();
-        const parsedJsonBody = weeklyHabitCreationSchema.safeParse({
-            ...rawJsonBody,
-            userId: safeUserId,
-        });
+        const parsedJsonBody = weeklyHabitCreationSchema.safeParse(rawJsonBody);
 
         if (!parsedJsonBody.success) {
             return c.json(
