@@ -109,7 +109,6 @@ _No request schema - query parameters only_
 
 ```typescript
 const weeklyHabitCreationSchema = z.object({
-    userId: z.string(),
     domain: z.string(), // e.g., "meal" (currently only "meal" is supported)
     entityId: z.string().uuid(), // e.g., mealId
 
