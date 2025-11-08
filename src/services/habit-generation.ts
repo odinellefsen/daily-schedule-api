@@ -4,7 +4,12 @@ import { and, eq } from "drizzle-orm";
 import type { TodoGeneratedType } from "../contracts/todo";
 import { db } from "../db";
 import type { Habit } from "../db/schemas";
-import { habitSubEntities, habits, habitTriggers } from "../db/schemas";
+import {
+    habitSubEntities,
+    habits,
+    habitTriggerExecutions,
+    habitTriggers,
+} from "../db/schemas";
 import { FlowcorePathways } from "../utils/flowcore";
 import { getTitleResolver } from "./domain-resolvers";
 
@@ -146,7 +151,7 @@ async function generateHabitInstance(
         scheduledTime: string | null;
     }>,
     triggerDate: string,
-): Promise<void> {
+): Promise<{ instanceId: string; todosGenerated: number }> {
     const instanceId = crypto.randomUUID();
     const todoEvents: TodoGeneratedType[] = [];
 
@@ -226,6 +231,8 @@ async function generateHabitInstance(
         batch: true,
         data: todoEvents,
     });
+
+    return { instanceId, todosGenerated: todoEvents.length };
 }
 
 /**
@@ -291,12 +298,14 @@ function calculateScheduledDateForSubEntity(
 
 /**
  * Core habit generation service for weekly habits with trigger-based generation
+ * Uses deduplication to ensure triggers only fire once per date
  */
 export async function generateMissingHabitTodos(
     userId: string,
     targetDate: string,
 ): Promise<{
     success: number;
+    skipped: number;
     failed: number;
     errors: Array<{ habitId: string; error: string }>;
 }> {
@@ -320,6 +329,7 @@ export async function generateMissingHabitTodos(
 
         const results = {
             success: 0,
+            skipped: 0,
             failed: 0,
             errors: [] as Array<{ habitId: string; error: string }>,
         };
@@ -327,9 +337,39 @@ export async function generateMissingHabitTodos(
         // Process each trigger to generate habit instances
         for (const { habit, subEntities } of triggersToFire) {
             try {
-                await generateHabitInstance(habit, subEntities, targetDate);
+                // Check if this trigger has already fired for this date
+                const existingExecution =
+                    await db.query.habitTriggerExecutions.findFirst({
+                        where: and(
+                            eq(habitTriggerExecutions.habitId, habit.id),
+                            eq(habitTriggerExecutions.triggerDate, targetDate),
+                        ),
+                    });
+
+                if (existingExecution) {
+                    console.log(
+                        `Skipping habit ${habit.id} - already generated for ${targetDate} (instance: ${existingExecution.instanceId})`,
+                    );
+                    results.skipped++;
+                    continue;
+                }
+
+                // Generate the habit instance
+                const { instanceId, todosGenerated } =
+                    await generateHabitInstance(habit, subEntities, targetDate);
+
+                // Record the execution to prevent duplicates
+                await db.insert(habitTriggerExecutions).values({
+                    id: crypto.randomUUID(),
+                    habitId: habit.id,
+                    triggerDate: targetDate,
+                    instanceId,
+                });
+
                 results.success++;
-                console.log(`Generated habit instance for ${habit.entityId}`);
+                console.log(
+                    `Generated habit instance for ${habit.entityId}: ${todosGenerated} todos created (instance: ${instanceId})`,
+                );
             } catch (error) {
                 const errorMessage =
                     error instanceof Error ? error.message : String(error);
@@ -347,7 +387,7 @@ export async function generateMissingHabitTodos(
         }
 
         console.log(
-            `Weekly habit generation completed: ${results.success} successful, ${results.failed} failed`,
+            `Weekly habit generation completed: ${results.success} successful, ${results.skipped} skipped, ${results.failed} failed`,
         );
         return results;
     } catch (error) {

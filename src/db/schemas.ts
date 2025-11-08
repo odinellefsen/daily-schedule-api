@@ -143,6 +143,16 @@ export const habitSubEntities = pgTable("habit_subentities", {
     scheduledTime: text("scheduled_time"), // HH:MM
 });
 
+export const habitTriggerExecutions = pgTable("habit_trigger_executions", {
+    id: uuid("id").primaryKey(),
+    habitId: uuid("habit_id")
+        .references(() => habits.id, { onDelete: "cascade" })
+        .notNull(),
+    triggerDate: text("trigger_date").notNull(), // YYYY-MM-DD when trigger fired
+    instanceId: uuid("instance_id").notNull(), // Links to todos.instanceId
+    executedAt: timestamp("executed_at").notNull().defaultNow(),
+});
+
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
 
@@ -163,3 +173,7 @@ export type NewHabitTrigger = typeof habitTriggers.$inferInsert;
 
 export type HabitSubEntity = typeof habitSubEntities.$inferSelect;
 export type NewHabitSubEntity = typeof habitSubEntities.$inferInsert;
+
+export type HabitTriggerExecution = typeof habitTriggerExecutions.$inferSelect;
+export type NewHabitTriggerExecution =
+    typeof habitTriggerExecutions.$inferInsert;
