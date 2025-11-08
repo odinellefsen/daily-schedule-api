@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
-import { weeklyHabitCreationSchema } from "../../../contracts/habit/habit.contract";
+import z from "zod";
+import { HHMM, Weekday, YMD } from "../../../contracts/habit/habit.contract";
 import { db } from "../../../db";
 import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
@@ -25,13 +26,36 @@ function subtractMinutesFromTime(time: string, minutes: number): string {
     return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(2, "0")}`;
 }
 
+const createComplexHabitRequestSchema = z.object({
+    domain: z.string(), // e.g., "meal"
+    entityId: z.string().uuid(), // e.g., mealId
+
+    // Main habit configuration (so far only weekly)
+    recurrenceType: z.literal("weekly"),
+    targetWeekday: Weekday, // When the main event should happen
+    targetTime: HHMM.optional(), // HH:MM when main event should happen
+    startDate: YMD,
+
+    subEntities: z
+        .array(
+            z.object({
+                // as in instructions in a meal recipe
+                subEntityId: z.string().uuid().optional(),
+                scheduledWeekday: Weekday,
+                scheduledTime: HHMM.optional(),
+            }),
+        )
+        .min(1),
+});
+
 export function registerCreateHabit(app: Hono) {
     // Create multiple domain-linked habits in a batch (e.g., meal instructions)
     app.post("/batch", async (c) => {
         const safeUserId = c.userId!;
 
         const rawJsonBody = await c.req.json();
-        const parsedJsonBody = weeklyHabitCreationSchema.safeParse(rawJsonBody);
+        const parsedJsonBody =
+            createComplexHabitRequestSchema.safeParse(rawJsonBody);
 
         if (!parsedJsonBody.success) {
             return c.json(
@@ -152,13 +176,10 @@ export function registerCreateHabit(app: Hono) {
             ...additionalSubEntities,
         ];
 
-        console.log(
-            `Habit creation [meal]: ${safeBatchHabitData.subEntities.length} user-configured, ${additionalSubEntities.length} auto-added from ${mealRecipesForEntity.length} recipes`,
-        );
-
         try {
             await FlowcorePathways.write("habit.v0/complex-habit.created.v0", {
                 data: {
+                    userId: safeUserId,
                     ...safeBatchHabitData,
                     subEntities: completeSubEntities,
                 },
