@@ -6,6 +6,7 @@ import { db } from "../db";
 import type { Habit } from "../db/schemas";
 import { habitSubEntities, habits, habitTriggers } from "../db/schemas";
 import { FlowcorePathways } from "../utils/flowcore";
+import { getTitleResolver } from "./domain-resolvers";
 
 /**
  * Convert dueDate, preferredTime, and timezone into a scheduledFor timestamp
@@ -149,6 +150,9 @@ async function generateHabitInstance(
     const instanceId = crypto.randomUUID();
     const todoEvents: TodoGeneratedType[] = [];
 
+    // Get the domain-specific title resolver
+    const resolver = getTitleResolver(habit.domain);
+
     // Generate todos for all subEntities in this habit instance
     for (const subEntity of subEntities) {
         // Calculate the actual scheduled date for this subEntity
@@ -164,12 +168,17 @@ async function generateHabitInstance(
             scheduledTime,
         );
 
+        // Resolve title dynamically from domain resolver
+        const title = subEntity.subEntityId
+            ? await resolver.getSubEntityTitle(subEntity.subEntityId)
+            : "Unknown Task";
+
         // Create todo event for subEntity
         const todoEvent: TodoGeneratedType = {
             userId: habit.userId,
             habitId: habit.id,
             instanceId,
-            title: "to be implemented - subEntity",
+            title,
             dueDate: scheduledDate,
             preferredTime: scheduledTime,
             scheduledFor: scheduledFor.toISOString(),
@@ -194,11 +203,14 @@ async function generateHabitInstance(
         mainEventTime,
     );
 
+    // Resolve main event title dynamically from domain resolver
+    const mainEventTitle = await resolver.getMainEventTitle(habit.entityId);
+
     const mainEventTodo: TodoGeneratedType = {
         userId: habit.userId,
         habitId: habit.id,
         instanceId,
-        title: "to be implemented - main event",
+        title: mainEventTitle,
         dueDate: mainEventDate,
         preferredTime: mainEventTime,
         scheduledFor: mainEventScheduledFor.toISOString(),
