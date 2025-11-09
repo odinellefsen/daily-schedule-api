@@ -16,6 +16,8 @@ export const Weekday = z.enum([
     "sunday",
 ]);
 
+export type WeekdayType = z.infer<typeof Weekday>;
+
 // Weekly habit creation schema for domain-linked habits (e.g., meal instructions)
 const weeklyHabitCreationSchema = z.object({
     userId: z.string(),
