@@ -7,25 +7,6 @@ import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-/**
- * Subtract minutes from a time string (HH:MM format)
- * @param time - Time string in HH:MM format (e.g., "18:00")
- * @param minutes - Minutes to subtract
- * @returns New time string in HH:MM format
- */
-function subtractMinutesFromTime(time: string, minutes: number): string {
-    const [hours, mins] = time.split(":").map(Number);
-    const totalMinutes = hours * 60 + mins - minutes;
-
-    // Handle negative wrap-around (previous day)
-    const adjustedMinutes = totalMinutes < 0 ? 0 : totalMinutes;
-
-    const newHours = Math.floor(adjustedMinutes / 60);
-    const newMins = adjustedMinutes % 60;
-
-    return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(2, "0")}`;
-}
-
 const createComplexHabitRequestSchema = z.object({
     domain: z.string(), // e.g., "meal"
     entityId: z.string().uuid(), // e.g., mealId
@@ -153,35 +134,16 @@ export function registerCreateHabit(app: Hono) {
             }
         }
 
-        // Build a set of configured instruction IDs
-        const configuredInstructionIds = new Set(providedSubEntityIds);
-
-        // Add unconfigured instructions - they happen at the same time as the main event
-        const unconfiguredInstructions = allInstructions.filter(
-            (instr) => !configuredInstructionIds.has(instr.id),
-        );
-
-        const additionalSubEntities = unconfiguredInstructions.map((instr) => ({
-            subEntityId: instr.id,
-            scheduledWeekday: safeBatchHabitData.targetWeekday,
-            // Schedule 30 minutes before the main event, or use main event time if not specified
-            scheduledTime: safeBatchHabitData.targetTime
-                ? subtractMinutesFromTime(safeBatchHabitData.targetTime, 30)
-                : undefined,
-        }));
-
-        // Merge user-configured and auto-generated subEntities
-        const completeSubEntities = [
-            ...safeBatchHabitData.subEntities,
-            ...additionalSubEntities,
-        ];
+        // Only store user-configured instructions
+        // Unconfigured instructions will be auto-added at generation time
+        // This ensures habits always reflect the current meal state
 
         try {
             await FlowcorePathways.write("habit.v0/complex-habit.created.v0", {
                 data: {
                     userId: safeUserId,
                     ...safeBatchHabitData,
-                    subEntities: completeSubEntities,
+                    subEntities: safeBatchHabitData.subEntities, // Only configured ones
                 },
             });
         } catch (error) {
@@ -194,9 +156,8 @@ export function registerCreateHabit(app: Hono) {
         return c.json(
             ApiResponse.success("Batch habits created successfully", {
                 domain: safeBatchHabitData.domain,
-                userConfiguredCount: safeBatchHabitData.subEntities.length,
-                autoAddedCount: additionalSubEntities.length,
-                totalSubEntityCount: completeSubEntities.length,
+                configuredSubEntitiesCount:
+                    safeBatchHabitData.subEntities.length,
             }),
             StatusCodes.CREATED,
         );

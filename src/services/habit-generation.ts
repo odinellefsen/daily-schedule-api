@@ -6,12 +6,62 @@ import { db } from "../db";
 import type { Habit } from "../db/schemas";
 import {
     habitSubEntities,
-    habits,
     habitTriggerExecutions,
+    habits,
     habitTriggers,
+    mealRecipes,
+    recipeInstructions,
 } from "../db/schemas";
 import { FlowcorePathways } from "../utils/flowcore";
 import { getTitleResolver } from "./domain-resolvers";
+
+/**
+ * Subtract minutes from a time string (HH:MM format)
+ * @param time - Time string in HH:MM format (e.g., "18:00")
+ * @param minutes - Minutes to subtract
+ * @returns New time string in HH:MM format
+ */
+function subtractMinutesFromTime(time: string, minutes: number): string {
+    const [hours, mins] = time.split(":").map(Number);
+    const totalMinutes = hours * 60 + mins - minutes;
+
+    // Handle negative wrap-around (previous day)
+    const adjustedMinutes = totalMinutes < 0 ? 0 : totalMinutes;
+
+    const newHours = Math.floor(adjustedMinutes / 60);
+    const newMins = adjustedMinutes % 60;
+
+    return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(2, "0")}`;
+}
+
+/**
+ * Fetch all current instructions for a meal from the database
+ * This ensures habits always reflect the current meal state
+ */
+async function fetchCurrentMealInstructions(
+    mealId: string,
+): Promise<Array<{ id: string; instruction: string }>> {
+    // Get all recipes attached to this meal
+    const mealRecipesForEntity = await db
+        .select()
+        .from(mealRecipes)
+        .where(eq(mealRecipes.mealId, mealId))
+        .orderBy(mealRecipes.orderInMeal);
+
+    // Fetch all instructions for all recipes in this meal
+    const allInstructions = [];
+    for (const mealRecipe of mealRecipesForEntity) {
+        const instructions = await db
+            .select()
+            .from(recipeInstructions)
+            .where(eq(recipeInstructions.recipeId, mealRecipe.recipeId))
+            .orderBy(recipeInstructions.instructionNumber);
+
+        allInstructions.push(...instructions);
+    }
+
+    return allInstructions;
+}
 
 /**
  * Convert dueDate, preferredTime, and timezone into a scheduledFor timestamp
@@ -140,6 +190,7 @@ async function selectTriggersForDate(
 
 /**
  * Generate todos for a habit instance (all subEntities for one habit)
+ * Fetches current meal instructions to ensure habits stay in sync with meal changes
  */
 async function generateHabitInstance(
     habit: Habit,
@@ -158,7 +209,7 @@ async function generateHabitInstance(
     // Get the domain-specific title resolver
     const resolver = getTitleResolver(habit.domain);
 
-    // Generate todos for all subEntities in this habit instance
+    // 1. Generate todos for user-configured subEntities (with their custom timing)
     for (const subEntity of subEntities) {
         // Calculate the actual scheduled date for this subEntity
         const scheduledDate = calculateScheduledDateForSubEntity(
@@ -193,6 +244,63 @@ async function generateHabitInstance(
         };
 
         todoEvents.push(todoEvent);
+    }
+
+    // 2. For meal domain: fetch current instructions and auto-add unconfigured ones
+    if (habit.domain === "meal") {
+        // Fetch current meal instructions from database
+        const currentInstructions = await fetchCurrentMealInstructions(
+            habit.entityId,
+        );
+
+        // Build set of configured instruction IDs
+        const configuredInstructionIds = new Set(
+            subEntities
+                .map((se) => se.subEntityId)
+                .filter((id): id is string => id !== null),
+        );
+
+        // Find unconfigured instructions (not explicitly scheduled by user)
+        const unconfiguredInstructions = currentInstructions.filter(
+            (instr) => !configuredInstructionIds.has(instr.id),
+        );
+
+        // Generate todos for unconfigured instructions with default timing
+        for (const instruction of unconfiguredInstructions) {
+            const scheduledDate = calculateScheduledDateForSubEntity(
+                triggerDate,
+                habit.targetWeekday,
+                habit.targetWeekday, // Same day as main event
+            );
+
+            // Default: 30 minutes before main event, or 9:00 if no time specified
+            const scheduledTime = habit.targetTime
+                ? subtractMinutesFromTime(habit.targetTime, 30)
+                : "09:00";
+
+            const scheduledFor = calculateScheduledFor(
+                scheduledDate,
+                scheduledTime,
+            );
+
+            // Resolve title from instruction
+            const title = await resolver.getSubEntityTitle(instruction.id);
+
+            const todoEvent: TodoGeneratedType = {
+                userId: habit.userId,
+                habitId: habit.id,
+                instanceId,
+                title,
+                dueDate: scheduledDate,
+                preferredTime: scheduledTime,
+                scheduledFor: scheduledFor.toISOString(),
+                domain: habit.domain,
+                entityId: habit.entityId,
+                subEntityId: instruction.id,
+            };
+
+            todoEvents.push(todoEvent);
+        }
     }
 
     // Create todo for the main habit event (the actual goal)
