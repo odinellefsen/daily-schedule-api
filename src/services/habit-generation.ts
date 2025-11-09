@@ -1,13 +1,14 @@
 import crypto from "node:crypto";
 import { parseISO } from "date-fns";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
+import type { WeekdayType } from "../contracts/habit/habit.contract";
 import type { TodoGeneratedType } from "../contracts/todo";
 import { db } from "../db";
 import type { Habit } from "../db/schemas";
 import {
     habitSubEntities,
-    habitTriggerExecutions,
     habits,
+    habitTriggerExecutions,
     habitTriggers,
     mealRecipes,
     recipeInstructions,
@@ -100,7 +101,7 @@ function calculateScheduledFor(
 /**
  * Get weekday from date string, timezone-aware
  */
-function getWeekdayFromDate(dateStr: string): string {
+function getWeekdayFromDate(dateStr: string): WeekdayType {
     // Validate input format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
         throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
@@ -115,7 +116,7 @@ function getWeekdayFromDate(dateStr: string): string {
         throw new Error(`Invalid date created from: ${dateTimeString}`);
     }
 
-    const weekdays = [
+    const weekdays: WeekdayType[] = [
         "sunday",
         "monday",
         "tuesday",
@@ -124,6 +125,7 @@ function getWeekdayFromDate(dateStr: string): string {
         "friday",
         "saturday",
     ];
+
     return weekdays[date.getDay()];
 }
 
@@ -151,32 +153,68 @@ async function selectTriggersForDate(
         }>;
     }>
 > {
-    const weekday = getWeekdayFromDate(targetDate);
+    const weekday: WeekdayType = getWeekdayFromDate(targetDate);
 
     // Find all triggers that should fire today for weekly habits
     const triggers = await db.query.habitTriggers.findMany({
         where: eq(habitTriggers.triggerWeekday, weekday),
     });
 
-    // Get habits and subEntities for each trigger
+    // Extract all unique habitIds from triggers
+    const habitIds = Array.from(new Set(triggers.map((t) => t.habitId)));
+
+    // If no triggers, return early
+    if (habitIds.length === 0) {
+        return [];
+    }
+
+    // Batch query all habits at once
+    const allHabits = await db.query.habits.findMany({
+        where: and(
+            inArray(habits.id, habitIds),
+            eq(habits.userId, userId),
+            eq(habits.isActive, true),
+            eq(habits.recurrenceType, "weekly"),
+        ),
+    });
+
+    // Create a map of habitId -> habit for quick lookup
+    const habitMap = new Map(allHabits.map((h) => [h.id, h]));
+
+    // Get the habitIds that actually matched our criteria
+    const validHabitIds = allHabits.map((h) => h.id);
+
+    // Batch query all subEntities at once
+    const allSubEntities = await db.query.habitSubEntities.findMany({
+        where: inArray(habitSubEntities.habitId, validHabitIds),
+        orderBy: habitSubEntities.scheduledWeekday,
+    });
+
+    // Group subEntities by habitId
+    const subEntitiesByHabitId = new Map<
+        string,
+        Array<{
+            id: string;
+            habitId: string;
+            subEntityId: string | null;
+            scheduledWeekday: string;
+            scheduledTime: string | null;
+        }>
+    >();
+
+    for (const subEntity of allSubEntities) {
+        const existing = subEntitiesByHabitId.get(subEntity.habitId) || [];
+        existing.push(subEntity);
+        subEntitiesByHabitId.set(subEntity.habitId, existing);
+    }
+
+    // Build the final result array by matching triggers with their habits and subEntities
     const triggersWithSubEntities = [];
     for (const trigger of triggers) {
-        // Get the habit for this trigger
-        const habit = await db.query.habits.findFirst({
-            where: and(
-                eq(habits.id, trigger.habitId),
-                eq(habits.userId, userId),
-                eq(habits.isActive, true),
-                eq(habits.recurrenceType, "weekly"),
-            ),
-        });
-
+        const habit = habitMap.get(trigger.habitId);
         if (!habit) continue; // Skip if habit doesn't match user/active criteria
 
-        const subEntities = await db.query.habitSubEntities.findMany({
-            where: eq(habitSubEntities.habitId, habit.id),
-            orderBy: habitSubEntities.scheduledWeekday,
-        });
+        const subEntities = subEntitiesByHabitId.get(habit.id) || [];
 
         triggersWithSubEntities.push({
             trigger,
