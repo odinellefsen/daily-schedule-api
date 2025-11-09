@@ -460,13 +460,14 @@ export async function generateMissingHabitTodos(
             );
         }
 
-        // Check if habit generation has already run for this date
-        const existingExecution =
+        const hasExecutedToday =
             await db.query.habitTriggerExecutions.findFirst({
-                where: eq(habitTriggerExecutions.triggerDate, targetDate),
+                where: and(
+                    eq(habitTriggerExecutions.userId, userId),
+                    eq(habitTriggerExecutions.triggerDate, targetDate),
+                ),
             });
-
-        if (existingExecution) {
+        if (hasExecutedToday) {
             console.log(`Habit generation already completed for ${targetDate}`);
             return {
                 success: 0,
@@ -476,11 +477,18 @@ export async function generateMissingHabitTodos(
             };
         }
 
-        // Immediately insert execution record to claim this date
-        await db.insert(habitTriggerExecutions).values({
-            id: crypto.randomUUID(),
-            triggerDate: targetDate,
-        });
+        await db
+            .insert(habitTriggerExecutions)
+            .values({
+                userId,
+                triggerDate: targetDate,
+            })
+            .onConflictDoUpdate({
+                target: habitTriggerExecutions.userId,
+                set: {
+                    triggerDate: targetDate,
+                },
+            });
 
         console.log(
             `Starting weekly habit todo generation for user ${userId} on ${targetDate}`,

@@ -144,7 +144,7 @@ export const habitSubEntities = pgTable("habit_subentities", {
 });
 
 export const habitTriggerExecutions = pgTable("habit_trigger_executions", {
-    id: uuid("id").primaryKey(),
+    userId: text("user_id").primaryKey(),
     triggerDate: text("trigger_date").notNull(), // YYYY-MM-DD when trigger fired
 });
 
