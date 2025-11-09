@@ -477,6 +477,7 @@ export async function generateMissingHabitTodos(
             };
         }
 
+        // to make sure it only runs once per day
         await db
             .insert(habitTriggerExecutions)
             .values({
