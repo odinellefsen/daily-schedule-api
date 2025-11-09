@@ -460,6 +460,22 @@ export async function generateMissingHabitTodos(
             );
         }
 
+        // Check if habit generation has already run for this date
+        const existingExecution =
+            await db.query.habitTriggerExecutions.findFirst({
+                where: eq(habitTriggerExecutions.triggerDate, targetDate),
+            });
+
+        if (existingExecution) {
+            console.log(`Habit generation already completed for ${targetDate}`);
+            return {
+                success: 0,
+                skipped: 0,
+                failed: 0,
+                errors: [],
+            };
+        }
+
         console.log(
             `Starting weekly habit todo generation for user ${userId} on ${targetDate}`,
         );
@@ -480,23 +496,6 @@ export async function generateMissingHabitTodos(
         // Process each trigger to generate habit instances
         for (const { habit, subEntities } of triggersToFire) {
             try {
-                // Check if this trigger has already fired for this date
-                const existingExecution =
-                    await db.query.habitTriggerExecutions.findFirst({
-                        where: and(
-                            eq(habitTriggerExecutions.habitId, habit.id),
-                            eq(habitTriggerExecutions.triggerDate, targetDate),
-                        ),
-                    });
-
-                if (existingExecution) {
-                    console.log(
-                        `Skipping habit ${habit.id} - already generated for ${targetDate} (instance: ${existingExecution.instanceId})`,
-                    );
-                    results.skipped++;
-                    continue;
-                }
-
                 // Generate the habit instance
                 const { instanceId, todosGenerated } =
                     await generateHabitInstance(habit, subEntities, targetDate);
