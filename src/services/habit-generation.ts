@@ -476,6 +476,12 @@ export async function generateMissingHabitTodos(
             };
         }
 
+        // Immediately insert execution record to claim this date
+        await db.insert(habitTriggerExecutions).values({
+            id: crypto.randomUUID(),
+            triggerDate: targetDate,
+        });
+
         console.log(
             `Starting weekly habit todo generation for user ${userId} on ${targetDate}`,
         );
@@ -499,14 +505,6 @@ export async function generateMissingHabitTodos(
                 // Generate the habit instance
                 const { instanceId, todosGenerated } =
                     await generateHabitInstance(habit, subEntities, targetDate);
-
-                // Record the execution to prevent duplicates
-                await db.insert(habitTriggerExecutions).values({
-                    id: crypto.randomUUID(),
-                    habitId: habit.id,
-                    triggerDate: targetDate,
-                    instanceId,
-                });
 
                 results.success++;
                 console.log(

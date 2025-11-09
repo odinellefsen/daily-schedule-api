@@ -145,12 +145,7 @@ export const habitSubEntities = pgTable("habit_subentities", {
 
 export const habitTriggerExecutions = pgTable("habit_trigger_executions", {
     id: uuid("id").primaryKey(),
-    habitId: uuid("habit_id")
-        .references(() => habits.id, { onDelete: "cascade" })
-        .notNull(),
     triggerDate: text("trigger_date").notNull(), // YYYY-MM-DD when trigger fired
-    instanceId: uuid("instance_id").notNull(), // Links to todos.instanceId
-    executedAt: timestamp("executed_at").notNull().defaultNow(),
 });
 
 export type Recipe = typeof recipes.$inferSelect;
