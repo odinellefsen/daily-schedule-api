@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import z from "zod";
-import { HHMM, Weekday, YMD } from "../../../contracts/habit/habit.contract";
+import {
+    HHMM,
+    habitsCreatedSchema,
+    Weekday,
+    YMD,
+} from "../../../contracts/habit/habit.contract";
 import { db } from "../../../db";
 import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
@@ -134,17 +139,33 @@ export function registerCreateHabit(app: Hono) {
             }
         }
 
+        const newHabit: z.infer<typeof habitsCreatedSchema> = {
+            userId: safeUserId,
+            ...safeBatchHabitData,
+        };
+
+        console.log(safeUserId);
+
+        const createHabitEvent = habitsCreatedSchema.safeParse(newHabit);
+        if (!createHabitEvent.success) {
+            return c.json(
+                ApiResponse.error(
+                    "Invalid habit data",
+                    createHabitEvent.error.errors,
+                ),
+                StatusCodes.BAD_REQUEST,
+            );
+        }
+        const safeCreateHabitEvent = createHabitEvent.data;
+
         // Only store user-configured instructions
         // Unconfigured instructions will be auto-added at generation time
         // This ensures habits always reflect the current meal state
 
         try {
+            console.log("hello world!");
             await FlowcorePathways.write("habit.v0/complex-habit.created.v0", {
-                data: {
-                    userId: safeUserId,
-                    ...safeBatchHabitData,
-                    subEntities: safeBatchHabitData.subEntities, // Only configured ones
-                },
+                data: safeCreateHabitEvent,
             });
         } catch (error) {
             return c.json(
