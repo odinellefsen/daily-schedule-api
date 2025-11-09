@@ -166,7 +166,7 @@ async function selectTriggersForDate(
         return [];
     }
 
-    const allHabits = await db.query.habits.findMany({
+    const habitsForToday = await db.query.habits.findMany({
         where: and(
             inArray(habits.id, habitIds),
             eq(habits.userId, userId),
@@ -176,10 +176,10 @@ async function selectTriggersForDate(
     });
 
     // Create a map of habitId -> habit for quick lookup
-    const habitMap = new Map(allHabits.map((h) => [h.id, h]));
+    const habitMap = new Map(habitsForToday.map((h) => [h.id, h]));
 
     // Get the habitIds that actually matched our criteria
-    const validHabitIds = allHabits.map((h) => h.id);
+    const validHabitIds = habitsForToday.map((h) => h.id);
 
     // Batch query all subEntities at once
     const allSubEntities = await db.query.habitSubEntities.findMany({
