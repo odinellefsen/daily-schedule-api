@@ -19,13 +19,8 @@ export function registerListTodos(app: Hono) {
         // Get today's date in user's timezone (YYYY-MM-DD format)
         const todayDate = getCurrentDateInTimezone(userTimezone);
 
-        // LAZY GENERATION: Generate missing habit todos for today
-        try {
-            await generateMissingHabitTodos(safeUserId, todayDate);
-        } catch (error) {
-            console.error("Failed to generate habit todos:", error);
-            // Continue even if habit generation fails
-        }
+        // LAZY GENERATION: Generate missing habit todos for today, don't wait for it to complete
+        generateMissingHabitTodos(safeUserId, todayDate);
 
         // Get today's date bounds in user's timezone, converted to UTC for database query
         const { startOfDay: startOfDayUTC, endOfDay: endOfDayUTC } =
