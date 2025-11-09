@@ -160,15 +160,12 @@ async function selectTriggersForDate(
         where: eq(habitTriggers.triggerWeekday, weekday),
     });
 
-    // Extract all unique habitIds from triggers
     const habitIds = Array.from(new Set(triggers.map((t) => t.habitId)));
 
-    // If no triggers, return early
     if (habitIds.length === 0) {
         return [];
     }
 
-    // Batch query all habits at once
     const allHabits = await db.query.habits.findMany({
         where: and(
             inArray(habits.id, habitIds),
