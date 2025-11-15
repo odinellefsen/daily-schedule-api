@@ -150,7 +150,17 @@ export async function handleTodoGenerated(
             dueDate: payload.dueDate,
             preferredTime: payload.preferredTime || null,
             completed: false,
-            scheduledFor: scheduledForDate,
+            scheduledFor: payload.scheduledFor
+                ? (() => {
+                      const date = new Date(payload.scheduledFor);
+                      if (Number.isNaN(date.getTime())) {
+                          throw new Error(
+                              `Invalid scheduledFor date: ${payload.scheduledFor}`,
+                          );
+                      }
+                      return date;
+                  })()
+                : null,
             completedAt: null,
 
             // Simplified habit system fields
