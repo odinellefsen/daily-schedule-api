@@ -140,43 +140,38 @@ export async function handleTodoGenerated(
     }
 
     // UPSERT the todo (simplified structure)
-    await db
-        .insert(todos)
-        .values({
-            id: todoId,
-            userId: payload.userId,
-            title: payload.title,
-            description: payload.title, // Use title as description for compatibility
-            dueDate: payload.dueDate,
-            preferredTime: payload.preferredTime || null,
-            completed: false,
-            scheduledFor: payload.scheduledFor
-                ? (() => {
-                      const date = new Date(payload.scheduledFor);
-                      if (Number.isNaN(date.getTime())) {
-                          throw new Error(
-                              `Invalid scheduledFor date: ${payload.scheduledFor}`,
-                          );
-                      }
-                      return date;
-                  })()
-                : null,
-            completedAt: null,
+    await db.insert(todos).values({
+        id: todoId,
+        userId: payload.userId,
+        title: payload.title,
+        description: payload.title, // Use title as description for compatibility
+        dueDate: payload.dueDate,
+        preferredTime: payload.preferredTime || null,
+        completed: false,
+        scheduledFor: payload.scheduledFor
+            ? (() => {
+                  const date = new Date(payload.scheduledFor);
+                  if (Number.isNaN(date.getTime())) {
+                      throw new Error(
+                          `Invalid scheduledFor date: ${payload.scheduledFor}`,
+                      );
+                  }
+                  return date;
+              })()
+            : null,
+        completedAt: null,
 
-            // Simplified habit system fields
-            habitId: payload.habitId,
-            instanceId: payload.instanceId,
-            domain: payload.domain,
-            entityId: payload.entityId,
-            subEntityId: payload.subEntityId,
+        // Simplified habit system fields
+        habitId: payload.habitId,
+        instanceId: payload.instanceId,
+        domain: payload.domain,
+        entityId: payload.entityId,
+        subEntityId: payload.subEntityId,
 
-            // Legacy fields
-            relations: null,
-            eventId: event.eventId,
-        })
-        .onConflictDoNothing({
-            target: [todos.userId, todos.habitId, todos.dueDate],
-        });
+        // Legacy fields
+        relations: null,
+        eventId: event.eventId,
+    });
 
     // No more occurrence steps needed - direct instruction reference!
 }
