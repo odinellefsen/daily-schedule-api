@@ -246,6 +246,9 @@ async function generateHabitInstance(
 
     // 1. Generate todos for user-configured subEntities (with their custom timing)
     for (const subEntity of subEntities) {
+        // if subEntity is the main event then ignore it because it gets added at the end of the function
+        if (!subEntity.subEntityId) continue;
+
         // Calculate the actual scheduled date for this subEntity
         const scheduledDate = calculateScheduledDateForSubEntity(
             triggerDate,
