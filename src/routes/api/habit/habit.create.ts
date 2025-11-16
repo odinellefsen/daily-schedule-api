@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import type { Hono } from "hono";
-import z from "zod";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
     HHMM,
     habitsCreatedSchema,
@@ -9,10 +9,9 @@ import {
 } from "../../../contracts/habit/habit.contract";
 import { db } from "../../../db";
 import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const createComplexHabitRequestSchema = z.object({
     domain: z.string(), // e.g., "meal"
     entityId: z.string().uuid(), // e.g., mealId
@@ -35,34 +34,96 @@ const createComplexHabitRequestSchema = z.object({
         .min(1),
 });
 
-export function registerCreateHabit(app: Hono) {
+// Response schemas
+const successResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: z.object({
+        domain: z.string(),
+        configuredSubEntitiesCount: z.number(),
+    }),
+});
+
+const errorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+    errors: z.any().optional(),
+});
+
+// Route definition
+const createBatchHabitsRoute = createRoute({
+    method: "post",
+    path: "/api/habit/batch",
+    tags: ["Habits"],
+    security: [{ Bearer: [] }],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: createComplexHabitRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        201: {
+            description: "Batch habits created successfully",
+            content: {
+                "application/json": {
+                    schema: successResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        404: {
+            description: "Not Found",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+export function registerCreateHabit(app: OpenAPIHono) {
     // Create multiple domain-linked habits in a batch (e.g., meal instructions)
-    app.post("/batch", async (c) => {
+    app.openapi(createBatchHabitsRoute, async (c) => {
         const safeUserId = c.userId!;
-
-        const rawJsonBody = await c.req.json();
-        const parsedJsonBody =
-            createComplexHabitRequestSchema.safeParse(rawJsonBody);
-
-        if (!parsedJsonBody.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid batch habit creation data",
-                    parsedJsonBody.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-        const safeBatchHabitData = parsedJsonBody.data;
+        const safeBatchHabitData = c.req.valid("json");
 
         // Validate domain is "meal" for this endpoint
         if (safeBatchHabitData.domain !== "meal") {
             return c.json(
-                ApiResponse.error(
-                    "Unsupported domain for batch habits",
-                    `Expected domain 'meal', got '${safeBatchHabitData.domain}'. Only meal domain is currently supported.`,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Unsupported domain for batch habits",
+                    errors: `Expected domain 'meal', got '${safeBatchHabitData.domain}'. Only meal domain is currently supported.`,
+                },
+                400,
             );
         }
 
@@ -73,11 +134,12 @@ export function registerCreateHabit(app: Hono) {
 
         if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid meal entity",
-                    `Meal ${safeBatchHabitData.entityId} not found or access denied`,
-                ),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "Invalid meal entity",
+                    errors: `Meal ${safeBatchHabitData.entityId} not found or access denied`,
+                },
+                404,
             );
         }
 
@@ -90,11 +152,12 @@ export function registerCreateHabit(app: Hono) {
 
         if (mealRecipesForEntity.length === 0) {
             return c.json(
-                ApiResponse.error(
-                    "No recipes attached to meal",
-                    `Meal ${safeBatchHabitData.entityId} has no recipes. Attach recipes using POST /api/meal/:id/recipes before creating a habit.`,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "No recipes attached to meal",
+                    errors: `Meal ${safeBatchHabitData.entityId} has no recipes. Attach recipes using POST /api/meal/:id/recipes before creating a habit.`,
+                },
+                400,
             );
         }
 
@@ -112,11 +175,12 @@ export function registerCreateHabit(app: Hono) {
 
         if (allInstructions.length === 0) {
             return c.json(
-                ApiResponse.error(
-                    "No instructions found",
-                    `None of the recipes attached to meal ${safeBatchHabitData.entityId} have instructions`,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "No instructions found",
+                    errors: `None of the recipes attached to meal ${safeBatchHabitData.entityId} have instructions`,
+                },
+                400,
             );
         }
 
@@ -131,11 +195,12 @@ export function registerCreateHabit(app: Hono) {
         for (const subEntityId of providedSubEntityIds) {
             if (!validInstructionIds.has(subEntityId)) {
                 return c.json(
-                    ApiResponse.error(
-                        "Invalid subEntityId",
-                        `Instruction ${subEntityId} not found in meal's recipes`,
-                    ),
-                    StatusCodes.BAD_REQUEST,
+                    {
+                        success: false as const,
+                        message: "Invalid subEntityId",
+                        errors: `Instruction ${subEntityId} not found in meal's recipes`,
+                    },
+                    400,
                 );
             }
         }
@@ -150,11 +215,12 @@ export function registerCreateHabit(app: Hono) {
         const createHabitEvent = habitsCreatedSchema.safeParse(newHabit);
         if (!createHabitEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid habit data",
-                    createHabitEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid habit data",
+                    errors: createHabitEvent.error.errors,
+                },
+                400,
             );
         }
         const safeCreateHabitEvent = createHabitEvent.data;
@@ -170,18 +236,26 @@ export function registerCreateHabit(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to create batch habits", error),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to create batch habits",
+                    errors: error,
+                },
+                500,
             );
         }
 
         return c.json(
-            ApiResponse.success("Batch habits created successfully", {
-                domain: safeBatchHabitData.domain,
-                configuredSubEntitiesCount:
-                    safeBatchHabitData.subEntities.length,
-            }),
-            StatusCodes.CREATED,
+            {
+                success: true as const,
+                message: "Batch habits created successfully",
+                data: {
+                    domain: safeBatchHabitData.domain,
+                    configuredSubEntitiesCount:
+                        safeBatchHabitData.subEntities.length,
+                },
+            },
+            201,
         );
     });
 }

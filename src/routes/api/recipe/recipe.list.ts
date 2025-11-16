@@ -1,5 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
-import type { Hono } from "hono";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { db } from "../../../db";
 import {
     foodItems,
@@ -9,10 +10,183 @@ import {
     recipeInstructions,
     recipes,
 } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 
-export function registerListRecipes(app: Hono) {
-    app.get("/", async (c) => {
+// Response schemas
+const recipeMetadataSchema = z.object({
+    id: z.string().uuid(),
+    nameOfTheRecipe: z.string(),
+    generalDescriptionOfTheRecipe: z.string().nullable(),
+    whenIsItConsumed: z.array(z.string()).nullable(),
+    version: z.number(),
+    stepCount: z.number(),
+    ingredientCount: z.number(),
+    hasSteps: z.boolean(),
+    hasIngredients: z.boolean(),
+    completeness: z.enum(["complete", "incomplete"]),
+});
+
+const fullRecipeSchema = z.object({
+    id: z.string().uuid(),
+    nameOfTheRecipe: z.string(),
+    generalDescriptionOfTheRecipe: z.string().nullable(),
+    whenIsItConsumed: z.array(z.string()).nullable(),
+    version: z.number(),
+    instructions: z.array(
+        z.object({
+            id: z.string().uuid(),
+            instruction: z.string(),
+            instructionNumber: z.number(),
+            foodItemUnits: z.array(
+                z.object({
+                    quantity: z.number(),
+                    calories: z.number(),
+                    unitOfMeasurement: z.string(),
+                    foodItemName: z.string(),
+                }),
+            ),
+        }),
+    ),
+    ingredients: z.array(
+        z.object({
+            id: z.string().uuid(),
+            ingredientText: z.string(),
+        }),
+    ),
+    metadata: z.object({
+        stepCount: z.number(),
+        ingredientCount: z.number(),
+        estimatedTotalTime: z.number().nullable(),
+    }),
+});
+
+const recipeBasicSchema = z.object({
+    id: z.string().uuid(),
+    nameOfTheRecipe: z.string(),
+    generalDescriptionOfTheRecipe: z.string().nullable(),
+    whenIsItConsumed: z.array(z.string()).nullable(),
+});
+
+// Route definitions
+const listRecipesRoute = createRoute({
+    method: "get",
+    path: "/api/recipe",
+    tags: ["Recipes"],
+    security: [{ Bearer: [] }],
+    responses: {
+        200: {
+            description: "Recipes retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(true),
+                        message: z.string(),
+                        data: z.array(recipeMetadataSchema),
+                    }),
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+const getRecipeByIdRoute = createRoute({
+    method: "get",
+    path: "/api/recipe/{recipeId}",
+    tags: ["Recipes"],
+    security: [{ Bearer: [] }],
+    request: {
+        params: z.object({
+            recipeId: z.string().uuid(),
+        }),
+    },
+    responses: {
+        200: {
+            description: "Recipe retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(true),
+                        message: z.string(),
+                        data: fullRecipeSchema,
+                    }),
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+        404: {
+            description: "Recipe not found or access denied",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+const searchRecipesRoute = createRoute({
+    method: "get",
+    path: "/api/recipe/search",
+    tags: ["Recipes"],
+    security: [{ Bearer: [] }],
+    request: {
+        query: z.object({
+            q: z.string().optional(),
+            timing: z.string().optional(),
+        }),
+    },
+    responses: {
+        200: {
+            description: "Recipe search results",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(true),
+                        message: z.string(),
+                        data: z.array(recipeBasicSchema),
+                    }),
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+export function registerListRecipes(app: OpenAPIHono) {
+    app.openapi(listRecipesRoute, async (c) => {
         const safeUserId = c.userId!;
 
         const userRecipes = await db
@@ -47,21 +221,23 @@ export function registerListRecipes(app: Hono) {
                     hasIngredients: ingredients.length > 0,
                     completeness:
                         steps.length > 0 && ingredients.length > 0
-                            ? "complete"
-                            : "incomplete",
+                            ? ("complete" as const)
+                            : ("incomplete" as const),
                 };
             }),
         );
 
         return c.json(
-            ApiResponse.success(
-                "Recipes retrieved successfully",
-                recipesWithMetadata,
-            ),
+            {
+                success: true as const,
+                message: "Recipes retrieved successfully",
+                data: recipesWithMetadata,
+            },
+            200,
         );
     });
 
-    app.get("/:recipeId", async (c) => {
+    app.openapi(getRecipeByIdRoute, async (c) => {
         const safeUserId = c.userId!;
         const recipeId = c.req.param("recipeId");
 
@@ -71,8 +247,11 @@ export function registerListRecipes(app: Hono) {
 
         if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
             return c.json(
-                ApiResponse.error("Recipe not found or access denied"),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "Recipe not found or access denied",
+                },
+                404,
             );
         }
 
@@ -177,11 +356,16 @@ export function registerListRecipes(app: Hono) {
         };
 
         return c.json(
-            ApiResponse.success("Recipe retrieved successfully", fullRecipe),
+            {
+                success: true as const,
+                message: "Recipe retrieved successfully",
+                data: fullRecipe,
+            },
+            200,
         );
     });
 
-    app.get("/search", async (c) => {
+    app.openapi(searchRecipesRoute, async (c) => {
         const safeUserId = c.userId!;
         const query = c.req.query("q") || "";
         const mealTiming = c.req.query("timing"); // BREAKFAST, LUNCH, etc.
@@ -217,7 +401,12 @@ export function registerListRecipes(app: Hono) {
         }
 
         return c.json(
-            ApiResponse.success("Recipe search results", userRecipes),
+            {
+                success: true as const,
+                message: "Recipe search results",
+                data: userRecipes,
+            },
+            200,
         );
     });
 }

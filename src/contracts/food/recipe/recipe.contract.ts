@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@hono/zod-openapi";
 import { MealTimingEnum } from "./recipe.shared_utils";
 
 export const recipeSchema = z.object({

@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "@hono/zod-openapi";
 
 /** YYYY-MM-DD */
 export const YMD = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);

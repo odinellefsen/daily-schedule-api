@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
-import type { Hono } from "hono";
-import z from "zod";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
     MealTimingEnum,
     type RecipeMetadataType,
@@ -8,10 +8,9 @@ import {
 } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const createRecipeRequestSchema = z.object({
     nameOfTheRecipe: z
         .string()
@@ -21,22 +20,82 @@ const createRecipeRequestSchema = z.object({
     whenIsItConsumed: z.array(z.nativeEnum(MealTimingEnum)).optional(),
 });
 
-export function registerCreateRecipe(app: Hono) {
-    app.post("/", async (c) => {
-        const safeUserId = c.userId!;
+// Response schemas
+const successResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: recipeSchema,
+});
 
-        const rawJsonBody = await c.req.json();
-        const parsedJsonBody = createRecipeRequestSchema.safeParse(rawJsonBody);
-        if (!parsedJsonBody.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid recipe data",
-                    parsedJsonBody.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-        const safeCreateRecipeJsonBody = parsedJsonBody.data;
+const errorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+    errors: z.any().optional(),
+});
+
+// Route definition
+const createRecipeRoute = createRoute({
+    method: "post",
+    path: "/api/recipe",
+    tags: ["Recipes"],
+    security: [{ Bearer: [] }],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: createRecipeRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        200: {
+            description: "Recipe created successfully",
+            content: {
+                "application/json": {
+                    schema: successResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        409: {
+            description: "Conflict - Recipe with name already exists",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+export function registerCreateRecipe(app: OpenAPIHono) {
+    app.openapi(createRecipeRoute, async (c) => {
+        const safeUserId = c.userId!;
+        const safeCreateRecipeJsonBody = c.req.valid("json");
 
         const existingRecipe = await db
             .select()
@@ -52,8 +111,11 @@ export function registerCreateRecipe(app: Hono) {
             );
         if (existingRecipe.length > 0) {
             return c.json(
-                ApiResponse.error("Recipe with name already exists"),
-                StatusCodes.CONFLICT,
+                {
+                    success: false as const,
+                    message: "Recipe with name already exists",
+                },
+                409,
             );
         }
 
@@ -69,11 +131,12 @@ export function registerCreateRecipe(app: Hono) {
         const createRecipeEvent = recipeSchema.safeParse(newRecipe);
         if (!createRecipeEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid recipe data",
-                    createRecipeEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid recipe data",
+                    errors: createRecipeEvent.error.errors,
+                },
+                400,
             );
         }
         const safeCreateRecipeEvent = createRecipeEvent.data;
@@ -84,16 +147,22 @@ export function registerCreateRecipe(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to create recipe", error),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to create recipe",
+                    errors: error,
+                },
+                500,
             );
         }
 
         return c.json(
-            ApiResponse.success(
-                "Recipe created successfully",
-                safeCreateRecipeEvent,
-            ),
+            {
+                success: true as const,
+                message: "Recipe created successfully",
+                data: safeCreateRecipeEvent,
+            },
+            200,
         );
     });
 }

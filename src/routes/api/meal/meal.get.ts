@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
-import type { Hono } from "hono";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { db } from "../../../db";
 import {
     mealRecipes,
@@ -7,10 +8,83 @@ import {
     recipeIngredients,
     recipeInstructions,
 } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 
-export function registerGetMeal(app: Hono) {
-    app.get("/:mealId", async (c) => {
+// Response schemas
+const fullMealSchema = z.object({
+    id: z.string().uuid(),
+    mealName: z.string(),
+    recipes: z.array(
+        z.object({
+            recipeId: z.string().uuid(),
+            orderInMeal: z.number(),
+        }),
+    ),
+    instructions: z.array(
+        z.object({
+            recipeId: z.string().uuid(),
+            instruction: z.string(),
+            instructionNumber: z.number(),
+        }),
+    ),
+    ingredients: z.array(
+        z.object({
+            recipeId: z.string().uuid(),
+            ingredientText: z.string(),
+        }),
+    ),
+});
+
+// Route definition
+const getMealRoute = createRoute({
+    method: "get",
+    path: "/api/meal/{mealId}",
+    tags: ["Meals"],
+    security: [{ Bearer: [] }],
+    request: {
+        params: z.object({
+            mealId: z.string().uuid(),
+        }),
+    },
+    responses: {
+        200: {
+            description: "Meal retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(true),
+                        message: z.string(),
+                        data: fullMealSchema,
+                    }),
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+        404: {
+            description: "Meal not found or access denied",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+export function registerGetMeal(app: OpenAPIHono) {
+    app.openapi(getMealRoute, async (c) => {
         const safeUserId = c.userId!;
         const mealId = c.req.param("mealId");
 
@@ -20,8 +94,11 @@ export function registerGetMeal(app: Hono) {
 
         if (!mealFromDb || mealFromDb.userId !== safeUserId) {
             return c.json(
-                ApiResponse.error("Meal not found or access denied"),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "Meal not found or access denied",
+                },
+                404,
             );
         }
 
@@ -76,7 +153,12 @@ export function registerGetMeal(app: Hono) {
         };
 
         return c.json(
-            ApiResponse.success("Meal retrieved successfully", fullMeal),
+            {
+                success: true as const,
+                message: "Meal retrieved successfully",
+                data: fullMeal,
+            },
+            200,
         );
     });
 }

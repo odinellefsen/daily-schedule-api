@@ -1,10 +1,9 @@
-import type { Hono } from "hono";
-import z from "zod";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { type MealCreateType, mealSchema } from "../../../contracts/food/meal";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const createMealRequestSchema = z.object({
     mealName: z
         .string()
@@ -12,22 +11,80 @@ const createMealRequestSchema = z.object({
         .max(100, "Meal name max length is 100"),
 });
 
-export function registerCreateMeal(app: Hono) {
-    app.post("/", async (c) => {
-        const safeUserId = c.userId!;
+// Response schemas
+const successResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: z.object({
+        meal: z.object({
+            id: z.string().uuid(),
+            mealName: z.string(),
+        }),
+        message: z.string(),
+    }),
+});
 
-        const rawJsonBody = await c.req.json();
-        const parsedJsonBody = createMealRequestSchema.safeParse(rawJsonBody);
-        if (!parsedJsonBody.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid meal data",
-                    parsedJsonBody.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-        const safeCreateMealJsonBody = parsedJsonBody.data;
+const errorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+    errors: z.any().optional(),
+});
+
+// Route definition
+const createMealRoute = createRoute({
+    method: "post",
+    path: "/api/meal",
+    tags: ["Meals"],
+    security: [{ Bearer: [] }],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: createMealRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        201: {
+            description: "Meal created successfully",
+            content: {
+                "application/json": {
+                    schema: successResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+export function registerCreateMeal(app: OpenAPIHono) {
+    app.openapi(createMealRoute, async (c) => {
+        const safeUserId = c.userId!;
+        const safeCreateMealJsonBody = c.req.valid("json");
 
         const newMeal: MealCreateType = {
             id: crypto.randomUUID(),
@@ -38,11 +95,12 @@ export function registerCreateMeal(app: Hono) {
         const createMealEvent = mealSchema.safeParse(newMeal);
         if (!createMealEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid meal data",
-                    createMealEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid meal data",
+                    errors: createMealEvent.error.errors,
+                },
+                400,
             );
         }
         const safeCreateMealEvent = createMealEvent.data;
@@ -53,20 +111,28 @@ export function registerCreateMeal(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to create meal", error),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to create meal",
+                    errors: error,
+                },
+                500,
             );
         }
 
         const { userId: _, ...createMeal } = safeCreateMealEvent;
 
         return c.json(
-            ApiResponse.success("Meal created successfully", {
-                meal: createMeal,
-                message:
-                    "Meal created. Use POST /api/meal/:id/recipes to attach recipes.",
-            }),
-            StatusCodes.CREATED,
+            {
+                success: true as const,
+                message: "Meal created successfully",
+                data: {
+                    meal: createMeal,
+                    message:
+                        "Meal created. Use POST /api/meal/:id/recipes to attach recipes.",
+                },
+            },
+            201,
         );
     });
 }

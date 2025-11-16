@@ -1,6 +1,6 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { apiReference } from "@scalar/hono-api-reference";
+import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import api from "./routes/api";
 
@@ -38,12 +38,25 @@ import { registerListFoodItems } from "./routes/api/food-item/food-item.list";
 import { registerCreateFoodItemUnits } from "./routes/api/food-item/food-item-units.create";
 import { registerDeleteFoodItemUnits } from "./routes/api/food-item/food-item-units.delete";
 import { registerListFoodItemUnits } from "./routes/api/food-item/food-item-units.list";
+import { registerCreateHabit } from "./routes/api/habit/habit.create";
+import { registerCreateMeal } from "./routes/api/meal/meal.create";
+import { registerGetMeal } from "./routes/api/meal/meal.get";
+import { registerListMeals } from "./routes/api/meal/meal.list";
+import { registerAttachMealRecipes } from "./routes/api/meal/meal-recipes.attach";
+import { registerCreateRecipe } from "./routes/api/recipe/recipe.create";
+import { registerDeleteRecipe } from "./routes/api/recipe/recipe.delete";
+import { registerListRecipes } from "./routes/api/recipe/recipe.list";
+import { registerCreateRecipeIngredients } from "./routes/api/recipe/recipe-ingredients.create";
+import { registerCreateRecipeInstructions } from "./routes/api/recipe/recipe-instructions.create";
 import { registerCreateTodo } from "./routes/api/todo/todo.create";
 import { registerListTodos } from "./routes/api/todo/todo.list";
 
 // Apply auth middleware
 app.use("/api/todo/*", requireAuth());
 app.use("/api/food-item/*", requireAuth());
+app.use("/api/habit/*", requireAuth());
+app.use("/api/recipe/*", requireAuth());
+app.use("/api/meal/*", requireAuth());
 
 // Register OpenAPI routes directly on main app
 registerCreateTodo(app);
@@ -54,6 +67,16 @@ registerDeleteFoodItem(app);
 registerCreateFoodItemUnits(app);
 registerListFoodItemUnits(app);
 registerDeleteFoodItemUnits(app);
+registerCreateHabit(app);
+registerCreateRecipe(app);
+registerDeleteRecipe(app);
+registerListRecipes(app);
+registerCreateRecipeIngredients(app);
+registerCreateRecipeInstructions(app);
+registerCreateMeal(app);
+registerListMeals(app);
+registerGetMeal(app);
+registerAttachMealRecipes(app);
 
 // Mount other regular API routes (non-OpenAPI for now)
 app.route("/api", api);
@@ -82,7 +105,7 @@ app.doc31("/api/openapi.json", {
 // Scalar API Reference (modern, beautiful UI) - PRIMARY DOCS
 app.get(
     "/api/docs",
-    apiReference({
+    Scalar({
         spec: {
             url: "/api/openapi.json",
         },

@@ -1,42 +1,103 @@
 import { and, eq, inArray } from "drizzle-orm";
-import type { Hono } from "hono";
-import z from "zod";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
     type MealRecipeAttachType,
     mealRecipeAttachSchema,
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
 import { mealRecipes, meals, recipes } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const requestSchema = z.object({
     recipeIds: z
         .array(z.string().uuid())
         .min(1, "At least one recipe ID is required"),
 });
 
-export function registerAttachMealRecipes(app: Hono) {
-    // Attach recipe(s) to a meal
-    app.post("/:mealId/recipes", async (c) => {
+// Response schemas
+const successResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: z.object({
+        mealRecipe: mealRecipeAttachSchema,
+    }),
+});
+
+const errorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+    errors: z.any().optional(),
+});
+
+// Route definition
+const attachRecipesToMealRoute = createRoute({
+    method: "post",
+    path: "/api/meal/{mealId}/recipes",
+    tags: ["Meals"],
+    security: [{ Bearer: [] }],
+    request: {
+        params: z.object({
+            mealId: z.string().uuid(),
+        }),
+        body: {
+            content: {
+                "application/json": {
+                    schema: requestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        201: {
+            description: "Recipes attached to meal successfully",
+            content: {
+                "application/json": {
+                    schema: successResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        404: {
+            description: "Meal or recipes not found",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+export function registerAttachMealRecipes(app: OpenAPIHono) {
+    app.openapi(attachRecipesToMealRoute, async (c) => {
         const safeUserId = c.userId!;
         const mealId = c.req.param("mealId");
-
-        const rawJsonBody = await c.req.json();
-
-        const parsedJsonBody = requestSchema.safeParse(rawJsonBody);
-        if (!parsedJsonBody.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid recipe data",
-                    parsedJsonBody.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-
-        const { recipeIds } = parsedJsonBody.data;
+        const { recipeIds } = c.req.valid("json");
 
         // Verify meal exists and belongs to user
         const mealFromDb = await db.query.meals.findFirst({
@@ -45,8 +106,11 @@ export function registerAttachMealRecipes(app: Hono) {
 
         if (!mealFromDb) {
             return c.json(
-                ApiResponse.error("Meal not found or access denied"),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "Meal not found or access denied",
+                },
+                404,
             );
         }
 
@@ -62,11 +126,12 @@ export function registerAttachMealRecipes(app: Hono) {
                 (id) => !recipesFromDb.some((r) => r.id === id),
             );
             return c.json(
-                ApiResponse.error(
-                    "One or more recipes not found or access denied",
-                    `Recipes ${missingRecipeIds.join(", ")} not found or access denied`,
-                ),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "One or more recipes not found or access denied",
+                    errors: `Recipes ${missingRecipeIds.join(", ")} not found or access denied`,
+                },
+                404,
             );
         }
 
@@ -95,11 +160,12 @@ export function registerAttachMealRecipes(app: Hono) {
         const attachEvent = mealRecipeAttachSchema.safeParse(newMealRecipe);
         if (!attachEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid meal recipe data",
-                    attachEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid meal recipe data",
+                    errors: attachEvent.error.errors,
+                },
+                400,
             );
         }
 
@@ -109,19 +175,24 @@ export function registerAttachMealRecipes(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to attach recipes to meal", error),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to attach recipes to meal",
+                    errors: error,
+                },
+                500,
             );
         }
 
         return c.json(
-            ApiResponse.success(
-                `${recipeIds.length} recipe${recipeIds.length > 1 ? "s" : ""} attached to meal successfully`,
-                {
+            {
+                success: true as const,
+                message: `${recipeIds.length} recipe${recipeIds.length > 1 ? "s" : ""} attached to meal successfully`,
+                data: {
                     mealRecipe: attachEvent.data,
                 },
-            ),
-            StatusCodes.CREATED,
+            },
+            201,
         );
     });
 }

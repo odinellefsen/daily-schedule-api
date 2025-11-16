@@ -1,18 +1,14 @@
 import { Hono } from "hono";
 import { requireAuth } from "../../../middleware/auth";
-import { registerCreateMeal } from "./meal.create";
-import { registerGetMeal } from "./meal.get";
-import { registerListMeals } from "./meal.list";
-import { registerAttachMealRecipes } from "./meal-recipes.attach";
 
 export const meal = new Hono();
 
 meal.use("/*", requireAuth());
 
-// Register all meal routes
-registerCreateMeal(meal);
-registerListMeals(meal);
-registerGetMeal(meal);
-registerAttachMealRecipes(meal);
+// NOTE: All meal routes are now registered directly in main index.ts for OpenAPI
+// - registerCreateMeal
+// - registerListMeals
+// - registerGetMeal
+// - registerAttachMealRecipes
 
 export default meal;

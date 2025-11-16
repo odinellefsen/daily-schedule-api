@@ -1,11 +1,51 @@
 import { eq } from "drizzle-orm";
-import type { Hono } from "hono";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { db } from "../../../db";
 import { mealRecipes, meals } from "../../../db/schemas";
-import { ApiResponse } from "../../../utils/api-responses";
 
-export function registerListMeals(app: Hono) {
-    app.get("/", async (c) => {
+// Response schemas
+const mealSummarySchema = z.object({
+    id: z.string().uuid(),
+    mealName: z.string(),
+    recipeCount: z.number(),
+});
+
+// Route definition
+const listMealsRoute = createRoute({
+    method: "get",
+    path: "/api/meal",
+    tags: ["Meals"],
+    security: [{ Bearer: [] }],
+    responses: {
+        200: {
+            description: "Meals retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(true),
+                        message: z.string(),
+                        data: z.array(mealSummarySchema),
+                    }),
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+export function registerListMeals(app: OpenAPIHono) {
+    app.openapi(listMealsRoute, async (c) => {
         const safeUserId = c.userId!;
 
         const userMeals = await db
@@ -31,7 +71,12 @@ export function registerListMeals(app: Hono) {
         );
 
         return c.json(
-            ApiResponse.success("Meals retrieved successfully", mealsData),
+            {
+                success: true as const,
+                message: "Meals retrieved successfully",
+                data: mealsData,
+            },
+            200,
         );
     });
 }

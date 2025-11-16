@@ -1,16 +1,15 @@
 import { eq } from "drizzle-orm";
-import type { Hono } from "hono";
-import z from "zod";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
     type RecipeIngredientsType,
     recipeIngredientsSchema,
 } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const createRecipeIngredientsRequestSchema = z.object({
     recipeId: z.string().uuid(),
     ingredients: z
@@ -23,23 +22,82 @@ const createRecipeIngredientsRequestSchema = z.object({
         .max(50),
 });
 
-export function registerCreateRecipeIngredients(app: Hono) {
-    app.post("/ingredients", async (c) => {
-        const safeUserId = c.userId!;
+// Response schemas
+const successResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: recipeIngredientsSchema,
+});
 
-        const rawJsonBody = await c.req.json();
-        const parsedJsonBody =
-            createRecipeIngredientsRequestSchema.safeParse(rawJsonBody);
-        if (!parsedJsonBody.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid recipe ingredients data",
-                    parsedJsonBody.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-        const safeCreateRecipeIngredientsJsonBody = parsedJsonBody.data;
+const errorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+    errors: z.any().optional(),
+});
+
+// Route definition
+const createRecipeIngredientsRoute = createRoute({
+    method: "post",
+    path: "/api/recipe/ingredients",
+    tags: ["Recipes"],
+    security: [{ Bearer: [] }],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: createRecipeIngredientsRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        200: {
+            description: "Recipe ingredients created successfully",
+            content: {
+                "application/json": {
+                    schema: successResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        404: {
+            description: "Recipe not found or access denied",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+export function registerCreateRecipeIngredients(app: OpenAPIHono) {
+    app.openapi(createRecipeIngredientsRoute, async (c) => {
+        const safeUserId = c.userId!;
+        const safeCreateRecipeIngredientsJsonBody = c.req.valid("json");
 
         // Verify recipe exists and belongs to user
         const recipeFromDb = await db.query.recipes.findFirst({
@@ -48,8 +106,11 @@ export function registerCreateRecipeIngredients(app: Hono) {
 
         if (!recipeFromDb || recipeFromDb.userId !== safeUserId) {
             return c.json(
-                ApiResponse.error("Recipe not found or access denied"),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "Recipe not found or access denied",
+                },
+                404,
             );
         }
 
@@ -67,11 +128,12 @@ export function registerCreateRecipeIngredients(app: Hono) {
             recipeIngredientsSchema.safeParse(newRecipeIngredients);
         if (!createRecipeIngredientsEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid recipe ingredients data",
-                    createRecipeIngredientsEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid recipe ingredients data",
+                    errors: createRecipeIngredientsEvent.error.errors,
+                },
+                400,
             );
         }
         const safeCreateRecipeIngredientsEvent =
@@ -86,16 +148,22 @@ export function registerCreateRecipeIngredients(app: Hono) {
             );
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to create recipe ingredients", error),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to create recipe ingredients",
+                    errors: error,
+                },
+                500,
             );
         }
 
         return c.json(
-            ApiResponse.success(
-                "Recipe ingredients created successfully",
-                safeCreateRecipeIngredientsEvent,
-            ),
+            {
+                success: true as const,
+                message: "Recipe ingredients created successfully",
+                data: safeCreateRecipeIngredientsEvent,
+            },
+            200,
         );
     });
 }

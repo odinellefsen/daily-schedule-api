@@ -1,37 +1,95 @@
 import { and, eq } from "drizzle-orm";
-import type { Hono } from "hono";
-import z from "zod";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
     type RecipeArchiveType,
     recipeArchiveSchema,
 } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const deleteRecipeRequestSchema = z.object({
     recipeId: z.string().uuid(),
 });
 
-export function registerDeleteRecipe(app: Hono) {
-    app.delete("/", async (c) => {
-        const safeUserId = c.userId!;
+// Response schemas
+const successResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: recipeArchiveSchema,
+});
 
-        const rawRequestJsonBody = await c.req.json();
-        const parsedRequestJsonBody =
-            deleteRecipeRequestSchema.safeParse(rawRequestJsonBody);
-        if (!parsedRequestJsonBody.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid recipe data",
-                    parsedRequestJsonBody.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-        const safeDeleteRecipeRequestBody = parsedRequestJsonBody.data;
+const errorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+    errors: z.any().optional(),
+});
+
+// Route definition
+const deleteRecipeRoute = createRoute({
+    method: "delete",
+    path: "/api/recipe",
+    tags: ["Recipes"],
+    security: [{ Bearer: [] }],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: deleteRecipeRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        200: {
+            description: "Recipe archived successfully",
+            content: {
+                "application/json": {
+                    schema: successResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        404: {
+            description: "Recipe not found",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+export function registerDeleteRecipe(app: OpenAPIHono) {
+    app.openapi(deleteRecipeRoute, async (c) => {
+        const safeUserId = c.userId!;
+        const safeDeleteRecipeRequestBody = c.req.valid("json");
 
         const recipeFromDb = await db.query.recipes.findFirst({
             where: and(
@@ -42,8 +100,11 @@ export function registerDeleteRecipe(app: Hono) {
 
         if (!recipeFromDb) {
             return c.json(
-                ApiResponse.error("Recipe not found"),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "Recipe not found",
+                },
+                404,
             );
         }
 
@@ -55,11 +116,12 @@ export function registerDeleteRecipe(app: Hono) {
             recipeArchiveSchema.safeParse(recipeArchived);
         if (!recipeArchivedEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid recipe archived data",
-                    recipeArchivedEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid recipe archived data",
+                    errors: recipeArchivedEvent.error.errors,
+                },
+                400,
             );
         }
         const safeRecipeArchivedEvent = recipeArchivedEvent.data;
@@ -70,16 +132,22 @@ export function registerDeleteRecipe(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to archive recipe", error),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to archive recipe",
+                    errors: error,
+                },
+                500,
             );
         }
 
         return c.json(
-            ApiResponse.success(
-                "Recipe archived successfully",
-                safeRecipeArchivedEvent,
-            ),
+            {
+                success: true as const,
+                message: "Recipe archived successfully",
+                data: safeRecipeArchivedEvent,
+            },
+            200,
         );
     });
 }
