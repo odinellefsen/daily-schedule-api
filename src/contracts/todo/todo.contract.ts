@@ -1,5 +1,5 @@
 // src/contracts/todo/todo.contract.ts
-import { z } from "zod";
+import { z } from "@hono/zod-openapi";
 
 // Relation schemas for different domains
 const mealRelationSchema = z.object({

@@ -1,10 +1,9 @@
-import type { Hono } from "hono";
-import z from "zod";
+import type { OpenAPIHono } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
 import { type TodoType, todoSchema } from "../../../contracts/todo";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const createTodoRequestSchema = z.object({
     description: z
         .string()
@@ -30,22 +29,86 @@ const createTodoRequestSchema = z.object({
         .optional(),
 });
 
-export function registerCreateTodo(app: Hono) {
-    app.post("/", async (c) => {
-        const safeUserId = c.userId!;
+// Response schemas
+const successResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: z.object({
+        id: z.string().uuid(),
+        userId: z.string(),
+        description: z.string(),
+        completed: z.boolean(),
+        scheduledFor: z.string().datetime().optional(),
+        completedAt: z.string().datetime().optional(),
+        relations: z.any().optional(),
+    }),
+});
 
-        const rawJsonBody = await c.req.json();
-        const parsedJsonBody = createTodoRequestSchema.safeParse(rawJsonBody);
-        if (!parsedJsonBody.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid todo data",
-                    parsedJsonBody.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-        const safeCreateTodoJsonBody = parsedJsonBody.data;
+const errorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+    errors: z.any().optional(),
+});
+
+// OpenAPI route definition
+const createTodoRoute = createRoute({
+    method: "post",
+    path: "/api/todo",
+    tags: ["Todos"],
+    security: [
+        {
+            Bearer: [],
+        },
+    ],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: createTodoRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        200: {
+            description: "Todo created successfully",
+            content: {
+                "application/json": {
+                    schema: successResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+export function registerCreateTodo(app: OpenAPIHono) {
+    app.openapi(createTodoRoute, async (c) => {
+        const safeUserId = c.userId!;
+        const safeCreateTodoJsonBody = c.req.valid("json");
 
         const newTodo: TodoType = {
             id: crypto.randomUUID(),
@@ -60,11 +123,12 @@ export function registerCreateTodo(app: Hono) {
         const createTodoEvent = todoSchema.safeParse(newTodo);
         if (!createTodoEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid todo data",
-                    createTodoEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid todo data",
+                    errors: createTodoEvent.error.errors,
+                },
+                400,
             );
         }
         const safeCreateTodoEvent = createTodoEvent.data;
@@ -75,16 +139,22 @@ export function registerCreateTodo(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to create todo", error),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to create todo",
+                    errors: error,
+                },
+                500,
             );
         }
 
         return c.json(
-            ApiResponse.success(
-                "Todo created successfully",
-                safeCreateTodoEvent,
-            ),
+            {
+                success: true as const,
+                message: "Todo created successfully",
+                data: safeCreateTodoEvent,
+            },
+            200,
         );
     });
 }

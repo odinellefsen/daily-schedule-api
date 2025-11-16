@@ -18,16 +18,48 @@ export const StatusCodes = {
     SERVICE_UNAVAILABLE: 503, // External service down (e.g., Flowcore)
 } as const;
 
-export const ApiResponse = {
-    success: (message: string, data?: unknown) => ({
+type SuccessResponse<T> = {
+    success: true;
+    message: string;
+    data: T;
+};
+
+type SuccessResponseWithoutData = {
+    success: true;
+    message: string;
+};
+
+type ErrorResponse = {
+    success: false;
+    message: string;
+    errors?: unknown;
+};
+
+function success<T>(message: string, data: T): SuccessResponse<T>;
+function success(message: string): SuccessResponseWithoutData;
+function success<T>(message: string, data?: T): SuccessResponse<T> | SuccessResponseWithoutData {
+    if (data !== undefined) {
+        return {
+            success: true,
+            message,
+            data,
+        };
+    }
+    return {
         success: true,
         message,
-        ...(data !== undefined && data !== null ? { data } : {}),
-    }),
+    };
+}
 
-    error: (message: string, errors?: unknown) => ({
+function error(message: string, errors?: unknown): ErrorResponse {
+    return {
         success: false,
         message,
-        ...(errors !== undefined && errors !== null ? { errors } : {}),
-    }),
+        errors,
+    };
+}
+
+export const ApiResponse = {
+    success,
+    error,
 };
