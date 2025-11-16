@@ -4,7 +4,6 @@ import type { z } from "zod";
 import type {
     foodItemArchivedSchema,
     foodItemSchema,
-    foodItemUpdatedSchema,
 } from "../../contracts/food/food-item";
 import { db } from "../../db";
 import { foodItems } from "../../db/schemas";
@@ -22,22 +21,6 @@ export async function handleFoodItemCreated(
         categoryHierarchy: payload.categoryHierarchy,
         userId: payload.userId,
     });
-}
-
-export async function handleFoodItemUpdated(
-    event: Omit<FlowcoreEvent, "payload"> & {
-        payload: z.infer<typeof foodItemUpdatedSchema>;
-    },
-) {
-    const { payload } = event;
-
-    await db
-        .update(foodItems)
-        .set({
-            name: payload.name,
-            categoryHierarchy: payload.categoryHierarchy,
-        })
-        .where(eq(foodItems.id, payload.id));
 }
 
 export async function handleFoodItemArchived(

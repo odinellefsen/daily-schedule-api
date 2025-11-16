@@ -6,10 +6,8 @@ development:
       flowType: food-item.v0
       events:
         - food-item.created.v0
-        - food-item.updated.v0
         - food-item.archived.v0
         - food-item.units.created.v0
-        - food-item.units.updated.v0
         - food-item.units.deleted.v0
       endpoints:
        - ""
@@ -19,15 +17,9 @@ development:
       flowType: recipe.v0
       events:
         - recipe.created.v0
-        - recipe.updated.v0
         - recipe.archived.v0
         - recipe-instructions.created.v0
-        - recipe-instructions.updated.v0
-        - recipe-instructions.archived.v0
         - recipe-ingredients.created.v0
-        - recipe-ingredients.updated.v0
-        - recipe-ingredients.archived.v0
-        - recipe-version.v0
       endpoints:
        - ""
     meal:
@@ -36,10 +28,7 @@ development:
       flowType: meal.v0
       events:
         - meal.created.v0
-        - meal.updated.v0
-        - meal.archived.v0
         - meal-recipe.attached.v0
-        - meal-recipe.detached.v0
       endpoints:
        - ""
     todo:
@@ -48,10 +37,6 @@ development:
       flowType: todo.v0
       events:
         - todo.created.v0
-        - todo.completed.v0
-        - todo.cancelled.v0
-        - todo.relations.updated.v0
-        - todo.archived.v0
         - todo.generated.v0
       endpoints:
        - ""
