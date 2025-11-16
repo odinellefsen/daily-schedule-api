@@ -2,8 +2,8 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
 import { and, eq } from "drizzle-orm";
 import {
-    type FoodItemArchivedType,
-    foodItemArchivedSchema,
+    type FoodItemDeletedType,
+    foodItemDeletedSchema,
 } from "../../../contracts/food/food-item/food-item.contract";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
@@ -18,7 +18,7 @@ const deleteFoodItemRequestSchema = z.object({
 const successResponseSchema = z.object({
     success: z.literal(true),
     message: z.string(),
-    data: foodItemArchivedSchema,
+    data: foodItemDeletedSchema,
 });
 
 const errorResponseSchema = z.object({
@@ -44,7 +44,7 @@ const deleteFoodItemRoute = createRoute({
     },
     responses: {
         200: {
-            description: "Food item archived successfully",
+            description: "Food item deleted successfully",
             content: {
                 "application/json": {
                     schema: successResponseSchema,
@@ -108,33 +108,33 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
             );
         }
 
-        const foodItemArchived: FoodItemArchivedType = {
+        const foodItemDeleted: FoodItemDeletedType = {
             foodItemId: foodItemFromDb.id,
         };
 
-        const foodItemArchivedEvent =
-            foodItemArchivedSchema.safeParse(foodItemArchived);
-        if (!foodItemArchivedEvent.success) {
+        const foodItemDeletedEvent =
+            foodItemDeletedSchema.safeParse(foodItemDeleted);
+        if (!foodItemDeletedEvent.success) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid food item archived data",
-                    errors: foodItemArchivedEvent.error.errors,
+                    message: "Invalid food item deleted data",
+                    errors: foodItemDeletedEvent.error.errors,
                 },
                 400,
             );
         }
-        const safeFoodItemArchivedEvent = foodItemArchivedEvent.data;
+        const safeFoodItemDeletedEvent = foodItemDeletedEvent.data;
 
         try {
             await FlowcorePathways.write("food-item.v0/food-item.deleted.v0", {
-                data: safeFoodItemArchivedEvent,
+                data: safeFoodItemDeletedEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to archive food item",
+                    message: "Failed to delete food item",
                     errors: error,
                 },
                 500,
@@ -144,8 +144,8 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Food item archived successfully",
-                data: safeFoodItemArchivedEvent,
+                message: "Food item deleted successfully",
+                data: safeFoodItemDeletedEvent,
             },
             200,
         );

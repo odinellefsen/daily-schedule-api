@@ -29,9 +29,9 @@ export const foodItemSchema = z.object({
         .optional(),
 });
 
-export const foodItemArchivedSchema = z.object({
+export const foodItemDeletedSchema = z.object({
     foodItemId: z.string().uuid(),
 });
 
 export type FoodItemType = z.infer<typeof foodItemSchema>;
-export type FoodItemArchivedType = z.infer<typeof foodItemArchivedSchema>;
+export type FoodItemDeletedType = z.infer<typeof foodItemDeletedSchema>;

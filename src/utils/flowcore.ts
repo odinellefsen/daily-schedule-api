@@ -5,7 +5,7 @@ import {
 } from "@flowcore/pathways";
 import { zodEnv } from "../../env";
 import {
-    foodItemArchivedSchema,
+    foodItemDeletedSchema,
     foodItemSchema,
     foodItemUnitDeletedSchema,
     foodItemUnitSchema,
@@ -20,8 +20,8 @@ import {
 import { habitsCreatedSchema } from "../contracts/habit/habit.contract";
 import { todoSchema } from "../contracts/todo";
 import {
-    handleFoodItemArchived,
     handleFoodItemCreated,
+    handleFoodItemDeleted,
 } from "../handlers/food-item/food-item.handler";
 import {
     handleFoodItemUnitsCreated,
@@ -62,7 +62,7 @@ export const FlowcorePathways = new PathwaysBuilder({
         flowType: "food-item.v0",
         eventType: "food-item.deleted.v0",
         retryDelayMs: 10000,
-        schema: foodItemArchivedSchema,
+        schema: foodItemDeletedSchema,
     })
     .register({
         flowType: "food-item.v0",
@@ -125,7 +125,7 @@ export const FlowcorePathways = new PathwaysBuilder({
         schema: habitsCreatedSchema,
     })
     .handle("food-item.v0/food-item.created.v0", handleFoodItemCreated)
-    .handle("food-item.v0/food-item.deleted.v0", handleFoodItemArchived)
+    .handle("food-item.v0/food-item.deleted.v0", handleFoodItemDeleted)
     .handle(
         "food-item.v0/food-item.units.created.v0",
         handleFoodItemUnitsCreated,

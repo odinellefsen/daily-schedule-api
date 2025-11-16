@@ -2,7 +2,7 @@ import type { FlowcoreEvent } from "@flowcore/pathways";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import type {
-    foodItemArchivedSchema,
+    foodItemDeletedSchema,
     foodItemSchema,
 } from "../../contracts/food/food-item";
 import { db } from "../../db";
@@ -23,9 +23,9 @@ export async function handleFoodItemCreated(
     });
 }
 
-export async function handleFoodItemArchived(
+export async function handleFoodItemDeleted(
     event: Omit<FlowcoreEvent, "payload"> & {
-        payload: z.infer<typeof foodItemArchivedSchema>;
+        payload: z.infer<typeof foodItemDeletedSchema>;
     },
 ) {
     const { payload } = event;

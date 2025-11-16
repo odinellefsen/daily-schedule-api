@@ -12,7 +12,7 @@ dataCore:
         food-item.created.v0:
           description: "Food item created event"
         food-item.deleted.v0:
-          description: "Food item archived event"
+          description: "Food item deleted event"
         food-item.units.created.v0:
           description: "Food item units created event"
         food-item.units.deleted.v0:
@@ -23,7 +23,7 @@ dataCore:
         recipe.created.v0:
           description: "Recipe created event"
         recipe.deleted.v0:
-          description: "Recipe archived event"
+          description: "Recipe deleted event"
         recipe-instructions.created.v0:
           description: "Recipe instructions created event"
         recipe-ingredients.created.v0:
