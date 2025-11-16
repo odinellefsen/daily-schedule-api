@@ -10,6 +10,12 @@ import { mealRecipes, meals, recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
+const requestSchema = z.object({
+    recipeIds: z
+        .array(z.string().uuid())
+        .min(1, "At least one recipe ID is required"),
+});
+
 export function registerAttachMealRecipes(app: Hono) {
     // Attach recipe(s) to a meal
     app.post("/:mealId/recipes", async (c) => {
@@ -17,11 +23,6 @@ export function registerAttachMealRecipes(app: Hono) {
         const mealId = c.req.param("mealId");
 
         const rawJsonBody = await c.req.json();
-        const requestSchema = z.object({
-            recipeIds: z
-                .array(z.string().uuid())
-                .min(1, "At least one recipe ID is required"),
-        });
 
         const parsedJsonBody = requestSchema.safeParse(rawJsonBody);
         if (!parsedJsonBody.success) {
