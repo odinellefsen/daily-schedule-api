@@ -1,33 +1,100 @@
 import { inArray } from "drizzle-orm";
-import type { Hono } from "hono";
-import z from "zod";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { foodItemUnitDeletedSchema } from "../../../contracts/food/food-item";
 import type { UnitOfMeasurementEnum } from "../../../contracts/food/food-item/food-item.shared_utils";
 import { db } from "../../../db";
 import { foodItemUnits } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const deleteFoodItemUnitRequestSchema = z.object({
     unitIds: z.array(z.string().uuid()),
 });
 
-export function registerDeleteFoodItemUnits(app: Hono) {
-    app.delete("/:foodItemId/units", async (c) => {
-        const rawJsonBodyRequest = await c.req.json();
-        const parsedJsonBodyRequest =
-            deleteFoodItemUnitRequestSchema.safeParse(rawJsonBodyRequest);
-        if (!parsedJsonBodyRequest.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid food item unit data",
-                    parsedJsonBodyRequest.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-        const safeDeleteFoodItemUnitRequestBody = parsedJsonBodyRequest.data;
+// Route definition
+const deleteFoodItemUnitsRoute = createRoute({
+    method: "delete",
+    path: "/api/food-item/:foodItemId/units",
+    tags: ["Food Item Units"],
+    security: [{ Bearer: [] }],
+    request: {
+        params: z.object({
+            foodItemId: z.string().uuid(),
+        }),
+        body: {
+            content: {
+                "application/json": {
+                    schema: deleteFoodItemUnitRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        200: {
+            description: "Food item units deleted successfully",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(true),
+                        message: z.string(),
+                        data: z.string(),
+                    }),
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                        errors: z.any().optional(),
+                    }),
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+        404: {
+            description: "Not Found",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                        errors: z.any().optional(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
+    app.openapi(deleteFoodItemUnitsRoute, async (c) => {
+        const safeDeleteFoodItemUnitRequestBody = c.req.valid("json");
 
         const foodItemUnitsFromDb = await db.query.foodItemUnits.findMany({
             where: inArray(
@@ -41,8 +108,11 @@ export function registerDeleteFoodItemUnits(app: Hono) {
             safeDeleteFoodItemUnitRequestBody.unitIds.length
         ) {
             return c.json(
-                ApiResponse.error("One or more food item units not found"),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "One or more food item units not found",
+                },
+                404,
             );
         }
 
@@ -51,10 +121,11 @@ export function registerDeleteFoodItemUnits(app: Hono) {
         );
         if (uniqueFoodItemIds.size !== 1) {
             return c.json(
-                ApiResponse.error(
-                    "All units must belong to the same food item",
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "All units must belong to the same food item",
+                },
+                400,
             );
         }
 
@@ -86,11 +157,12 @@ export function registerDeleteFoodItemUnits(app: Hono) {
         });
         if (!newDeleteFoodItemUnitEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid food item unit data",
-                    newDeleteFoodItemUnitEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid food item unit data",
+                    errors: newDeleteFoodItemUnitEvent.error.errors,
+                },
+                400,
             );
         }
         const safeDeleteFoodItemUnitEvent = newDeleteFoodItemUnitEvent.data;
@@ -105,11 +177,22 @@ export function registerDeleteFoodItemUnits(app: Hono) {
         } catch (error) {
             console.error(error);
             return c.json(
-                ApiResponse.error("Failed to delete food item units"),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to delete food item units",
+                    errors: error,
+                },
+                500,
             );
         }
 
-        return c.json(ApiResponse.success("Food item units deleted"));
+        return c.json(
+            {
+                success: true as const,
+                message: "Food item units deleted",
+                data: "Food item units deleted successfully",
+            },
+            200,
+        );
     });
 }

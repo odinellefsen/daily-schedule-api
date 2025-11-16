@@ -1,16 +1,15 @@
 import { and, eq } from "drizzle-orm";
-import type { Hono } from "hono";
-import z from "zod";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
     type FoodItemArchivedType,
     foodItemArchivedSchema,
 } from "../../../contracts/food/food-item/food-item.contract";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const deleteFoodItemRequestSchema = z.object({
     foodItemName: z
         .string()
@@ -18,23 +17,82 @@ const deleteFoodItemRequestSchema = z.object({
         .max(100, "Food item name max length is 100"),
 });
 
-export function registerDeleteFoodItem(app: Hono) {
-    app.delete("/", async (c) => {
-        const safeUserId = c.userId!;
+// Response schemas
+const successResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: foodItemArchivedSchema,
+});
 
-        const rawRequestJsonBody = await c.req.json();
-        const parsedRequestJsonBody =
-            deleteFoodItemRequestSchema.safeParse(rawRequestJsonBody);
-        if (!parsedRequestJsonBody.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid food item data",
-                    parsedRequestJsonBody.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-        const safeDeleteFoodItemRequestBody = parsedRequestJsonBody.data;
+const errorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+    errors: z.any().optional(),
+});
+
+// Route definition
+const deleteFoodItemRoute = createRoute({
+    method: "delete",
+    path: "/api/food-item",
+    tags: ["Food Items"],
+    security: [{ Bearer: [] }],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: deleteFoodItemRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        200: {
+            description: "Food item archived successfully",
+            content: {
+                "application/json": {
+                    schema: successResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        404: {
+            description: "Not Found - Food item does not exist",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+export function registerDeleteFoodItem(app: OpenAPIHono) {
+    app.openapi(deleteFoodItemRoute, async (c) => {
+        const safeUserId = c.userId!;
+        const safeDeleteFoodItemRequestBody = c.req.valid("json");
 
         const foodItemFromDb = await db.query.foodItems.findFirst({
             where: and(
@@ -45,8 +103,11 @@ export function registerDeleteFoodItem(app: Hono) {
 
         if (!foodItemFromDb) {
             return c.json(
-                ApiResponse.error("Food item not found"),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "Food item not found",
+                },
+                404,
             );
         }
 
@@ -65,11 +126,12 @@ export function registerDeleteFoodItem(app: Hono) {
             foodItemArchivedSchema.safeParse(foodItemArchived);
         if (!foodItemArchivedEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid food item archived data",
-                    foodItemArchivedEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid food item archived data",
+                    errors: foodItemArchivedEvent.error.errors,
+                },
+                400,
             );
         }
         const safeFoodItemArchivedEvent = foodItemArchivedEvent.data;
@@ -80,16 +142,22 @@ export function registerDeleteFoodItem(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to archive food item", error),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to archive food item",
+                    errors: error,
+                },
+                500,
             );
         }
 
         return c.json(
-            ApiResponse.success(
-                "Food item archived successfully",
-                safeFoodItemArchivedEvent,
-            ),
+            {
+                success: true as const,
+                message: "Food item archived successfully",
+                data: safeFoodItemArchivedEvent,
+            },
+            200,
         );
     });
 }

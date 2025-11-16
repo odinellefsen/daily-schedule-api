@@ -1,11 +1,122 @@
 import { and, eq } from "drizzle-orm";
-import type { Hono } from "hono";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { db } from "../../../db";
 import { foodItems, foodItemUnits } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 
-export function registerListFoodItemUnits(app: Hono) {
-    app.get("/:foodItemId/units", async (c) => {
+// Response schemas
+const foodItemUnitDetailSchema = z.object({
+    id: z.string().uuid(),
+    foodItemId: z.string().uuid(),
+    foodItemName: z.string(),
+    unitOfMeasurement: z.string(),
+    unitDescription: z.string().nullable(),
+    calories: z.number(),
+    proteinInGrams: z.number(),
+    carbohydratesInGrams: z.number(),
+    fatInGrams: z.number(),
+    fiberInGrams: z.number().nullable(),
+    sugarInGrams: z.number().nullable(),
+});
+
+const allFoodItemUnitsSchema = z.object({
+    unitId: z.string().uuid(),
+    unitOfMeasurement: z.string(),
+    unitDescription: z.string().nullable(),
+    calories: z.number(),
+    proteinInGrams: z.number(),
+    carbohydratesInGrams: z.number(),
+    fatInGrams: z.number(),
+    fiberInGrams: z.number().nullable(),
+    sugarInGrams: z.number().nullable(),
+    foodItemId: z.string().uuid(),
+    foodItemName: z.string(),
+    categoryHierarchy: z.array(z.string()).nullable(),
+});
+
+// Route definitions
+const listFoodItemUnitsByFoodItemIdRoute = createRoute({
+    method: "get",
+    path: "/api/food-item/:foodItemId/units",
+    tags: ["Food Item Units"],
+    security: [{ Bearer: [] }],
+    request: {
+        params: z.object({
+            foodItemId: z.string().uuid(),
+        }),
+    },
+    responses: {
+        200: {
+            description: "Food item units retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(true),
+                        message: z.string(),
+                        data: z.array(foodItemUnitDetailSchema),
+                    }),
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+        404: {
+            description: "Not Found",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+const listAllFoodItemUnitsRoute = createRoute({
+    method: "get",
+    path: "/api/food-item/units",
+    tags: ["Food Item Units"],
+    security: [{ Bearer: [] }],
+    responses: {
+        200: {
+            description: "All food item units retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(true),
+                        message: z.string(),
+                        data: z.array(allFoodItemUnitsSchema),
+                    }),
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+export function registerListFoodItemUnits(app: OpenAPIHono) {
+    app.openapi(listFoodItemUnitsByFoodItemIdRoute, async (c) => {
         const safeUserId = c.userId!;
         const foodItemId = c.req.param("foodItemId");
 
@@ -19,8 +130,11 @@ export function registerListFoodItemUnits(app: Hono) {
 
         if (!foodItemFromDb) {
             return c.json(
-                ApiResponse.error("Food item not found or access denied"),
-                StatusCodes.NOT_FOUND,
+                {
+                    success: false as const,
+                    message: "Food item not found or access denied",
+                },
+                404,
             );
         }
 
@@ -45,14 +159,16 @@ export function registerListFoodItemUnits(app: Hono) {
         }));
 
         return c.json(
-            ApiResponse.success(
-                "Food item units retrieved successfully",
-                unitsWithFoodItem,
-            ),
+            {
+                success: true as const,
+                message: "Food item units retrieved successfully",
+                data: unitsWithFoodItem,
+            },
+            200,
         );
     });
 
-    app.get("/units", async (c) => {
+    app.openapi(listAllFoodItemUnitsRoute, async (c) => {
         const safeUserId = c.userId!;
 
         // Get all units for all user's food items
@@ -77,10 +193,12 @@ export function registerListFoodItemUnits(app: Hono) {
             .orderBy(foodItems.name, foodItemUnits.unitOfMeasurement);
 
         return c.json(
-            ApiResponse.success(
-                "All food item units retrieved successfully",
-                unitsWithFoodItems,
-            ),
+            {
+                success: true as const,
+                message: "All food item units retrieved successfully",
+                data: unitsWithFoodItems,
+            },
+            200,
         );
     });
 }

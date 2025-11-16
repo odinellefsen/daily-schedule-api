@@ -1,5 +1,5 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import api from "./routes/api";
@@ -32,10 +32,14 @@ app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
 
 // Import and register OpenAPI routes
 import { requireAuth } from "./middleware/auth";
+import { registerCreateFoodItem } from "./routes/api/food-item/food-item.create";
+import { registerDeleteFoodItem } from "./routes/api/food-item/food-item.delete";
+import { registerListFoodItems } from "./routes/api/food-item/food-item.list";
+import { registerCreateFoodItemUnits } from "./routes/api/food-item/food-item-units.create";
+import { registerDeleteFoodItemUnits } from "./routes/api/food-item/food-item-units.delete";
+import { registerListFoodItemUnits } from "./routes/api/food-item/food-item-units.list";
 import { registerCreateTodo } from "./routes/api/todo/todo.create";
 import { registerListTodos } from "./routes/api/todo/todo.list";
-import { registerCreateFoodItem } from "./routes/api/food-item/food-item.create";
-import { registerListFoodItems } from "./routes/api/food-item/food-item.list";
 
 // Apply auth middleware
 app.use("/api/todo/*", requireAuth());
@@ -46,6 +50,10 @@ registerCreateTodo(app);
 registerListTodos(app);
 registerCreateFoodItem(app);
 registerListFoodItems(app);
+registerDeleteFoodItem(app);
+registerCreateFoodItemUnits(app);
+registerListFoodItemUnits(app);
+registerDeleteFoodItemUnits(app);
 
 // Mount other regular API routes (non-OpenAPI for now)
 app.route("/api", api);
@@ -56,7 +64,8 @@ app.doc31("/api/openapi.json", {
     info: {
         title: "Daily Scheduler API",
         version: "1.0.0",
-        description: "API for managing todos, habits, meals, recipes, and food items",
+        description:
+            "API for managing todos, habits, meals, recipes, and food items",
     },
     servers: [
         {
@@ -70,12 +79,9 @@ app.doc31("/api/openapi.json", {
     ],
 });
 
-// Swagger UI (classic)
-app.get("/api/docs", swaggerUI({ url: "/api/openapi.json" }));
-
-// Scalar API Reference (modern, beautiful UI)
+// Scalar API Reference (modern, beautiful UI) - PRIMARY DOCS
 app.get(
-    "/api/reference",
+    "/api/docs",
     apiReference({
         spec: {
             url: "/api/openapi.json",
@@ -83,6 +89,9 @@ app.get(
         theme: "purple",
     }),
 );
+
+// Swagger UI (classic) - alternative view
+app.get("/api/swagger", swaggerUI({ url: "/api/openapi.json" }));
 
 export default {
     port: 3030,
