@@ -11,7 +11,7 @@ dataCore:
       eventTypes:
         food-item.created.v0:
           description: "Food item created event"
-        food-item.archived.v0:
+        food-item.deleted.v0:
           description: "Food item archived event"
         food-item.units.created.v0:
           description: "Food item units created event"

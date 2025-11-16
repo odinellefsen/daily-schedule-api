@@ -6,7 +6,7 @@ development:
       flowType: food-item.v0
       events:
         - food-item.created.v0
-        - food-item.archived.v0
+        - food-item.deleted.v0
         - food-item.units.created.v0
         - food-item.units.deleted.v0
       endpoints:

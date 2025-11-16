@@ -60,7 +60,7 @@ export const FlowcorePathways = new PathwaysBuilder({
     })
     .register({
         flowType: "food-item.v0",
-        eventType: "food-item.archived.v0",
+        eventType: "food-item.deleted.v0",
         retryDelayMs: 10000,
         schema: foodItemArchivedSchema,
     })
@@ -125,7 +125,7 @@ export const FlowcorePathways = new PathwaysBuilder({
         schema: habitsCreatedSchema,
     })
     .handle("food-item.v0/food-item.created.v0", handleFoodItemCreated)
-    .handle("food-item.v0/food-item.archived.v0", handleFoodItemArchived)
+    .handle("food-item.v0/food-item.deleted.v0", handleFoodItemArchived)
     .handle(
         "food-item.v0/food-item.units.created.v0",
         handleFoodItemUnitsCreated,

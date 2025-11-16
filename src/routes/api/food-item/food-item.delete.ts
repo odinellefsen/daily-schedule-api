@@ -127,7 +127,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
         const safeFoodItemArchivedEvent = foodItemArchivedEvent.data;
 
         try {
-            await FlowcorePathways.write("food-item.v0/food-item.archived.v0", {
+            await FlowcorePathways.write("food-item.v0/food-item.deleted.v0", {
                 data: safeFoodItemArchivedEvent,
             });
         } catch (error) {
