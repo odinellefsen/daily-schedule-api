@@ -23,14 +23,7 @@ export const recipeIngredientsUpdateSchema = recipeIngredientsSchema.extend({
     oldValues: recipeIngredientsSchema,
 });
 
-export const recipeIngredientsArchiveSchema = recipeIngredientsSchema.extend({
-    reasonForArchiving: z.string().min(1, "Reason for archiving is required"),
-});
-
 export type RecipeIngredientsType = z.infer<typeof recipeIngredientsSchema>;
 export type RecipeIngredientsUpdateType = z.infer<
     typeof recipeIngredientsUpdateSchema
->;
-export type RecipeIngredientsArchiveType = z.infer<
-    typeof recipeIngredientsArchiveSchema
 >;
