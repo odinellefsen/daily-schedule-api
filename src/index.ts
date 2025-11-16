@@ -1,4 +1,3 @@
-import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
@@ -102,9 +101,9 @@ app.doc31("/api/openapi.json", {
     ],
 });
 
-// Scalar API Reference (modern, beautiful UI) - PRIMARY DOCS
+// Scalar API Reference (modern, beautiful UI)
 app.get(
-    "/api/docs",
+    "/api/swagger",
     Scalar({
         spec: {
             url: "/api/openapi.json",
@@ -112,9 +111,6 @@ app.get(
         theme: "purple",
     }),
 );
-
-// Swagger UI (classic) - alternative view
-app.get("/api/swagger", swaggerUI({ url: "/api/openapi.json" }));
 
 export default {
     port: 3030,
