@@ -51,7 +51,12 @@ export async function handleRecipeArchived(
 ) {
     const { payload } = event;
 
-    await db.delete(recipes).where(eq(recipes.id, payload.id));
+    console.log("123payload: ", payload);
+
+    const result = await db
+        .delete(recipes)
+        .where(eq(recipes.id, payload.recipeId));
+    console.log("result: ", result);
 }
 
 export async function handleRecipeVersionUpdated(

@@ -2,7 +2,6 @@ import { and, eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import z from "zod";
 import {
-    type MealTimingEnum,
     type RecipeArchiveType,
     recipeArchiveSchema,
 } from "../../../contracts/food/recipe";
@@ -13,10 +12,7 @@ import { FlowcorePathways } from "../../../utils/flowcore";
 
 // client side request schema
 const deleteRecipeRequestSchema = z.object({
-    nameOfTheRecipe: z
-        .string()
-        .min(1, "Recipe name min length is 1")
-        .max(75, "Recipe name max length is 75"),
+    recipeId: z.string().uuid(),
 });
 
 export function registerDeleteRecipe(app: Hono) {
@@ -39,10 +35,7 @@ export function registerDeleteRecipe(app: Hono) {
 
         const recipeFromDb = await db.query.recipes.findFirst({
             where: and(
-                eq(
-                    recipes.nameOfTheRecipe,
-                    safeDeleteRecipeRequestBody.nameOfTheRecipe,
-                ),
+                eq(recipes.id, safeDeleteRecipeRequestBody.recipeId),
                 eq(recipes.userId, safeUserId),
             ),
         });
@@ -55,17 +48,7 @@ export function registerDeleteRecipe(app: Hono) {
         }
 
         const recipeArchived: RecipeArchiveType = {
-            id: recipeFromDb.id,
-            userId: safeUserId,
-            nameOfTheRecipe: recipeFromDb.nameOfTheRecipe,
-            generalDescriptionOfTheRecipe:
-                recipeFromDb.generalDescriptionOfTheRecipe || undefined,
-            whenIsItConsumed: recipeFromDb.whenIsItConsumed
-                ? recipeFromDb.whenIsItConsumed.map(
-                      (val) => val as MealTimingEnum,
-                  )
-                : undefined,
-            reasonForArchiving: "User requested deletion",
+            recipeId: recipeFromDb.id,
         };
 
         const recipeArchivedEvent =
