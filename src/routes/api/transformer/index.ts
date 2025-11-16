@@ -15,6 +15,7 @@ transformer.post("/", async (c) => {
             flowType: event.flowType,
             eventType: event.eventType,
             eventId: event.eventId,
+            payload: event.payload,
         });
 
         if (secret !== zodEnv.FLOWCORE_WEBHOOK_API_KEY) {

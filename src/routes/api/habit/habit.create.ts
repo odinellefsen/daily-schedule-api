@@ -12,6 +12,7 @@ import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
+// client side request schema
 const createComplexHabitRequestSchema = z.object({
     domain: z.string(), // e.g., "meal"
     entityId: z.string().uuid(), // e.g., mealId

@@ -10,6 +10,7 @@ import { mealRecipes, meals, recipes } from "../../../db/schemas";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
+// client side request schema
 const requestSchema = z.object({
     recipeIds: z
         .array(z.string().uuid())
