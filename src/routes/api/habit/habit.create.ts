@@ -13,7 +13,7 @@ import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const createComplexHabitRequestSchema = z.object({
-    domain: z.string(), // e.g., "meal"
+    domain: z.literal("meal"), // e.g., "meal"
     entityId: z.string().uuid(), // e.g., mealId
 
     // Main habit configuration (so far only weekly)
