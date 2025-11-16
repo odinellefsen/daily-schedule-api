@@ -19,7 +19,9 @@ export const recipes = pgTable("recipes", {
 
 export const recipeInstructions = pgTable("recipe_instructions", {
     id: uuid("id").primaryKey(),
-    recipeId: uuid("recipe_id").references(() => recipes.id),
+    recipeId: uuid("recipe_id").references(() => recipes.id, {
+        onDelete: "cascade",
+    }),
     instruction: text("instruction").notNull(),
     instructionNumber: integer("instruction_number").notNull(),
 });
@@ -39,7 +41,7 @@ export const recipeInstructionFoodItemUnits = pgTable(
 export const recipeIngredients = pgTable("recipe_ingredients", {
     id: uuid("id").primaryKey(),
     recipeId: uuid("recipe_id")
-        .references(() => recipes.id)
+        .references(() => recipes.id, { onDelete: "cascade" })
         .notNull(),
     ingredientText: text("ingredient_text").notNull(),
 });
