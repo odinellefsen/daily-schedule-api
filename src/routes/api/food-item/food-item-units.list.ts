@@ -1,6 +1,6 @@
-import { and, eq } from "drizzle-orm";
-import { createRoute, z } from "@hono/zod-openapi";
 import type { OpenAPIHono } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
+import { and, eq } from "drizzle-orm";
 import { db } from "../../../db";
 import { foodItems, foodItemUnits } from "../../../db/schemas";
 
@@ -12,9 +12,9 @@ const foodItemUnitDetailSchema = z.object({
     unitOfMeasurement: z.string(),
     unitDescription: z.string().nullable(),
     calories: z.number(),
-    proteinInGrams: z.number(),
-    carbohydratesInGrams: z.number(),
-    fatInGrams: z.number(),
+    proteinInGrams: z.number().nullable(),
+    carbohydratesInGrams: z.number().nullable(),
+    fatInGrams: z.number().nullable(),
     fiberInGrams: z.number().nullable(),
     sugarInGrams: z.number().nullable(),
 });
@@ -24,9 +24,9 @@ const allFoodItemUnitsSchema = z.object({
     unitOfMeasurement: z.string(),
     unitDescription: z.string().nullable(),
     calories: z.number(),
-    proteinInGrams: z.number(),
-    carbohydratesInGrams: z.number(),
-    fatInGrams: z.number(),
+    proteinInGrams: z.number().nullable(),
+    carbohydratesInGrams: z.number().nullable(),
+    fatInGrams: z.number().nullable(),
     fiberInGrams: z.number().nullable(),
     sugarInGrams: z.number().nullable(),
     foodItemId: z.string().uuid(),

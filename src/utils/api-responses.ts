@@ -37,7 +37,10 @@ type ErrorResponse = {
 
 function success<T>(message: string, data: T): SuccessResponse<T>;
 function success(message: string): SuccessResponseWithoutData;
-function success<T>(message: string, data?: T): SuccessResponse<T> | SuccessResponseWithoutData {
+function success<T>(
+    message: string,
+    data?: T,
+): SuccessResponse<T> | SuccessResponseWithoutData {
     if (data !== undefined) {
         return {
             success: true,
