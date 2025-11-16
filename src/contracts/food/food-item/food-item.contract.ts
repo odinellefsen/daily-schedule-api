@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@hono/zod-openapi";
 
 // Food item with multiple possible units, each with their own nutrition
 export const foodItemSchema = z.object({

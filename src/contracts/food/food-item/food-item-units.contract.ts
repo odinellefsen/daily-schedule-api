@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@hono/zod-openapi";
 import { UnitOfMeasurementEnum } from "./food-item.shared_utils";
 
 // Base schema for a single food unit

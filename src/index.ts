@@ -1,5 +1,6 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
+import { apiReference } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import api from "./routes/api";
 
@@ -29,15 +30,22 @@ app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
     bearerFormat: "JWT",
 });
 
-// Import and register the create todo OpenAPI route
+// Import and register OpenAPI routes
 import { requireAuth } from "./middleware/auth";
 import { registerCreateTodo } from "./routes/api/todo/todo.create";
+import { registerListTodos } from "./routes/api/todo/todo.list";
+import { registerCreateFoodItem } from "./routes/api/food-item/food-item.create";
+import { registerListFoodItems } from "./routes/api/food-item/food-item.list";
 
-// Apply auth middleware to todo routes
+// Apply auth middleware
 app.use("/api/todo/*", requireAuth());
+app.use("/api/food-item/*", requireAuth());
 
-// Register the create todo route directly
+// Register OpenAPI routes directly on main app
 registerCreateTodo(app);
+registerListTodos(app);
+registerCreateFoodItem(app);
+registerListFoodItems(app);
 
 // Mount other regular API routes (non-OpenAPI for now)
 app.route("/api", api);
@@ -62,8 +70,19 @@ app.doc31("/api/openapi.json", {
     ],
 });
 
-// Swagger UI
+// Swagger UI (classic)
 app.get("/api/docs", swaggerUI({ url: "/api/openapi.json" }));
+
+// Scalar API Reference (modern, beautiful UI)
+app.get(
+    "/api/reference",
+    apiReference({
+        spec: {
+            url: "/api/openapi.json",
+        },
+        theme: "purple",
+    }),
+);
 
 export default {
     port: 3030,

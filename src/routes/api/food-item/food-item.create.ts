@@ -1,16 +1,15 @@
+import type { OpenAPIHono } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
 import { and, eq } from "drizzle-orm";
-import type { Hono } from "hono";
-import z from "zod";
 import {
     type FoodItemType,
     foodItemSchema,
 } from "../../../contracts/food/food-item";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
-import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
-// client side request schema
+// Request schema
 const createFoodItemRequestSchema = z.object({
     foodItemName: z
         .string()
@@ -19,23 +18,82 @@ const createFoodItemRequestSchema = z.object({
     categoryHierarchy: z.array(z.string()).optional(),
 });
 
-export function registerCreateFoodItem(app: Hono) {
-    app.post("/", async (c) => {
-        const safeUserId = c.userId!;
+// Response schemas
+const successResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: foodItemSchema,
+});
 
-        const rawJsonBody = await c.req.json();
-        const parsedJsonBody =
-            createFoodItemRequestSchema.safeParse(rawJsonBody);
-        if (!parsedJsonBody.success) {
-            return c.json(
-                ApiResponse.error(
-                    "Invalid food item data",
-                    parsedJsonBody.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
-            );
-        }
-        const safeCreateFoodItemJsonBody = parsedJsonBody.data;
+const errorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+    errors: z.any().optional(),
+});
+
+// Route definition
+const createFoodItemRoute = createRoute({
+    method: "post",
+    path: "/api/food-item",
+    tags: ["Food Items"],
+    security: [{ Bearer: [] }],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: createFoodItemRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        200: {
+            description: "Food item created successfully",
+            content: {
+                "application/json": {
+                    schema: successResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        409: {
+            description: "Conflict - Food item with name already exists",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+export function registerCreateFoodItem(app: OpenAPIHono) {
+    app.openapi(createFoodItemRoute, async (c) => {
+        const safeUserId = c.userId!;
+        const safeCreateFoodItemJsonBody = c.req.valid("json");
 
         const existingFoodItem = await db
             .select()
@@ -48,8 +106,11 @@ export function registerCreateFoodItem(app: Hono) {
             );
         if (existingFoodItem.length > 0) {
             return c.json(
-                ApiResponse.error("Food item with name already exists"),
-                StatusCodes.CONFLICT,
+                {
+                    success: false as const,
+                    message: "Food item with name already exists",
+                },
+                409,
             );
         }
 
@@ -63,11 +124,12 @@ export function registerCreateFoodItem(app: Hono) {
         const createFoodItemEvent = foodItemSchema.safeParse(newFoodItem);
         if (!createFoodItemEvent.success) {
             return c.json(
-                ApiResponse.error(
-                    "Invalid food item data",
-                    createFoodItemEvent.error.errors,
-                ),
-                StatusCodes.BAD_REQUEST,
+                {
+                    success: false as const,
+                    message: "Invalid food item data",
+                    errors: createFoodItemEvent.error.errors,
+                },
+                400,
             );
         }
         const safeCreateFoodItemEvent = createFoodItemEvent.data;
@@ -78,16 +140,22 @@ export function registerCreateFoodItem(app: Hono) {
             });
         } catch (error) {
             return c.json(
-                ApiResponse.error("Failed to create food item", error),
-                StatusCodes.SERVER_ERROR,
+                {
+                    success: false as const,
+                    message: "Failed to create food item",
+                    errors: error,
+                },
+                500,
             );
         }
 
         return c.json(
-            ApiResponse.success(
-                "Food item created successfully",
-                safeCreateFoodItemEvent,
-            ),
+            {
+                success: true as const,
+                message: "Food item created successfully",
+                data: safeCreateFoodItemEvent,
+            },
+            200,
         );
     });
 }

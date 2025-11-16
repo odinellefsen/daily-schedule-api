@@ -1,11 +1,100 @@
 import { eq } from "drizzle-orm";
-import type { Hono } from "hono";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { db } from "../../../db";
 import { foodItems, foodItemUnits } from "../../../db/schemas";
-import { ApiResponse } from "../../../utils/api-responses";
 
-export function registerListFoodItems(app: Hono) {
-    app.get("/", async (c) => {
+// Response schemas
+const foodItemWithUnitsSchema = z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    categoryHierarchy: z.array(z.string()).nullable(),
+    unitCount: z.number(),
+    hasUnits: z.boolean(),
+});
+
+const foodItemBasicSchema = z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    categoryHierarchy: z.array(z.string()).nullable(),
+});
+
+const listFoodItemsResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: z.array(foodItemWithUnitsSchema),
+});
+
+const searchFoodItemsResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: z.array(foodItemBasicSchema),
+});
+
+// Route definitions
+const listFoodItemsRoute = createRoute({
+    method: "get",
+    path: "/api/food-item",
+    tags: ["Food Items"],
+    security: [{ Bearer: [] }],
+    responses: {
+        200: {
+            description: "Food items retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: listFoodItemsResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+const searchFoodItemsRoute = createRoute({
+    method: "get",
+    path: "/api/food-item/search",
+    tags: ["Food Items"],
+    security: [{ Bearer: [] }],
+    request: {
+        query: z.object({
+            q: z.string().optional(),
+        }),
+    },
+    responses: {
+        200: {
+            description: "Food items search results",
+            content: {
+                "application/json": {
+                    schema: searchFoodItemsResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+export function registerListFoodItems(app: OpenAPIHono) {
+    app.openapi(listFoodItemsRoute, async (c) => {
         const safeUserId = c.userId!;
 
         const userFoodItems = await db
@@ -33,14 +122,16 @@ export function registerListFoodItems(app: Hono) {
         );
 
         return c.json(
-            ApiResponse.success(
-                "Food items retrieved successfully",
-                foodItemsWithUnitCounts,
-            ),
+            {
+                success: true as const,
+                message: "Food items retrieved successfully",
+                data: foodItemsWithUnitCounts,
+            },
+            200,
         );
     });
 
-    app.get("/search", async (c) => {
+    app.openapi(searchFoodItemsRoute, async (c) => {
         const safeUserId = c.userId!;
         const query = c.req.query("q") || "";
 
@@ -58,14 +149,24 @@ export function registerListFoodItems(app: Hono) {
             );
 
             return c.json(
-                ApiResponse.success("Food items search results", filtered),
+                {
+                    success: true as const,
+                    message: "Food items search results",
+                    data: filtered,
+                },
+                200,
             );
         }
 
         const results = await dbQuery.orderBy(foodItems.name);
 
         return c.json(
-            ApiResponse.success("Food items retrieved successfully", results),
+            {
+                success: true as const,
+                message: "Food items retrieved successfully",
+                data: results,
+            },
+            200,
         );
     });
 }

@@ -1,16 +1,134 @@
 import { and, eq, gte, lte } from "drizzle-orm";
-import type { Hono } from "hono";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { db } from "../../../db";
 import { todos } from "../../../db/schemas";
 import { generateMissingHabitTodos } from "../../../services/habit-generation";
-import { ApiResponse } from "../../../utils/api-responses";
 import {
     getCurrentDateInTimezone,
     getDayBoundsInTimezone,
 } from "../../../utils/timezone";
 
-export function registerListTodos(app: Hono) {
-    app.get("/today", async (c) => {
+// Response schemas
+const todayTodoItemSchema = z.object({
+    id: z.string().uuid(),
+    description: z.string(),
+    scheduledFor: z.string().datetime().optional(),
+    completed: z.boolean(),
+    context: z.union([
+        z.object({
+            type: z.literal("meal"),
+            mealName: z.string(),
+            instructionNumber: z.number(),
+            estimatedDuration: z.number().nullable(),
+        }),
+        z.object({
+            type: z.literal("standalone"),
+        }),
+    ]),
+    canStartNow: z.boolean(),
+    isOverdue: z.boolean(),
+    urgency: z.enum(["overdue", "now", "upcoming", "later"]),
+});
+
+const todayTodosResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: z.object({
+        todos: z.array(todayTodoItemSchema),
+        counts: z.object({
+            total: z.number(),
+            completed: z.number(),
+            remaining: z.number(),
+            overdue: z.number(),
+        }),
+    }),
+});
+
+const allTodosItemSchema = z.object({
+    id: z.string().uuid(),
+    description: z.string(),
+    completed: z.boolean(),
+    scheduledFor: z.string().datetime().optional(),
+    completedAt: z.string().datetime().optional(),
+    relations: z.any().nullable(),
+});
+
+const allTodosResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: z.array(allTodosItemSchema),
+});
+
+// Route definitions
+const getTodayTodosRoute = createRoute({
+    method: "get",
+    path: "/api/todo/today",
+    tags: ["Todos"],
+    security: [{ Bearer: [] }],
+    request: {
+        headers: z.object({
+            "x-timezone": z.string().optional(),
+        }),
+    },
+    responses: {
+        200: {
+            description: "Today's todos retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: todayTodosResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+const getAllTodosRoute = createRoute({
+    method: "get",
+    path: "/api/todo",
+    tags: ["Todos"],
+    security: [{ Bearer: [] }],
+    request: {
+        headers: z.object({
+            "x-timezone": z.string().optional(),
+        }),
+    },
+    responses: {
+        200: {
+            description: "All todos retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: allTodosResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        success: z.literal(false),
+                        message: z.string(),
+                    }),
+                },
+            },
+        },
+    },
+});
+
+export function registerListTodos(app: OpenAPIHono) {
+    app.openapi(getTodayTodosRoute, async (c) => {
         const safeUserId = c.userId!;
 
         // Get user's timezone from header, default to UTC
@@ -94,14 +212,19 @@ export function registerListTodos(app: Hono) {
         };
 
         return c.json(
-            ApiResponse.success("Today's todos retrieved successfully", {
-                todos: transformedTodos,
-                counts,
-            }),
+            {
+                success: true as const,
+                message: "Today's todos retrieved successfully",
+                data: {
+                    todos: transformedTodos,
+                    counts,
+                },
+            },
+            200,
         );
     });
 
-    app.get("/", async (c) => {
+    app.openapi(getAllTodosRoute, async (c) => {
         const safeUserId = c.userId!;
 
         // LAZY GENERATION: Generate missing habit todos for today when listing all todos
@@ -131,10 +254,12 @@ export function registerListTodos(app: Hono) {
         }));
 
         return c.json(
-            ApiResponse.success(
-                "Todos retrieved successfully",
-                transformedTodos,
-            ),
+            {
+                success: true as const,
+                message: "Todos retrieved successfully",
+                data: transformedTodos,
+            },
+            200,
         );
     });
 }
