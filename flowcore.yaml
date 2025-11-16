@@ -22,7 +22,7 @@ dataCore:
       eventTypes:
         recipe.created.v0:
           description: "Recipe created event"
-        recipe.archived.v0:
+        recipe.deleted.v0:
           description: "Recipe archived event"
         recipe-instructions.created.v0:
           description: "Recipe instructions created event"

@@ -84,7 +84,7 @@ export const FlowcorePathways = new PathwaysBuilder({
     })
     .register({
         flowType: "recipe.v0",
-        eventType: "recipe.archived.v0",
+        eventType: "recipe.deleted.v0",
         retryDelayMs: 10000,
         schema: recipeArchiveSchema,
     })
@@ -135,7 +135,7 @@ export const FlowcorePathways = new PathwaysBuilder({
         handleFoodItemUnitsDeleted,
     )
     .handle("recipe.v0/recipe.created.v0", handleRecipeCreated)
-    .handle("recipe.v0/recipe.archived.v0", handleRecipeArchived)
+    .handle("recipe.v0/recipe.deleted.v0", handleRecipeArchived)
     .handle(
         "recipe.v0/recipe-instructions.created.v0",
         handleRecipeInstructionsCreated,

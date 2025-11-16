@@ -127,7 +127,7 @@ export function registerDeleteRecipe(app: OpenAPIHono) {
         const safeRecipeArchivedEvent = recipeArchivedEvent.data;
 
         try {
-            await FlowcorePathways.write("recipe.v0/recipe.archived.v0", {
+            await FlowcorePathways.write("recipe.v0/recipe.deleted.v0", {
                 data: safeRecipeArchivedEvent,
             });
         } catch (error) {
