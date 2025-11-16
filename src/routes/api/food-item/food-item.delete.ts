@@ -11,10 +11,7 @@ import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const deleteFoodItemRequestSchema = z.object({
-    foodItemName: z
-        .string()
-        .min(1, "Food item name min length is 1")
-        .max(100, "Food item name max length is 100"),
+    foodItemId: z.string().uuid(),
 });
 
 // Response schemas
@@ -96,7 +93,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
 
         const foodItemFromDb = await db.query.foodItems.findFirst({
             where: and(
-                eq(foodItems.name, safeDeleteFoodItemRequestBody.foodItemName),
+                eq(foodItems.id, safeDeleteFoodItemRequestBody.foodItemId),
                 eq(foodItems.userId, safeUserId),
             ),
         });
@@ -112,14 +109,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
         }
 
         const foodItemArchived: FoodItemArchivedType = {
-            id: foodItemFromDb.id,
-            userId: safeUserId,
-            name: foodItemFromDb.name,
-            // Convert database string back to array format for contract
-            categoryHierarchy: foodItemFromDb.categoryHierarchy
-                ? foodItemFromDb.categoryHierarchy
-                : undefined,
-            reasonForArchiving: "User requested deletion",
+            foodItemId: foodItemFromDb.id,
         };
 
         const foodItemArchivedEvent =

@@ -30,5 +30,5 @@ export async function handleFoodItemArchived(
 ) {
     const { payload } = event;
 
-    await db.delete(foodItems).where(eq(foodItems.id, payload.id));
+    await db.delete(foodItems).where(eq(foodItems.id, payload.foodItemId));
 }
