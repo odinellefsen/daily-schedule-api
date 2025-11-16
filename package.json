@@ -2,6 +2,7 @@
 	"name": "daily-scheduler-api",
 	"scripts": {
 		"dev": "bun run --hot src/index.ts",
+		"build": "bun build src/index.ts --outdir dist",
 		"lint": "biome lint src/",
 		"lint:fix": "biome lint --write src/",
 		"format": "biome format src/",

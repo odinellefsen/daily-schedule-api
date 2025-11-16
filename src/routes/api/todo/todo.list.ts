@@ -12,7 +12,7 @@ import {
 // Response schemas
 const todayTodoItemSchema = z.object({
     id: z.string().uuid(),
-    description: z.string(),
+    description: z.string().nullable(),
     scheduledFor: z.string().datetime().optional(),
     completed: z.boolean(),
     context: z.union([
@@ -47,7 +47,7 @@ const todayTodosResponseSchema = z.object({
 
 const allTodosItemSchema = z.object({
     id: z.string().uuid(),
-    description: z.string(),
+    description: z.string().nullable(),
     completed: z.boolean(),
     scheduledFor: z.string().datetime().optional(),
     completedAt: z.string().datetime().optional(),
@@ -169,10 +169,10 @@ export function registerListTodos(app: OpenAPIHono) {
             const scheduledTime = todo.scheduledFor
                 ? new Date(todo.scheduledFor)
                 : null;
-            const isOverdue = scheduledTime && scheduledTime < now;
+            const isOverdue = scheduledTime ? scheduledTime < now : false;
             const canStartNow = !scheduledTime || scheduledTime <= now;
 
-            let urgency = "later";
+            let urgency: "overdue" | "now" | "upcoming" | "later" = "later";
             if (isOverdue) urgency = "overdue";
             else if (canStartNow) urgency = "now";
             else if (
@@ -187,15 +187,17 @@ export function registerListTodos(app: OpenAPIHono) {
                 scheduledFor: todo.scheduledFor?.toISOString(),
                 completed: todo.completed,
                 context: mealRelation
-                    ? {
-                          type: "meal",
+                    ? ({
+                          type: "meal" as const,
                           mealName: `Step ${mealRelation.instructionNumber}`, // We'd need to fetch meal name in a real implementation
-                          instructionNumber: mealRelation.instructionNumber,
-                          estimatedDuration: null, // Would come from meal step data
-                      }
-                    : {
-                          type: "standalone",
-                      },
+                          instructionNumber: Number(
+                              mealRelation.instructionNumber,
+                          ),
+                          estimatedDuration: null,
+                      } as const)
+                    : ({
+                          type: "standalone" as const,
+                      } as const),
                 canStartNow,
                 isOverdue,
                 urgency,
