@@ -26,15 +26,7 @@ import {
 } from "../contracts/food/recipe";
 import { recipeVersionSchema } from "../contracts/food/recipe/recipe-version.contract";
 import { habitsCreatedSchema } from "../contracts/habit/habit.contract";
-import {
-    todoArchiveSchema,
-    todoCancelledSchema,
-    todoCompletedSchema,
-    todoGeneratedSchema,
-    todoRelationsUpdatedSchema,
-    todoSchema,
-    todoUpdateSchema,
-} from "../contracts/todo";
+import { todoSchema } from "../contracts/todo";
 import {
     handleFoodItemArchived,
     handleFoodItemCreated,
@@ -66,14 +58,7 @@ import {
     handleRecipeInstructionsUpdated,
     handleRecipeInstructionsVersionUpdated,
 } from "../handlers/recipe/recipe-instructions.handler";
-import {
-    handleTodoArchived,
-    handleTodoCancelled,
-    handleTodoCompleted,
-    handleTodoCreated,
-    handleTodoGenerated,
-    handleTodoRelationsUpdated,
-} from "../handlers/todo/todo.handler";
+import { handleTodoCreated } from "../handlers/todo/todo.handler";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
 const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
@@ -198,42 +183,6 @@ export const FlowcorePathways = new PathwaysBuilder({
         schema: todoSchema,
     })
     .register({
-        flowType: "todo.v0",
-        eventType: "todo.updated.v0",
-        retryDelayMs: 10000,
-        schema: todoUpdateSchema,
-    })
-    .register({
-        flowType: "todo.v0",
-        eventType: "todo.completed.v0",
-        retryDelayMs: 10000,
-        schema: todoCompletedSchema,
-    })
-    .register({
-        flowType: "todo.v0",
-        eventType: "todo.cancelled.v0",
-        retryDelayMs: 10000,
-        schema: todoCancelledSchema,
-    })
-    .register({
-        flowType: "todo.v0",
-        eventType: "todo.relations.updated.v0",
-        retryDelayMs: 10000,
-        schema: todoRelationsUpdatedSchema,
-    })
-    .register({
-        flowType: "todo.v0",
-        eventType: "todo.archived.v0",
-        retryDelayMs: 10000,
-        schema: todoArchiveSchema,
-    })
-    .register({
-        flowType: "todo.v0",
-        eventType: "todo.generated.v0",
-        retryDelayMs: 10000,
-        schema: todoGeneratedSchema,
-    })
-    .register({
         flowType: "recipe.v0",
         eventType: "recipe-version.v0",
         retryDelayMs: 10000,
@@ -290,11 +239,6 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle("meal.v0/meal.created.v0", handleMealCreated)
     .handle("meal.v0/meal-recipe.attached.v0", handleMealRecipeAttached)
     .handle("todo.v0/todo.created.v0", handleTodoCreated)
-    .handle("todo.v0/todo.archived.v0", handleTodoArchived)
-    .handle("todo.v0/todo.completed.v0", handleTodoCompleted)
-    .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled)
-    .handle("todo.v0/todo.relations.updated.v0", handleTodoRelationsUpdated)
-    .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
     .handle("habit.v0/complex-habit.created.v0", handleHabitsCreated);
 
 // Combined handler for recipe version events
