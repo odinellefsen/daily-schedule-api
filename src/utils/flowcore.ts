@@ -12,7 +12,7 @@ import {
 } from "../contracts/food/food-item";
 import { mealRecipeAttachSchema, mealSchema } from "../contracts/food/meal";
 import {
-    recipeArchiveSchema,
+    recipeDeletedSchema,
     recipeIngredientsSchema,
     recipeInstructionsSchema,
     recipeSchema,
@@ -31,8 +31,8 @@ import { handleHabitsCreated } from "../handlers/habit/habit.handler";
 import { handleMealCreated } from "../handlers/meal/meal.handler";
 import { handleMealRecipeAttached } from "../handlers/meal/meal-recipes.handler";
 import {
-    handleRecipeArchived,
     handleRecipeCreated,
+    handleRecipeDeleted,
 } from "../handlers/recipe/recipe.handler";
 import { handleRecipeIngredientsCreated } from "../handlers/recipe/recipe-ingredients.handler";
 import { handleRecipeInstructionsCreated } from "../handlers/recipe/recipe-instructions.handler";
@@ -86,7 +86,7 @@ export const FlowcorePathways = new PathwaysBuilder({
         flowType: "recipe.v0",
         eventType: "recipe.deleted.v0",
         retryDelayMs: 10000,
-        schema: recipeArchiveSchema,
+        schema: recipeDeletedSchema,
     })
     .register({
         flowType: "recipe.v0",
@@ -135,7 +135,7 @@ export const FlowcorePathways = new PathwaysBuilder({
         handleFoodItemUnitsDeleted,
     )
     .handle("recipe.v0/recipe.created.v0", handleRecipeCreated)
-    .handle("recipe.v0/recipe.deleted.v0", handleRecipeArchived)
+    .handle("recipe.v0/recipe.deleted.v0", handleRecipeDeleted)
     .handle(
         "recipe.v0/recipe-instructions.created.v0",
         handleRecipeInstructionsCreated,

@@ -19,12 +19,6 @@ export const mealUpdateSchema = z.object({
         .optional(),
 });
 
-export const mealArchiveSchema = z.object({
-    id: z.string().uuid(),
-    userId: z.string(),
-    reasonForArchiving: z.string().min(1, "Reason for archiving is required"),
-});
-
 // Schema for attaching recipe(s) to a meal
 export const mealRecipeAttachSchema = z.object({
     mealId: z.string().uuid(),
@@ -45,6 +39,5 @@ export const mealRecipeDetachSchema = z.object({
 
 export type MealCreateType = z.infer<typeof mealSchema>;
 export type MealUpdateType = z.infer<typeof mealUpdateSchema>;
-export type MealArchiveType = z.infer<typeof mealArchiveSchema>;
 export type MealRecipeAttachType = z.infer<typeof mealRecipeAttachSchema>;
 export type MealRecipeDetachType = z.infer<typeof mealRecipeDetachSchema>;

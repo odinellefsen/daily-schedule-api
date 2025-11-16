@@ -2,7 +2,7 @@ import type { FlowcoreEvent } from "@flowcore/pathways";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import type {
-    recipeArchiveSchema,
+    recipeDeletedSchema,
     recipeSchema,
 } from "../../contracts/food/recipe";
 import { db } from "../../db";
@@ -24,14 +24,12 @@ export async function handleRecipeCreated(
     });
 }
 
-export async function handleRecipeArchived(
+export async function handleRecipeDeleted(
     event: Omit<FlowcoreEvent, "payload"> & {
-        payload: z.infer<typeof recipeArchiveSchema>;
+        payload: z.infer<typeof recipeDeletedSchema>;
     },
 ) {
     const { payload } = event;
-
-    console.log("123payload: ", payload);
 
     await db.delete(recipes).where(eq(recipes.id, payload.recipeId));
 }

@@ -26,10 +26,10 @@ export const recipeUpdateSchema = recipeSchema.extend({
     oldValues: recipeSchema,
 });
 
-export const recipeArchiveSchema = z.object({
+export const recipeDeletedSchema = z.object({
     recipeId: z.string().uuid(),
 });
 
 export type RecipeMetadataType = z.infer<typeof recipeSchema>;
 export type RecipeUpdateType = z.infer<typeof recipeUpdateSchema>;
-export type RecipeArchiveType = z.infer<typeof recipeArchiveSchema>;
+export type RecipeDeletedType = z.infer<typeof recipeDeletedSchema>;

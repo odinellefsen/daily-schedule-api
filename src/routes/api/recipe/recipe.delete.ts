@@ -2,8 +2,8 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
 import { and, eq } from "drizzle-orm";
 import {
-    type RecipeArchiveType,
-    recipeArchiveSchema,
+    type RecipeDeletedType,
+    recipeDeletedSchema,
 } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schemas";
@@ -18,7 +18,7 @@ const deleteRecipeRequestSchema = z.object({
 const successResponseSchema = z.object({
     success: z.literal(true),
     message: z.string(),
-    data: recipeArchiveSchema,
+    data: recipeDeletedSchema,
 });
 
 const errorResponseSchema = z.object({
@@ -44,7 +44,7 @@ const deleteRecipeRoute = createRoute({
     },
     responses: {
         200: {
-            description: "Recipe archived successfully",
+            description: "Recipe deleted successfully",
             content: {
                 "application/json": {
                     schema: successResponseSchema,
@@ -108,33 +108,32 @@ export function registerDeleteRecipe(app: OpenAPIHono) {
             );
         }
 
-        const recipeArchived: RecipeArchiveType = {
+        const recipeDeleted: RecipeDeletedType = {
             recipeId: recipeFromDb.id,
         };
 
-        const recipeArchivedEvent =
-            recipeArchiveSchema.safeParse(recipeArchived);
-        if (!recipeArchivedEvent.success) {
+        const recipeDeletedEvent = recipeDeletedSchema.safeParse(recipeDeleted);
+        if (!recipeDeletedEvent.success) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid recipe archived data",
-                    errors: recipeArchivedEvent.error.errors,
+                    message: "Invalid recipe deleted data",
+                    errors: recipeDeletedEvent.error.errors,
                 },
                 400,
             );
         }
-        const safeRecipeArchivedEvent = recipeArchivedEvent.data;
+        const safeRecipeDeletedEvent = recipeDeletedEvent.data;
 
         try {
             await FlowcorePathways.write("recipe.v0/recipe.deleted.v0", {
-                data: safeRecipeArchivedEvent,
+                data: safeRecipeDeletedEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to archive recipe",
+                    message: "Failed to delete recipe",
                     errors: error,
                 },
                 500,
@@ -144,8 +143,8 @@ export function registerDeleteRecipe(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Recipe archived successfully",
-                data: safeRecipeArchivedEvent,
+                message: "Recipe deleted successfully",
+                data: safeRecipeDeletedEvent,
             },
             200,
         );
