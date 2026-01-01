@@ -1,7 +1,7 @@
 import type { FlowcoreEvent } from "@flowcore/pathways";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
-import type { todoCompletedSchema } from "../../contracts/todo";
+import type { todoCompletedSchema } from "../../contracts/todo/todo.completed";
 import { db } from "../../db";
 import { todos } from "../../db/schemas";
 
