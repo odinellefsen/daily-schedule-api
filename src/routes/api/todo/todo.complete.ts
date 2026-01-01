@@ -45,7 +45,7 @@ const completeTodoRoute = createRoute({
     },
     responses: {
         200: {
-            description: "Todo created successfully",
+            description: "Todo completed successfully",
             content: {
                 "application/json": {
                     schema: successResponseSchema,
@@ -84,17 +84,17 @@ export function registerCompleteTodo(app: OpenAPIHono) {
         const safeUserId = c.userId!;
         const safeCompleteTodoJsonBody = c.req.valid("json");
 
-        const newTodo: TodoCompletedType = {
+        const completedTodo: TodoCompletedType = {
             id: safeCompleteTodoJsonBody.id,
             userId: safeUserId,
         };
 
-        const completeTodoEvent = todoCompletedSchema.safeParse(newTodo);
+        const completeTodoEvent = todoCompletedSchema.safeParse(completedTodo);
         if (!completeTodoEvent.success) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid todo data",
+                    message: "Invalid completed todo data",
                     errors: completeTodoEvent.error.errors,
                 },
                 400,
@@ -110,7 +110,7 @@ export function registerCompleteTodo(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to create todo",
+                    message: "Failed to complete todo",
                     errors: error,
                 },
                 500,
