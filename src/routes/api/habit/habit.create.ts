@@ -230,7 +230,6 @@ export function registerCreateHabit(app: OpenAPIHono) {
         // This ensures habits always reflect the current meal state
 
         try {
-            console.log("hello world!");
             await FlowcorePathways.write("habit.v0/complex-habit.created.v0", {
                 data: safeCreateHabitEvent,
             });
