@@ -33,15 +33,7 @@ const createTodoRequestSchema = z.object({
 const successResponseSchema = z.object({
     success: z.literal(true),
     message: z.string(),
-    data: z.object({
-        id: z.string().uuid(),
-        userId: z.string(),
-        description: z.string(),
-        completed: z.boolean(),
-        scheduledFor: z.string().datetime().optional(),
-        completedAt: z.string().datetime().optional(),
-        relations: z.any().optional(),
-    }),
+    data: todoSchema,
 });
 
 const errorResponseSchema = z.object({
