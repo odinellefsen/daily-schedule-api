@@ -37,6 +37,7 @@ development:
       flowType: todo.v0
       events:
         - todo.created.v0
+        - todo.completed.v0
         - todo.generated.v0
       endpoints:
        - ""
