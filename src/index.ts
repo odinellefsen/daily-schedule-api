@@ -49,6 +49,7 @@ import { registerCreateRecipeIngredients } from "./routes/api/recipe/recipe-ingr
 import { registerCreateRecipeInstructions } from "./routes/api/recipe/recipe-instructions.create";
 import { registerCreateTodo } from "./routes/api/todo/todo.create";
 import { registerListTodos } from "./routes/api/todo/todo.list";
+import { registerCompleteTodo } from "./routes/api/todo/todo.complete";
 
 // Apply auth middleware
 app.use("/api/todo/*", requireAuth());
@@ -59,6 +60,7 @@ app.use("/api/meal/*", requireAuth());
 
 // Register OpenAPI routes directly on main app
 registerCreateTodo(app);
+registerCompleteTodo(app);
 registerListTodos(app);
 registerCreateFoodItem(app);
 registerListFoodItems(app);
