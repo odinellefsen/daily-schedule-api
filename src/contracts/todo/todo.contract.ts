@@ -68,15 +68,8 @@ export const todoRelationsUpdatedSchema = z.object({
         .max(5, "you can only have up to 5 relations"),
 });
 
-export const todoCompletedSchema = z.object({
-    id: z.string().uuid(),
-    userId: z.string(),
-    completedAt: z.string().datetime(),
-});
-
 export type TodoType = z.infer<typeof todoSchema>;
 export type TodoUpdateType = z.infer<typeof todoUpdateSchema>;
-export type TodoCompletedType = z.infer<typeof todoCompletedSchema>;
 export type TodoCancelledType = z.infer<typeof todoCancelledSchema>;
 export type TodoRelationsUpdatedType = z.infer<
     typeof todoRelationsUpdatedSchema

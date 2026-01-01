@@ -1,39 +1,21 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
-import { type TodoType, todoSchema } from "../../../contracts/todo";
+import {
+    type TodoCompletedType,
+    todoCompletedSchema,
+} from "../../../contracts/todo/todo.completed";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
-const createTodoRequestSchema = z.object({
-    description: z
-        .string()
-        .min(1, "Description is required")
-        .max(250, "Description must be less than 250 characters"),
-    scheduledFor: z.string().datetime().optional(),
-    relations: z
-        .array(
-            z.object({
-                mealInstruction: z.object({
-                    mealStepId: z.string().uuid(),
-                    mealId: z.string().uuid(),
-                    recipeId: z.string().uuid(),
-                    instructionNumber: z.number().int().positive(),
-                }),
-            }),
-        )
-        .min(
-            1,
-            "if relations is NOT undefined, you must have at least one relation",
-        )
-        .max(5, "you can only have up to 5 relations")
-        .optional(),
+const completeTodoRequestSchema = z.object({
+    id: z.string().uuid(),
 });
 
 // Response schemas
 const successResponseSchema = z.object({
     success: z.literal(true),
     message: z.string(),
-    data: todoSchema,
+    data: todoCompletedSchema,
 });
 
 const errorResponseSchema = z.object({
@@ -43,7 +25,7 @@ const errorResponseSchema = z.object({
 });
 
 // OpenAPI route definition
-const createTodoRoute = createRoute({
+const completeTodoRoute = createRoute({
     method: "post",
     path: "/api/todo",
     tags: ["Todos"],
@@ -56,7 +38,7 @@ const createTodoRoute = createRoute({
         body: {
             content: {
                 "application/json": {
-                    schema: createTodoRequestSchema,
+                    schema: completeTodoRequestSchema,
                 },
             },
         },
@@ -97,37 +79,32 @@ const createTodoRoute = createRoute({
     },
 });
 
-export function registerCreateTodo(app: OpenAPIHono) {
-    app.openapi(createTodoRoute, async (c) => {
+export function registerCompleteTodo(app: OpenAPIHono) {
+    app.openapi(completeTodoRoute, async (c) => {
         const safeUserId = c.userId!;
-        const safeCreateTodoJsonBody = c.req.valid("json");
+        const safeCompleteTodoJsonBody = c.req.valid("json");
 
-        const newTodo: TodoType = {
-            id: crypto.randomUUID(),
+        const newTodo: TodoCompletedType = {
+            id: safeCompleteTodoJsonBody.id,
             userId: safeUserId,
-            description: safeCreateTodoJsonBody.description,
-            completed: false,
-            scheduledFor: safeCreateTodoJsonBody.scheduledFor,
-            completedAt: undefined,
-            relations: safeCreateTodoJsonBody.relations,
         };
 
-        const createTodoEvent = todoSchema.safeParse(newTodo);
-        if (!createTodoEvent.success) {
+        const completeTodoEvent = todoCompletedSchema.safeParse(newTodo);
+        if (!completeTodoEvent.success) {
             return c.json(
                 {
                     success: false as const,
                     message: "Invalid todo data",
-                    errors: createTodoEvent.error.errors,
+                    errors: completeTodoEvent.error.errors,
                 },
                 400,
             );
         }
-        const safeCreateTodoEvent = createTodoEvent.data;
+        const safeCompleteTodoEvent = completeTodoEvent.data;
 
         try {
-            await FlowcorePathways.write("todo.v0/todo.created.v0", {
-                data: safeCreateTodoEvent,
+            await FlowcorePathways.write("todo.v0/todo.completed.v0", {
+                data: safeCompleteTodoEvent,
             });
         } catch (error) {
             return c.json(
@@ -143,8 +120,8 @@ export function registerCreateTodo(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Todo created successfully",
-                data: safeCreateTodoEvent,
+                message: "Todo completed successfully",
+                data: safeCompleteTodoEvent,
             },
             200,
         );

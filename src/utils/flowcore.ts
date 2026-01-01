@@ -18,7 +18,8 @@ import {
     recipeSchema,
 } from "../contracts/food/recipe";
 import { habitsCreatedSchema } from "../contracts/habit/habit.contract";
-import { todoCompletedSchema, todoSchema } from "../contracts/todo";
+import { todoSchema } from "../contracts/todo";
+import { todoCompletedSchema } from "../contracts/todo/todo.completed";
 import {
     handleFoodItemCreated,
     handleFoodItemDeleted,
@@ -36,8 +37,8 @@ import {
 } from "../handlers/recipe/recipe.handler";
 import { handleRecipeIngredientsCreated } from "../handlers/recipe/recipe-ingredients.handler";
 import { handleRecipeInstructionsCreated } from "../handlers/recipe/recipe-instructions.handler";
-import { handleTodoCreated } from "../handlers/todo/todo.handler";
 import { handleTodoCompleted } from "../handlers/todo/todo.completed";
+import { handleTodoCreated } from "../handlers/todo/todo.handler";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
 const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
@@ -114,16 +115,16 @@ export const FlowcorePathways = new PathwaysBuilder({
         schema: mealRecipeAttachSchema,
     })
     .register({
-        flowType: "todo.v0",
-        eventType: "todo.created.v0",
-        retryDelayMs: 10000,
-        schema: todoSchema,
-    })
-    .register({
         flowType: "habit.v0",
         eventType: "complex-habit.created.v0",
         retryDelayMs: 10000,
         schema: habitsCreatedSchema,
+    })
+    .register({
+        flowType: "todo.v0",
+        eventType: "todo.created.v0",
+        retryDelayMs: 10000,
+        schema: todoSchema,
     })
     .register({
         flowType: "todo.v0",
