@@ -18,7 +18,7 @@ import {
     recipeSchema,
 } from "../contracts/food/recipe";
 import { habitsCreatedSchema } from "../contracts/habit/habit.contract";
-import { todoSchema } from "../contracts/todo";
+import { todoGeneratedSchema, todoSchema } from "../contracts/todo";
 import { todoCompletedSchema } from "../contracts/todo/todo.completed";
 import {
     handleFoodItemCreated,
@@ -38,6 +38,7 @@ import {
 import { handleRecipeIngredientsCreated } from "../handlers/recipe/recipe-ingredients.handler";
 import { handleRecipeInstructionsCreated } from "../handlers/recipe/recipe-instructions.handler";
 import { handleTodoCompleted } from "../handlers/todo/todo.completed";
+import { handleTodoGenerated } from "../handlers/todo/todo.generated";
 import { handleTodoCreated } from "../handlers/todo/todo.handler";
 
 export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
@@ -132,6 +133,12 @@ export const FlowcorePathways = new PathwaysBuilder({
         retryDelayMs: 10000,
         schema: todoCompletedSchema,
     })
+    .register({
+        flowType: "todo.v0",
+        eventType: "todo.generated.v0",
+        retryDelayMs: 10000,
+        schema: todoGeneratedSchema,
+    })
     .handle("food-item.v0/food-item.created.v0", handleFoodItemCreated)
     .handle("food-item.v0/food-item.deleted.v0", handleFoodItemDeleted)
     .handle(
@@ -155,6 +162,7 @@ export const FlowcorePathways = new PathwaysBuilder({
     .handle("meal.v0/meal.created.v0", handleMealCreated)
     .handle("meal.v0/meal-recipe.attached.v0", handleMealRecipeAttached)
     .handle("todo.v0/todo.created.v0", handleTodoCreated)
+    .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
     .handle("habit.v0/complex-habit.created.v0", handleHabitsCreated)
     .handle("todo.v0/todo.completed.v0", handleTodoCompleted);
 

@@ -3,6 +3,7 @@ import { HHMM, YMD } from "../habit/habit.contract";
 
 export const todoGeneratedSchema = z.object({
     // Basic todo fields
+    id: z.string().uuid(),
     userId: z.string().min(1),
     title: z.string().min(1),
     dueDate: YMD, // YYYY-MM-DD

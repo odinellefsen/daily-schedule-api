@@ -269,6 +269,7 @@ async function generateHabitInstance(
 
         // Create todo event for subEntity
         const todoEvent: TodoGeneratedType = {
+            id: crypto.randomUUID(),
             userId: habit.userId,
             habitId: habit.id,
             instanceId,
@@ -325,6 +326,7 @@ async function generateHabitInstance(
             const title = await resolver.getSubEntityTitle(instruction.id);
 
             const todoEvent: TodoGeneratedType = {
+                id: crypto.randomUUID(),
                 userId: habit.userId,
                 habitId: habit.id,
                 instanceId,
@@ -358,6 +360,7 @@ async function generateHabitInstance(
     const mainEventTitle = await resolver.getMainEventTitle(habit.entityId);
 
     const mainEventTodo: TodoGeneratedType = {
+        id: crypto.randomUUID(),
         userId: habit.userId,
         habitId: habit.id,
         instanceId,
