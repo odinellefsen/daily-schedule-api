@@ -88,7 +88,7 @@ const createFoodItemRoute = createRoute({
             },
         },
     },
-});
+} as const);
 
 export function registerCreateFoodItem(app: OpenAPIHono) {
     app.openapi(createFoodItemRoute, async (c) => {
