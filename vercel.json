@@ -1,8 +1,15 @@
 {
+  "buildCommand": "bun run build",
+  "installCommand": "bun install",
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/api"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.ts": {
+      "runtime": "edge"
+    }
+  }
 }
