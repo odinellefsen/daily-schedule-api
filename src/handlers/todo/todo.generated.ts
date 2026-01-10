@@ -14,9 +14,9 @@ export async function handleTodoGenerated(
     await db.insert(todos).values({
         id: payload.id,
         userId: payload.userId,
-        title: payload.title,
-        dueDate: payload.dueDate,
-        preferredTime: payload.preferredTime,
+        title: payload.description,
+        description: payload.description,
+        completed: payload.completed,
         scheduledFor: payload.scheduledFor
             ? (() => {
                   const date = new Date(payload.scheduledFor);
@@ -28,11 +28,17 @@ export async function handleTodoGenerated(
                   return date;
               })()
             : null,
-        habitId: payload.habitId,
-        instanceId: payload.instanceId,
-        domain: payload.domain,
-        entityId: payload.entityId,
-        subEntityId: payload.subEntityId,
-        eventId: payload.eventId,
+        completedAt: payload.completedAt
+            ? (() => {
+                  const date = new Date(payload.completedAt);
+                  if (Number.isNaN(date.getTime())) {
+                      throw new Error(
+                          `Invalid completedAt date: ${payload.completedAt}`,
+                      );
+                  }
+                  return date;
+              })()
+            : null,
+        relations: payload.relations ? JSON.stringify(payload.relations) : null,
     });
 }
