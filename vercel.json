@@ -6,10 +6,5 @@
       "source": "/(.*)",
       "destination": "/api"
     }
-  ],
-  "functions": {
-    "api/index.ts": {
-      "runtime": "edge"
-    }
-  }
+  ]
 }
