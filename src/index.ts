@@ -111,9 +111,7 @@ app.doc31("/api/openapi.json", {
 app.get(
     "/api/swagger",
     Scalar({
-        spec: {
-            url: "/api/openapi.json",
-        },
+        url: "/api/openapi.json",
         theme: "purple",
     }),
 );
