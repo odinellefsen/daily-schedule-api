@@ -10,7 +10,7 @@ const mealRelationSchema = z.object({
     recipeName: z.string().optional(), // snapshot for context
 });
 
-const mealInstructionRelationSchema = z.object({
+export const mealInstructionRelationSchema = z.object({
     mealStepId: z.string().uuid(),
     mealId: z.string().uuid(),
     recipeId: z.string().uuid(),

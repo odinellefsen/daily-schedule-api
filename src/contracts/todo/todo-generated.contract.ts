@@ -1,26 +1,31 @@
 import { z } from "zod";
-import { HHMM, YMD } from "../habit/habit.contract";
+import { mealInstructionRelationSchema } from "./todo.contract";
 
 export const todoGeneratedSchema = z.object({
-    // Basic todo fields
     id: z.string().uuid(),
-    userId: z.string().min(1),
-    title: z.string().min(1),
-    dueDate: YMD, // YYYY-MM-DD
-    preferredTime: HHMM.optional(), // HH:MM
-    scheduledFor: z.string().datetime(), // UTC timestamp for precise scheduling
+    userId: z.string(),
+    description: z
+        .string()
+        .min(1, "Description is required")
+        .max(250, "Description must be less than 250 characters"),
+    completed: z.boolean().default(false),
+    scheduledFor: z.string().datetime().optional(),
+    completedAt: z.string().datetime().optional(),
 
-    // Habit system linkage
-    habitId: z.string().uuid(),
-    instanceId: z.string().uuid(), // Groups related todos together
-
-    // Domain-agnostic reference (optional for plain text habits)
-    domain: z.string().optional(), // e.g., "meal", "workout", null for text habits
-    entityId: z.string().uuid().optional(), // e.g., mealId, workoutId
-    subEntityId: z.string().uuid().optional(), // e.g., instructionId, exerciseId
-
-    // Event metadata
-    eventId: z.string().optional(), // Will be filled by Flowcore
+    // Optional relations - extensible for future domains (fitness, shopping, bills, maintenance, etc.)
+    // in the future, when there are more available domains, make it into a union type
+    relations: z
+        .array(
+            z.object({
+                mealInstruction: mealInstructionRelationSchema,
+            }),
+        )
+        .min(
+            1,
+            "if relations is NOT undefined, you must have at least one relation",
+        )
+        .max(5, "you can only have up to 5 relations")
+        .optional(),
 });
 
 export type TodoGeneratedType = z.infer<typeof todoGeneratedSchema>;

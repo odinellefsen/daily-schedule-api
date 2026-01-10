@@ -271,15 +271,11 @@ async function generateHabitInstance(
         const todoEvent: TodoGeneratedType = {
             id: crypto.randomUUID(),
             userId: habit.userId,
-            habitId: habit.id,
-            instanceId,
-            title,
-            dueDate: scheduledDate,
-            preferredTime: scheduledTime,
+            description: title,
+            completed: false,
             scheduledFor: scheduledFor.toISOString(),
-            domain: habit.domain,
-            entityId: habit.entityId,
-            subEntityId: subEntity.subEntityId || undefined,
+            completedAt: undefined,
+            relations: undefined,
         };
 
         todoEvents.push(todoEvent);
@@ -328,15 +324,11 @@ async function generateHabitInstance(
             const todoEvent: TodoGeneratedType = {
                 id: crypto.randomUUID(),
                 userId: habit.userId,
-                habitId: habit.id,
-                instanceId,
-                title,
-                dueDate: scheduledDate,
-                preferredTime: scheduledTime,
+                description: title,
+                completed: false,
                 scheduledFor: scheduledFor.toISOString(),
-                domain: habit.domain,
-                entityId: habit.entityId,
-                subEntityId: instruction.id,
+                completedAt: undefined,
+                relations: undefined,
             };
 
             todoEvents.push(todoEvent);
@@ -362,15 +354,11 @@ async function generateHabitInstance(
     const mainEventTodo: TodoGeneratedType = {
         id: crypto.randomUUID(),
         userId: habit.userId,
-        habitId: habit.id,
-        instanceId,
-        title: mainEventTitle,
-        dueDate: mainEventDate,
-        preferredTime: mainEventTime,
+        description: mainEventTitle,
+        completed: false,
         scheduledFor: mainEventScheduledFor.toISOString(),
-        domain: habit.domain,
-        entityId: habit.entityId,
-        subEntityId: undefined, // Main event has no subEntityId
+        completedAt: undefined,
+        relations: undefined,
     };
 
     todoEvents.push(mainEventTodo);
