@@ -1,9 +1,13 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
+import type { Hono } from "hono";
 import { cors } from "hono/cors";
 import api from "./routes/api";
 
 export const app = new OpenAPIHono();
+// Exporting this type also ensures the module has a direct `from "hono"` import,
+// which some deployment/build detectors rely on.
+export type App = Hono;
 
 // Configure CORS to allow requests from frontend
 app.use(
@@ -47,9 +51,9 @@ import { registerDeleteRecipe } from "./routes/api/recipe/recipe.delete";
 import { registerListRecipes } from "./routes/api/recipe/recipe.list";
 import { registerCreateRecipeIngredients } from "./routes/api/recipe/recipe-ingredients.create";
 import { registerCreateRecipeInstructions } from "./routes/api/recipe/recipe-instructions.create";
+import { registerCompleteTodo } from "./routes/api/todo/todo.complete";
 import { registerCreateTodo } from "./routes/api/todo/todo.create";
 import { registerListTodos } from "./routes/api/todo/todo.list";
-import { registerCompleteTodo } from "./routes/api/todo/todo.complete";
 
 // Apply auth middleware
 app.use("/api/todo/*", requireAuth());
