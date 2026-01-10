@@ -1,6 +1,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
 import { and, eq } from "drizzle-orm";
+import type { ZodSchema } from "zod";
 import {
     type FoodItemType,
     foodItemSchema,
@@ -32,6 +33,58 @@ const errorResponseSchema = z.object({
 });
 
 // Route definition
+type MediaTypeObject = { schema: ZodSchema };
+type OpenApiResponseDef = {
+    description: string;
+    content: Record<string, MediaTypeObject>;
+};
+
+// Force `responses` to have a string index signature so `keyof responses` includes `number`,
+// which prevents `@hono/zod-openapi` from collapsing the inferred handler return type to `never`
+// in some TypeScript configurations (notably Vercel’s build).
+const createFoodItemResponses: Record<string, OpenApiResponseDef> = {
+    200: {
+        description: "Food item created successfully",
+        content: {
+            "application/json": {
+                schema: successResponseSchema,
+            },
+        },
+    },
+    400: {
+        description: "Bad Request",
+        content: {
+            "application/json": {
+                schema: errorResponseSchema,
+            },
+        },
+    },
+    401: {
+        description: "Unauthorized",
+        content: {
+            "application/json": {
+                schema: errorResponseSchema,
+            },
+        },
+    },
+    409: {
+        description: "Conflict - Food item with name already exists",
+        content: {
+            "application/json": {
+                schema: errorResponseSchema,
+            },
+        },
+    },
+    500: {
+        description: "Internal Server Error",
+        content: {
+            "application/json": {
+                schema: errorResponseSchema,
+            },
+        },
+    },
+};
+
 const createFoodItemRoute = createRoute({
     method: "post",
     path: "/api/food-item",
@@ -46,49 +99,8 @@ const createFoodItemRoute = createRoute({
             },
         },
     },
-    responses: {
-        200: {
-            description: "Food item created successfully",
-            content: {
-                "application/json": {
-                    schema: successResponseSchema,
-                },
-            },
-        },
-        400: {
-            description: "Bad Request",
-            content: {
-                "application/json": {
-                    schema: errorResponseSchema,
-                },
-            },
-        },
-        401: {
-            description: "Unauthorized",
-            content: {
-                "application/json": {
-                    schema: errorResponseSchema,
-                },
-            },
-        },
-        409: {
-            description: "Conflict - Food item with name already exists",
-            content: {
-                "application/json": {
-                    schema: errorResponseSchema,
-                },
-            },
-        },
-        500: {
-            description: "Internal Server Error",
-            content: {
-                "application/json": {
-                    schema: errorResponseSchema,
-                },
-            },
-        },
-    },
-} as const);
+    responses: createFoodItemResponses,
+});
 
 export function registerCreateFoodItem(app: OpenAPIHono) {
     app.openapi(createFoodItemRoute, async (c) => {
