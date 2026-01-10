@@ -2,6 +2,7 @@
 	"name": "daily-scheduler-api",
 	"scripts": {
 		"dev": "bun run --hot src/index.ts",
+		"vercel-build": "echo 'No build needed for serverless functions'",
 		"build": "bun build src/index.ts --outdir dist --target=bun",
 		"lint": "biome lint src/",
 		"lint:fix": "biome lint --write src/",
