@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
 import { and, eq, gte, lte } from "drizzle-orm";

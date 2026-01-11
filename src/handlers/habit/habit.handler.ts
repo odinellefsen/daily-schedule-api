@@ -1,7 +1,7 @@
-import crypto from "node:crypto";
+import { randomUUID } from "node:crypto";
 import type { FlowcoreEvent } from "@flowcore/pathways";
-import type { z } from "zod";
-import type { habitsCreatedSchema } from "../../contracts/habit/habit.contract";
+import type { z } from "@hono/zod-openapi";
+import { habitsCreatedSchema } from "../../contracts/habit/habit.contract";
 import { db } from "../../db";
 import { habitSubEntities, habits, habitTriggers } from "../../db/schemas";
 
@@ -11,7 +11,7 @@ export async function handleHabitsCreated(
     },
 ) {
     const { payload } = event;
-    const habitId = crypto.randomUUID();
+    const habitId = randomUUID();
 
     // 1. Create main habit record
     const habitRecord = {
@@ -34,18 +34,18 @@ export async function handleHabitsCreated(
 
     // 3. Create habit trigger record
     const triggerRecord = {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         habitId,
         triggerSubEntityId: triggerSubEntity.subEntityId || null,
-        triggerWeekday: triggerSubEntity.scheduledWeekday,
+        triggerWeekday: triggerSubEntity.scheduledWeekday ?? payload.targetWeekday,
     };
 
     // 4. Create all subEntity records
     const subEntityRecords = payload.subEntities.map((subEntity) => ({
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         habitId,
         subEntityId: subEntity.subEntityId || null,
-        scheduledWeekday: subEntity.scheduledWeekday,
+        scheduledWeekday: subEntity.scheduledWeekday ?? payload.targetWeekday,
         scheduledTime: subEntity.scheduledTime || null,
     }));
 
@@ -64,7 +64,7 @@ function findTriggerSubEntityForWeekRecurrenceType(
     targetWeekday: string,
     subEntities: Array<{
         subEntityId?: string;
-        scheduledWeekday: string;
+        scheduledWeekday?: string;
         scheduledTime?: string;
     }>,
 ) {
@@ -83,6 +83,7 @@ function findTriggerSubEntityForWeekRecurrenceType(
     let triggerSubEntity = subEntities[0]; // fallback
 
     for (const subEntity of subEntities) {
+        if (!subEntity.scheduledWeekday) continue;
         const subEntityDay = weekdays.indexOf(subEntity.scheduledWeekday);
 
         // Calculate days before target (positive = earlier in week)
