@@ -1,6 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import type { Hono } from "hono";
-import type { Handler } from "hono";
+import type { Handler, Hono } from "hono";
 import { cors } from "hono/cors";
 import api from "./routes/api";
 
@@ -25,6 +24,16 @@ app.use(
         credentials: true,
     }),
 );
+
+// Unauthenticated health check (for load balancers / k8s / uptime monitors)
+app.get("/health", (c) => {
+    return c.json({ ok: true }, 200);
+});
+
+// Convenience alias under /api (also unauthenticated)
+app.get("/api/health", (c) => {
+    return c.json({ ok: true }, 200);
+});
 
 // Register security schemes
 app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
@@ -116,13 +125,15 @@ async function getScalarHandler(): Promise<ScalarHandler> {
 
     // Important: `@scalar/hono-api-reference` is ESM-only. Our Vercel build targets CJS,
     // so we must use a dynamic `import()` to avoid `ERR_REQUIRE_ESM`.
-    scalarHandlerInit ??= import("@scalar/hono-api-reference").then(({ Scalar }) => {
-        scalarHandler = Scalar({
-            url: "/api/openapi.json",
-            theme: "purple",
-        }) as ScalarHandler;
-        return scalarHandler;
-    });
+    scalarHandlerInit ??= import("@scalar/hono-api-reference").then(
+        ({ Scalar }) => {
+            scalarHandler = Scalar({
+                url: "/api/openapi.json",
+                theme: "purple",
+            }) as ScalarHandler;
+            return scalarHandler;
+        },
+    );
 
     return scalarHandlerInit;
 }
