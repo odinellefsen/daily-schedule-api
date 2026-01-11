@@ -42473,6 +42473,191 @@ var require_date_fns = __commonJS((exports2) => {
   });
 });
 
+// node_modules/@scalar/core/dist/libs/html-rendering/html-rendering.js
+function getScriptTags(configuration, cdn) {
+  const restConfig = { ...configuration };
+  const functionProps = [];
+  for (const [key, value] of Object.entries(configuration)) {
+    if (typeof value === "function") {
+      functionProps.push(`"${key}": ${value.toString()}`);
+      delete restConfig[key];
+    } else if (Array.isArray(value) && value.some((item) => typeof item === "function")) {
+      functionProps.push(`"${key}": ${serializeArrayWithFunctions(value)}`);
+      delete restConfig[key];
+    }
+  }
+  const configString = JSON.stringify(restConfig, null, 2).split(`
+`).map((line2, index) => index === 0 ? line2 : "      " + line2).join(`
+`).replace(/\s*}$/, "");
+  const functionPropsString = functionProps.length ? `,
+        ${functionProps.join(`,
+        `)}
+      }` : "}";
+  return `
+    <!-- Load the Script -->
+    <script src="${cdn ?? "https://cdn.jsdelivr.net/npm/@scalar/api-reference"}"></script>
+
+    <!-- Initialize the Scalar API Reference -->
+    <script type="text/javascript">
+      Scalar.createApiReference('#app', ${configString}${functionPropsString})
+    </script>`;
+}
+var addIndent = (str, spaces = 2, initialIndent = false) => {
+  const indent = " ".repeat(spaces);
+  const lines = str.split(`
+`);
+  return lines.map((line2, index) => {
+    if (index === 0 && !initialIndent) {
+      return line2;
+    }
+    return `${indent}${line2}`;
+  }).join(`
+`);
+}, getStyles = (configuration, customTheme) => {
+  const styles = [];
+  if (configuration.customCss) {
+    styles.push("/* Custom CSS */");
+    styles.push(configuration.customCss);
+  }
+  if (!configuration.theme && customTheme) {
+    styles.push("/* Custom Theme */");
+    styles.push(customTheme);
+  }
+  if (styles.length === 0) {
+    return "";
+  }
+  return `
+    <style type="text/css">
+      ${addIndent(styles.join(`
+
+`), 6)}
+    </style>`;
+}, getHtmlDocument = (givenConfiguration, customTheme = "") => {
+  const { cdn, pageTitle, customCss, theme, ...rest } = givenConfiguration;
+  const configuration = getConfiguration({
+    ...rest,
+    ...theme ? { theme } : {},
+    customCss
+  });
+  const content = `<!doctype html>
+<html>
+  <head>
+    <title>${pageTitle ?? "Scalar API Reference"}</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1" />${getStyles(configuration, customTheme)}
+  </head>
+  <body>
+    <div id="app"></div>${getScriptTags(configuration, cdn)}
+  </body>
+</html>`;
+  return content;
+}, serializeArrayWithFunctions = (arr) => {
+  return `[${arr.map((item) => typeof item === "function" ? item.toString() : JSON.stringify(item)).join(", ")}]`;
+}, getConfiguration = (givenConfiguration) => {
+  const configuration = {
+    ...givenConfiguration
+  };
+  if (typeof configuration.content === "function") {
+    configuration.content = configuration.content();
+  }
+  if (configuration.content && configuration.url) {
+    delete configuration.content;
+  }
+  return configuration;
+};
+var init_html_rendering = () => {};
+
+// node_modules/@scalar/core/dist/libs/html-rendering/index.js
+var init_html_rendering2 = __esm(() => {
+  init_html_rendering();
+});
+
+// node_modules/@scalar/hono-api-reference/dist/scalar.js
+var DEFAULT_CONFIGURATION, customTheme = `
+.dark-mode {
+  color-scheme: dark;
+  --scalar-color-1: rgba(255, 255, 245, .86);
+  --scalar-color-2: rgba(255, 255, 245, .6);
+  --scalar-color-3: rgba(255, 255, 245, .38);
+  --scalar-color-disabled: rgba(255, 255, 245, .25);
+  --scalar-color-ghost: rgba(255, 255, 245, .25);
+  --scalar-color-accent: #e36002;
+  --scalar-background-1: #1e1e20;
+  --scalar-background-2: #2a2a2a;
+  --scalar-background-3: #505053;
+  --scalar-background-4: rgba(255, 255, 255, 0.06);
+  --scalar-background-accent: #e360021f;
+
+  --scalar-border-color: rgba(255, 255, 255, 0.1);
+  --scalar-scrollbar-color: rgba(255, 255, 255, 0.24);
+  --scalar-scrollbar-color-active: rgba(255, 255, 255, 0.48);
+  --scalar-lifted-brightness: 1.45;
+  --scalar-backdrop-brightness: 0.5;
+
+  --scalar-shadow-1: 0 1px 3px 0 rgb(0, 0, 0, 0.1);
+  --scalar-shadow-2: rgba(15, 15, 15, 0.2) 0px 3px 6px,
+    rgba(15, 15, 15, 0.4) 0px 9px 24px, 0 0 0 1px rgba(255, 255, 255, 0.1);
+
+  --scalar-button-1: #f6f6f6;
+  --scalar-button-1-color: #000;
+  --scalar-button-1-hover: #e7e7e7;
+
+  --scalar-color-green: #3dd68c;
+  --scalar-color-red: #f66f81;
+  --scalar-color-yellow: #f9b44e;
+  --scalar-color-blue: #5c73e7;
+  --scalar-color-orange: #ff8d4d;
+  --scalar-color-purple: #b191f9;
+}
+/* Sidebar */
+.dark-mode .sidebar {
+  --scalar-sidebar-background-1: #161618;
+  --scalar-sidebar-item-hover-color: var(--scalar-color-accent);
+  --scalar-sidebar-item-hover-background: transparent;
+  --scalar-sidebar-item-active-background: transparent;
+  --scalar-sidebar-border-color: transparent;
+  --scalar-sidebar-color-1: var(--scalar-color-1);
+  --scalar-sidebar-color-2: var(--scalar-color-2);
+  --scalar-sidebar-color-active: var(--scalar-color-accent);
+  --scalar-sidebar-search-background: #252529;
+  --scalar-sidebar-search-border-color: transparent;
+  --scalar-sidebar-search-color: var(--scalar-color-3);
+}
+`, Scalar = (configOrResolver) => {
+  return async (c) => {
+    let resolvedConfig = {};
+    if (typeof configOrResolver === "function") {
+      resolvedConfig = await configOrResolver(c);
+    } else {
+      resolvedConfig = configOrResolver;
+    }
+    const configuration = {
+      ...DEFAULT_CONFIGURATION,
+      ...resolvedConfig
+    };
+    return c.html(getHtmlDocument(configuration, customTheme));
+  };
+}, apiReference;
+var init_scalar = __esm(() => {
+  init_html_rendering2();
+  DEFAULT_CONFIGURATION = {
+    _integration: "hono"
+  };
+  apiReference = Scalar;
+});
+
+// node_modules/@scalar/hono-api-reference/dist/index.js
+var exports_dist = {};
+__export(exports_dist, {
+  apiReference: () => apiReference,
+  Scalar: () => Scalar
+});
+var init_dist2 = __esm(() => {
+  init_scalar();
+});
+
 // src/index.ts
 var exports_src2 = {};
 __export(exports_src2, {
@@ -48256,175 +48441,6 @@ function isJSONContentType(contentType) {
 function isFormContentType(contentType) {
   return contentType.startsWith("multipart/form-data") || contentType.startsWith("application/x-www-form-urlencoded");
 }
-
-// node_modules/@scalar/core/dist/libs/html-rendering/html-rendering.js
-var addIndent = (str, spaces = 2, initialIndent = false) => {
-  const indent = " ".repeat(spaces);
-  const lines = str.split(`
-`);
-  return lines.map((line, index) => {
-    if (index === 0 && !initialIndent) {
-      return line;
-    }
-    return `${indent}${line}`;
-  }).join(`
-`);
-};
-var getStyles = (configuration, customTheme) => {
-  const styles = [];
-  if (configuration.customCss) {
-    styles.push("/* Custom CSS */");
-    styles.push(configuration.customCss);
-  }
-  if (!configuration.theme && customTheme) {
-    styles.push("/* Custom Theme */");
-    styles.push(customTheme);
-  }
-  if (styles.length === 0) {
-    return "";
-  }
-  return `
-    <style type="text/css">
-      ${addIndent(styles.join(`
-
-`), 6)}
-    </style>`;
-};
-var getHtmlDocument = (givenConfiguration, customTheme = "") => {
-  const { cdn, pageTitle, customCss, theme, ...rest } = givenConfiguration;
-  const configuration = getConfiguration({
-    ...rest,
-    ...theme ? { theme } : {},
-    customCss
-  });
-  const content = `<!doctype html>
-<html>
-  <head>
-    <title>${pageTitle ?? "Scalar API Reference"}</title>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1" />${getStyles(configuration, customTheme)}
-  </head>
-  <body>
-    <div id="app"></div>${getScriptTags(configuration, cdn)}
-  </body>
-</html>`;
-  return content;
-};
-var serializeArrayWithFunctions = (arr) => {
-  return `[${arr.map((item) => typeof item === "function" ? item.toString() : JSON.stringify(item)).join(", ")}]`;
-};
-function getScriptTags(configuration, cdn) {
-  const restConfig = { ...configuration };
-  const functionProps = [];
-  for (const [key, value] of Object.entries(configuration)) {
-    if (typeof value === "function") {
-      functionProps.push(`"${key}": ${value.toString()}`);
-      delete restConfig[key];
-    } else if (Array.isArray(value) && value.some((item) => typeof item === "function")) {
-      functionProps.push(`"${key}": ${serializeArrayWithFunctions(value)}`);
-      delete restConfig[key];
-    }
-  }
-  const configString = JSON.stringify(restConfig, null, 2).split(`
-`).map((line, index) => index === 0 ? line : "      " + line).join(`
-`).replace(/\s*}$/, "");
-  const functionPropsString = functionProps.length ? `,
-        ${functionProps.join(`,
-        `)}
-      }` : "}";
-  return `
-    <!-- Load the Script -->
-    <script src="${cdn ?? "https://cdn.jsdelivr.net/npm/@scalar/api-reference"}"></script>
-
-    <!-- Initialize the Scalar API Reference -->
-    <script type="text/javascript">
-      Scalar.createApiReference('#app', ${configString}${functionPropsString})
-    </script>`;
-}
-var getConfiguration = (givenConfiguration) => {
-  const configuration = {
-    ...givenConfiguration
-  };
-  if (typeof configuration.content === "function") {
-    configuration.content = configuration.content();
-  }
-  if (configuration.content && configuration.url) {
-    delete configuration.content;
-  }
-  return configuration;
-};
-// node_modules/@scalar/hono-api-reference/dist/scalar.js
-var DEFAULT_CONFIGURATION = {
-  _integration: "hono"
-};
-var customTheme = `
-.dark-mode {
-  color-scheme: dark;
-  --scalar-color-1: rgba(255, 255, 245, .86);
-  --scalar-color-2: rgba(255, 255, 245, .6);
-  --scalar-color-3: rgba(255, 255, 245, .38);
-  --scalar-color-disabled: rgba(255, 255, 245, .25);
-  --scalar-color-ghost: rgba(255, 255, 245, .25);
-  --scalar-color-accent: #e36002;
-  --scalar-background-1: #1e1e20;
-  --scalar-background-2: #2a2a2a;
-  --scalar-background-3: #505053;
-  --scalar-background-4: rgba(255, 255, 255, 0.06);
-  --scalar-background-accent: #e360021f;
-
-  --scalar-border-color: rgba(255, 255, 255, 0.1);
-  --scalar-scrollbar-color: rgba(255, 255, 255, 0.24);
-  --scalar-scrollbar-color-active: rgba(255, 255, 255, 0.48);
-  --scalar-lifted-brightness: 1.45;
-  --scalar-backdrop-brightness: 0.5;
-
-  --scalar-shadow-1: 0 1px 3px 0 rgb(0, 0, 0, 0.1);
-  --scalar-shadow-2: rgba(15, 15, 15, 0.2) 0px 3px 6px,
-    rgba(15, 15, 15, 0.4) 0px 9px 24px, 0 0 0 1px rgba(255, 255, 255, 0.1);
-
-  --scalar-button-1: #f6f6f6;
-  --scalar-button-1-color: #000;
-  --scalar-button-1-hover: #e7e7e7;
-
-  --scalar-color-green: #3dd68c;
-  --scalar-color-red: #f66f81;
-  --scalar-color-yellow: #f9b44e;
-  --scalar-color-blue: #5c73e7;
-  --scalar-color-orange: #ff8d4d;
-  --scalar-color-purple: #b191f9;
-}
-/* Sidebar */
-.dark-mode .sidebar {
-  --scalar-sidebar-background-1: #161618;
-  --scalar-sidebar-item-hover-color: var(--scalar-color-accent);
-  --scalar-sidebar-item-hover-background: transparent;
-  --scalar-sidebar-item-active-background: transparent;
-  --scalar-sidebar-border-color: transparent;
-  --scalar-sidebar-color-1: var(--scalar-color-1);
-  --scalar-sidebar-color-2: var(--scalar-color-2);
-  --scalar-sidebar-color-active: var(--scalar-color-accent);
-  --scalar-sidebar-search-background: #252529;
-  --scalar-sidebar-search-border-color: transparent;
-  --scalar-sidebar-search-color: var(--scalar-color-3);
-}
-`;
-var Scalar = (configOrResolver) => {
-  return async (c) => {
-    let resolvedConfig = {};
-    if (typeof configOrResolver === "function") {
-      resolvedConfig = await configOrResolver(c);
-    } else {
-      resolvedConfig = configOrResolver;
-    }
-    const configuration = {
-      ...DEFAULT_CONFIGURATION,
-      ...resolvedConfig
-    };
-    return c.html(getHtmlDocument(configuration, customTheme));
-  };
-};
 
 // node_modules/hono/dist/middleware/cors/index.js
 var cors = (options) => {
@@ -59072,10 +59088,10 @@ async function handleFoodItemUnitsDeleted(event2) {
 }
 
 // src/handlers/habit/habit.handler.ts
-var import_node_crypto2 = __toESM(require("node:crypto"));
+var import_node_crypto2 = require("node:crypto");
 async function handleHabitsCreated(event2) {
   const { payload } = event2;
-  const habitId = import_node_crypto2.default.randomUUID();
+  const habitId = import_node_crypto2.randomUUID();
   const habitRecord = {
     id: habitId,
     userId: payload.userId,
@@ -59089,16 +59105,16 @@ async function handleHabitsCreated(event2) {
   };
   const triggerSubEntity = findTriggerSubEntityForWeekRecurrenceType(payload.targetWeekday, payload.subEntities);
   const triggerRecord = {
-    id: import_node_crypto2.default.randomUUID(),
+    id: import_node_crypto2.randomUUID(),
     habitId,
     triggerSubEntityId: triggerSubEntity.subEntityId || null,
-    triggerWeekday: triggerSubEntity.scheduledWeekday
+    triggerWeekday: triggerSubEntity.scheduledWeekday ?? payload.targetWeekday
   };
   const subEntityRecords = payload.subEntities.map((subEntity) => ({
-    id: import_node_crypto2.default.randomUUID(),
+    id: import_node_crypto2.randomUUID(),
     habitId,
     subEntityId: subEntity.subEntityId || null,
-    scheduledWeekday: subEntity.scheduledWeekday,
+    scheduledWeekday: subEntity.scheduledWeekday ?? payload.targetWeekday,
     scheduledTime: subEntity.scheduledTime || null
   }));
   await db.transaction(async (tx) => {
@@ -59121,6 +59137,8 @@ function findTriggerSubEntityForWeekRecurrenceType(targetWeekday, subEntities) {
   let maxOffset = -1;
   let triggerSubEntity = subEntities[0];
   for (const subEntity of subEntities) {
+    if (!subEntity.scheduledWeekday)
+      continue;
     const subEntityDay = weekdays.indexOf(subEntity.scheduledWeekday);
     let offset = targetDay - subEntityDay;
     if (offset < 0)
@@ -62363,10 +62381,24 @@ app.doc31("/api/openapi.json", {
     }
   ]
 });
-app.get("/api/swagger", Scalar({
-  url: "/api/openapi.json",
-  theme: "purple"
-}));
+var scalarHandler;
+var scalarHandlerInit;
+async function getScalarHandler() {
+  if (scalarHandler)
+    return scalarHandler;
+  scalarHandlerInit ??= Promise.resolve().then(() => (init_dist2(), exports_dist)).then(({ Scalar: Scalar2 }) => {
+    scalarHandler = Scalar2({
+      url: "/api/openapi.json",
+      theme: "purple"
+    });
+    return scalarHandler;
+  });
+  return scalarHandlerInit;
+}
+app.get("/api/swagger", async (c, next) => {
+  const handler = await getScalarHandler();
+  return handler(c, next);
+});
 var src_default2 = {
   port: 3030,
   fetch: app.fetch

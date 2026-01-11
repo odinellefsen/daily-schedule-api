@@ -1,6 +1,6 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { Scalar } from "@scalar/hono-api-reference";
 import type { Hono } from "hono";
+import type { Handler } from "hono";
 import { cors } from "hono/cors";
 import api from "./routes/api";
 
@@ -107,14 +107,31 @@ app.doc31("/api/openapi.json", {
     ],
 });
 
+type ScalarHandler = Handler;
+let scalarHandler: ScalarHandler | undefined;
+let scalarHandlerInit: Promise<ScalarHandler> | undefined;
+
+async function getScalarHandler(): Promise<ScalarHandler> {
+    if (scalarHandler) return scalarHandler;
+
+    // Important: `@scalar/hono-api-reference` is ESM-only. Our Vercel build targets CJS,
+    // so we must use a dynamic `import()` to avoid `ERR_REQUIRE_ESM`.
+    scalarHandlerInit ??= import("@scalar/hono-api-reference").then(({ Scalar }) => {
+        scalarHandler = Scalar({
+            url: "/api/openapi.json",
+            theme: "purple",
+        }) as ScalarHandler;
+        return scalarHandler;
+    });
+
+    return scalarHandlerInit;
+}
+
 // Scalar API Reference (modern, beautiful UI)
-app.get(
-    "/api/swagger",
-    Scalar({
-        url: "/api/openapi.json",
-        theme: "purple",
-    }),
-);
+app.get("/api/swagger", async (c, next) => {
+    const handler = await getScalarHandler();
+    return handler(c, next);
+});
 
 export default {
     port: 3030,
