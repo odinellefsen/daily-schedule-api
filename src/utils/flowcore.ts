@@ -41,30 +41,22 @@ import { handleTodoCompleted } from "../handlers/todo/todo.completed";
 import { handleTodoGenerated } from "../handlers/todo/todo.generated";
 import { handleTodoCreated } from "../handlers/todo/todo.handler";
 
-type FlowcoreInit = {
-    webhookApiKey: string;
-    pathways: PathwaysBuilder;
-    router: PathwayRouter;
-};
-
-let cached: FlowcoreInit | undefined;
-
-function initFlowcore(): FlowcoreInit {
-    if (cached) return cached;
-
-    const env = getEnv();
-    const webhookApiKey = env.FLOWCORE_WEBHOOK_API_KEY;
-    const postgresUrl = env.POSTGRES_CONNECTION_STRING;
-
-    const pathways = new PathwaysBuilder({
-        baseUrl: env.FLOWCORE_WEBHOOK_BASE_URL,
-        tenant: env.FLOWCORE_TENANT,
-        dataCore: env.FLOWCORE_DATA_CORE_NAME,
-        apiKey: webhookApiKey,
+function buildFlowcorePathways(config: {
+    baseUrl: string;
+    tenant: string;
+    dataCore: string;
+    apiKey: string;
+    postgresUrl: string;
+}) {
+    return new PathwaysBuilder({
+        baseUrl: config.baseUrl,
+        tenant: config.tenant,
+        dataCore: config.dataCore,
+        apiKey: config.apiKey,
     })
         .withPathwayState(
             createPostgresPathwayState({
-                connectionString: postgresUrl,
+                connectionString: config.postgresUrl,
             }),
         )
         .register({
@@ -177,6 +169,32 @@ function initFlowcore(): FlowcoreInit {
         .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
         .handle("habit.v0/complex-habit.created.v0", handleHabitsCreated)
         .handle("todo.v0/todo.completed.v0", handleTodoCompleted);
+}
+
+export type FlowcorePathwaysType = ReturnType<typeof buildFlowcorePathways>;
+
+let cached:
+    | {
+          webhookApiKey: string;
+          pathways: FlowcorePathwaysType;
+          router: PathwayRouter;
+      }
+    | undefined;
+
+function initFlowcore() {
+    if (cached) return cached;
+
+    const env = getEnv();
+    const webhookApiKey = env.FLOWCORE_WEBHOOK_API_KEY;
+    const postgresUrl = env.POSTGRES_CONNECTION_STRING;
+
+    const pathways = buildFlowcorePathways({
+        baseUrl: env.FLOWCORE_WEBHOOK_BASE_URL,
+        tenant: env.FLOWCORE_TENANT,
+        dataCore: env.FLOWCORE_DATA_CORE_NAME,
+        apiKey: webhookApiKey,
+        postgresUrl,
+    });
 
     const router = new PathwayRouter(pathways, webhookApiKey);
 
@@ -194,13 +212,13 @@ export function getPathwaysRouter() {
 
 // Keep existing import shape for all route handlers that call `FlowcorePathways.write(...)`.
 // Ensure methods are bound to the underlying instance so `this` works as expected.
-export const FlowcorePathways: PathwaysBuilder = new Proxy(
-    {} as PathwaysBuilder,
+export const FlowcorePathways: FlowcorePathwaysType = new Proxy(
+    {} as FlowcorePathwaysType,
     {
         get(_target, prop) {
             const instance = getFlowcorePathways();
-            const value = instance[prop as keyof PathwaysBuilder];
+            const value = instance[prop as keyof FlowcorePathwaysType];
             return typeof value === "function" ? value.bind(instance) : value;
         },
     },
-) as PathwaysBuilder;
+) as FlowcorePathwaysType;

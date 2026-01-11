@@ -59318,20 +59318,14 @@ async function handleTodoCreated(event2) {
 }
 
 // src/utils/flowcore.ts
-var cached;
-function initFlowcore() {
-  if (cached)
-    return cached;
-  const env = getEnv();
-  const webhookApiKey = env.FLOWCORE_WEBHOOK_API_KEY;
-  const postgresUrl = env.POSTGRES_CONNECTION_STRING;
-  const pathways2 = new PathwaysBuilder({
-    baseUrl: env.FLOWCORE_WEBHOOK_BASE_URL,
-    tenant: env.FLOWCORE_TENANT,
-    dataCore: env.FLOWCORE_DATA_CORE_NAME,
-    apiKey: webhookApiKey
+function buildFlowcorePathways(config) {
+  return new PathwaysBuilder({
+    baseUrl: config.baseUrl,
+    tenant: config.tenant,
+    dataCore: config.dataCore,
+    apiKey: config.apiKey
   }).withPathwayState(createPostgresPathwayState({
-    connectionString: postgresUrl
+    connectionString: config.postgresUrl
   })).register({
     flowType: "food-item.v0",
     eventType: "food-item.created.v0",
@@ -59403,6 +59397,21 @@ function initFlowcore() {
     retryDelayMs: 1e4,
     schema: todoGeneratedSchema
   }).handle("food-item.v0/food-item.created.v0", handleFoodItemCreated).handle("food-item.v0/food-item.deleted.v0", handleFoodItemDeleted).handle("food-item.v0/food-item.units.created.v0", handleFoodItemUnitsCreated).handle("food-item.v0/food-item.units.deleted.v0", handleFoodItemUnitsDeleted).handle("recipe.v0/recipe.created.v0", handleRecipeCreated).handle("recipe.v0/recipe.deleted.v0", handleRecipeDeleted).handle("recipe.v0/recipe-instructions.created.v0", handleRecipeInstructionsCreated).handle("recipe.v0/recipe-ingredients.created.v0", handleRecipeIngredientsCreated).handle("meal.v0/meal.created.v0", handleMealCreated).handle("meal.v0/meal-recipe.attached.v0", handleMealRecipeAttached).handle("todo.v0/todo.created.v0", handleTodoCreated).handle("todo.v0/todo.generated.v0", handleTodoGenerated).handle("habit.v0/complex-habit.created.v0", handleHabitsCreated).handle("todo.v0/todo.completed.v0", handleTodoCompleted);
+}
+var cached;
+function initFlowcore() {
+  if (cached)
+    return cached;
+  const env = getEnv();
+  const webhookApiKey = env.FLOWCORE_WEBHOOK_API_KEY;
+  const postgresUrl = env.POSTGRES_CONNECTION_STRING;
+  const pathways2 = buildFlowcorePathways({
+    baseUrl: env.FLOWCORE_WEBHOOK_BASE_URL,
+    tenant: env.FLOWCORE_TENANT,
+    dataCore: env.FLOWCORE_DATA_CORE_NAME,
+    apiKey: webhookApiKey,
+    postgresUrl
+  });
   const router2 = new PathwayRouter(pathways2, webhookApiKey);
   cached = { webhookApiKey, pathways: pathways2, router: router2 };
   return cached;
