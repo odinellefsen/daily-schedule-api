@@ -3,7 +3,7 @@ import {
     PathwayRouter,
     PathwaysBuilder,
 } from "@flowcore/pathways";
-import { zodEnv } from "../../env";
+import { getEnv } from "../../env";
 import {
     foodItemDeletedSchema,
     foodItemSchema,
@@ -41,132 +41,166 @@ import { handleTodoCompleted } from "../handlers/todo/todo.completed";
 import { handleTodoGenerated } from "../handlers/todo/todo.generated";
 import { handleTodoCreated } from "../handlers/todo/todo.handler";
 
-export const postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
-const webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
+type FlowcoreInit = {
+    webhookApiKey: string;
+    pathways: PathwaysBuilder;
+    router: PathwayRouter;
+};
 
-export const FlowcorePathways = new PathwaysBuilder({
-    baseUrl: zodEnv.FLOWCORE_WEBHOOK_BASE_URL,
-    tenant: zodEnv.FLOWCORE_TENANT,
-    dataCore: zodEnv.FLOWCORE_DATA_CORE_NAME,
-    apiKey: webhookApiKey,
-})
-    .withPathwayState(
-        createPostgresPathwayState({
-            connectionString: postgresUrl,
-        }),
-    )
-    .register({
-        flowType: "food-item.v0",
-        eventType: "food-item.created.v0",
-        retryDelayMs: 10000,
-        schema: foodItemSchema,
-    })
-    .register({
-        flowType: "food-item.v0",
-        eventType: "food-item.deleted.v0",
-        retryDelayMs: 10000,
-        schema: foodItemDeletedSchema,
-    })
-    .register({
-        flowType: "food-item.v0",
-        eventType: "food-item.units.created.v0",
-        retryDelayMs: 10000,
-        schema: foodItemUnitSchema,
-    })
-    .register({
-        flowType: "food-item.v0",
-        eventType: "food-item.units.deleted.v0",
-        retryDelayMs: 10000,
-        schema: foodItemUnitDeletedSchema,
-    })
-    .register({
-        flowType: "recipe.v0",
-        eventType: "recipe.created.v0",
-        retryDelayMs: 10000,
-        schema: recipeSchema,
-    })
-    .register({
-        flowType: "recipe.v0",
-        eventType: "recipe.deleted.v0",
-        retryDelayMs: 10000,
-        schema: recipeDeletedSchema,
-    })
-    .register({
-        flowType: "recipe.v0",
-        eventType: "recipe-instructions.created.v0",
-        retryDelayMs: 10000,
-        schema: recipeInstructionsSchema,
-    })
-    .register({
-        flowType: "recipe.v0",
-        eventType: "recipe-ingredients.created.v0",
-        retryDelayMs: 10000,
-        schema: recipeIngredientsSchema,
-    })
-    .register({
-        flowType: "meal.v0",
-        eventType: "meal.created.v0",
-        retryDelayMs: 10000,
-        schema: mealSchema,
-    })
-    .register({
-        flowType: "meal.v0",
-        eventType: "meal-recipe.attached.v0",
-        retryDelayMs: 10000,
-        schema: mealRecipeAttachSchema,
-    })
-    .register({
-        flowType: "habit.v0",
-        eventType: "complex-habit.created.v0",
-        retryDelayMs: 10000,
-        schema: habitsCreatedSchema,
-    })
-    .register({
-        flowType: "todo.v0",
-        eventType: "todo.created.v0",
-        retryDelayMs: 10000,
-        schema: todoSchema,
-    })
-    .register({
-        flowType: "todo.v0",
-        eventType: "todo.completed.v0",
-        retryDelayMs: 10000,
-        schema: todoCompletedSchema,
-    })
-    .register({
-        flowType: "todo.v0",
-        eventType: "todo.generated.v0",
-        retryDelayMs: 10000,
-        schema: todoGeneratedSchema,
-    })
-    .handle("food-item.v0/food-item.created.v0", handleFoodItemCreated)
-    .handle("food-item.v0/food-item.deleted.v0", handleFoodItemDeleted)
-    .handle(
-        "food-item.v0/food-item.units.created.v0",
-        handleFoodItemUnitsCreated,
-    )
-    .handle(
-        "food-item.v0/food-item.units.deleted.v0",
-        handleFoodItemUnitsDeleted,
-    )
-    .handle("recipe.v0/recipe.created.v0", handleRecipeCreated)
-    .handle("recipe.v0/recipe.deleted.v0", handleRecipeDeleted)
-    .handle(
-        "recipe.v0/recipe-instructions.created.v0",
-        handleRecipeInstructionsCreated,
-    )
-    .handle(
-        "recipe.v0/recipe-ingredients.created.v0",
-        handleRecipeIngredientsCreated,
-    )
-    .handle("meal.v0/meal.created.v0", handleMealCreated)
-    .handle("meal.v0/meal-recipe.attached.v0", handleMealRecipeAttached)
-    .handle("todo.v0/todo.created.v0", handleTodoCreated)
-    .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
-    .handle("habit.v0/complex-habit.created.v0", handleHabitsCreated)
-    .handle("todo.v0/todo.completed.v0", handleTodoCompleted);
+let cached: FlowcoreInit | undefined;
 
-export const pathwaysRouter = new PathwayRouter(
-    FlowcorePathways,
-    webhookApiKey,
-);
+function initFlowcore(): FlowcoreInit {
+    if (cached) return cached;
+
+    const env = getEnv();
+    const webhookApiKey = env.FLOWCORE_WEBHOOK_API_KEY;
+    const postgresUrl = env.POSTGRES_CONNECTION_STRING;
+
+    const pathways = new PathwaysBuilder({
+        baseUrl: env.FLOWCORE_WEBHOOK_BASE_URL,
+        tenant: env.FLOWCORE_TENANT,
+        dataCore: env.FLOWCORE_DATA_CORE_NAME,
+        apiKey: webhookApiKey,
+    })
+        .withPathwayState(
+            createPostgresPathwayState({
+                connectionString: postgresUrl,
+            }),
+        )
+        .register({
+            flowType: "food-item.v0",
+            eventType: "food-item.created.v0",
+            retryDelayMs: 10000,
+            schema: foodItemSchema,
+        })
+        .register({
+            flowType: "food-item.v0",
+            eventType: "food-item.deleted.v0",
+            retryDelayMs: 10000,
+            schema: foodItemDeletedSchema,
+        })
+        .register({
+            flowType: "food-item.v0",
+            eventType: "food-item.units.created.v0",
+            retryDelayMs: 10000,
+            schema: foodItemUnitSchema,
+        })
+        .register({
+            flowType: "food-item.v0",
+            eventType: "food-item.units.deleted.v0",
+            retryDelayMs: 10000,
+            schema: foodItemUnitDeletedSchema,
+        })
+        .register({
+            flowType: "recipe.v0",
+            eventType: "recipe.created.v0",
+            retryDelayMs: 10000,
+            schema: recipeSchema,
+        })
+        .register({
+            flowType: "recipe.v0",
+            eventType: "recipe.deleted.v0",
+            retryDelayMs: 10000,
+            schema: recipeDeletedSchema,
+        })
+        .register({
+            flowType: "recipe.v0",
+            eventType: "recipe-instructions.created.v0",
+            retryDelayMs: 10000,
+            schema: recipeInstructionsSchema,
+        })
+        .register({
+            flowType: "recipe.v0",
+            eventType: "recipe-ingredients.created.v0",
+            retryDelayMs: 10000,
+            schema: recipeIngredientsSchema,
+        })
+        .register({
+            flowType: "meal.v0",
+            eventType: "meal.created.v0",
+            retryDelayMs: 10000,
+            schema: mealSchema,
+        })
+        .register({
+            flowType: "meal.v0",
+            eventType: "meal-recipe.attached.v0",
+            retryDelayMs: 10000,
+            schema: mealRecipeAttachSchema,
+        })
+        .register({
+            flowType: "habit.v0",
+            eventType: "complex-habit.created.v0",
+            retryDelayMs: 10000,
+            schema: habitsCreatedSchema,
+        })
+        .register({
+            flowType: "todo.v0",
+            eventType: "todo.created.v0",
+            retryDelayMs: 10000,
+            schema: todoSchema,
+        })
+        .register({
+            flowType: "todo.v0",
+            eventType: "todo.completed.v0",
+            retryDelayMs: 10000,
+            schema: todoCompletedSchema,
+        })
+        .register({
+            flowType: "todo.v0",
+            eventType: "todo.generated.v0",
+            retryDelayMs: 10000,
+            schema: todoGeneratedSchema,
+        })
+        .handle("food-item.v0/food-item.created.v0", handleFoodItemCreated)
+        .handle("food-item.v0/food-item.deleted.v0", handleFoodItemDeleted)
+        .handle(
+            "food-item.v0/food-item.units.created.v0",
+            handleFoodItemUnitsCreated,
+        )
+        .handle(
+            "food-item.v0/food-item.units.deleted.v0",
+            handleFoodItemUnitsDeleted,
+        )
+        .handle("recipe.v0/recipe.created.v0", handleRecipeCreated)
+        .handle("recipe.v0/recipe.deleted.v0", handleRecipeDeleted)
+        .handle(
+            "recipe.v0/recipe-instructions.created.v0",
+            handleRecipeInstructionsCreated,
+        )
+        .handle(
+            "recipe.v0/recipe-ingredients.created.v0",
+            handleRecipeIngredientsCreated,
+        )
+        .handle("meal.v0/meal.created.v0", handleMealCreated)
+        .handle("meal.v0/meal-recipe.attached.v0", handleMealRecipeAttached)
+        .handle("todo.v0/todo.created.v0", handleTodoCreated)
+        .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
+        .handle("habit.v0/complex-habit.created.v0", handleHabitsCreated)
+        .handle("todo.v0/todo.completed.v0", handleTodoCompleted);
+
+    const router = new PathwayRouter(pathways, webhookApiKey);
+
+    cached = { webhookApiKey, pathways, router };
+    return cached;
+}
+
+export function getFlowcorePathways() {
+    return initFlowcore().pathways;
+}
+
+export function getPathwaysRouter() {
+    return initFlowcore().router;
+}
+
+// Keep existing import shape for all route handlers that call `FlowcorePathways.write(...)`.
+// Ensure methods are bound to the underlying instance so `this` works as expected.
+export const FlowcorePathways: PathwaysBuilder = new Proxy(
+    {} as PathwaysBuilder,
+    {
+        get(_target, prop) {
+            const instance = getFlowcorePathways();
+            const value = instance[prop as keyof PathwaysBuilder];
+            return typeof value === "function" ? value.bind(instance) : value;
+        },
+    },
+) as PathwaysBuilder;

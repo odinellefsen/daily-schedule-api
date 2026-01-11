@@ -49520,7 +49520,25 @@ var envSchema = exports_external.object({
   FLOWCORE_WEBHOOK_BASE_URL: exports_external.string(),
   CLERK_SECRET_KEY: exports_external.string()
 });
-var zodEnv = envSchema.parse(process.env);
+var cachedEnv;
+function getEnv() {
+  if (cachedEnv)
+    return cachedEnv;
+  const parsed = envSchema.safeParse(process.env);
+  if (!parsed.success) {
+    const fields = parsed.error.issues.map((i) => i.path.join(".") || "(root)").join(", ");
+    const message = `Missing/invalid required environment variables: ${fields}`;
+    console.error(message, parsed.error.flatten());
+    throw new Error(message);
+  }
+  cachedEnv = parsed.data;
+  return cachedEnv;
+}
+var zodEnv = new Proxy({}, {
+  get(_target, prop) {
+    return getEnv()[prop];
+  }
+});
 
 // src/utils/api-responses.ts
 var StatusCodes = {
@@ -59043,10 +59061,25 @@ var habitTriggerExecutions = pgTable("habit_trigger_executions", {
 });
 
 // src/db/index.ts
-var pool = new Pool({
-  connectionString: zodEnv.POSTGRES_CONNECTION_STRING
+var pool;
+var drizzleDb;
+function initDb() {
+  if (drizzleDb)
+    return drizzleDb;
+  const env = getEnv();
+  pool ??= new Pool({
+    connectionString: env.POSTGRES_CONNECTION_STRING
+  });
+  drizzleDb = drizzle(pool, { schema: exports_schemas });
+  return drizzleDb;
+}
+var db = new Proxy({}, {
+  get(_target, prop) {
+    const instance = initDb();
+    const value = instance[prop];
+    return typeof value === "function" ? value.bind(instance) : value;
+  }
 });
-var db = drizzle(pool, { schema: exports_schemas });
 
 // src/handlers/food-item/food-item.handler.ts
 async function handleFoodItemCreated(event2) {
@@ -59285,87 +59318,108 @@ async function handleTodoCreated(event2) {
 }
 
 // src/utils/flowcore.ts
-var postgresUrl = zodEnv.POSTGRES_CONNECTION_STRING;
-var webhookApiKey = zodEnv.FLOWCORE_WEBHOOK_API_KEY;
-var FlowcorePathways = new PathwaysBuilder({
-  baseUrl: zodEnv.FLOWCORE_WEBHOOK_BASE_URL,
-  tenant: zodEnv.FLOWCORE_TENANT,
-  dataCore: zodEnv.FLOWCORE_DATA_CORE_NAME,
-  apiKey: webhookApiKey
-}).withPathwayState(createPostgresPathwayState({
-  connectionString: postgresUrl
-})).register({
-  flowType: "food-item.v0",
-  eventType: "food-item.created.v0",
-  retryDelayMs: 1e4,
-  schema: foodItemSchema
-}).register({
-  flowType: "food-item.v0",
-  eventType: "food-item.deleted.v0",
-  retryDelayMs: 1e4,
-  schema: foodItemDeletedSchema
-}).register({
-  flowType: "food-item.v0",
-  eventType: "food-item.units.created.v0",
-  retryDelayMs: 1e4,
-  schema: foodItemUnitSchema
-}).register({
-  flowType: "food-item.v0",
-  eventType: "food-item.units.deleted.v0",
-  retryDelayMs: 1e4,
-  schema: foodItemUnitDeletedSchema
-}).register({
-  flowType: "recipe.v0",
-  eventType: "recipe.created.v0",
-  retryDelayMs: 1e4,
-  schema: recipeSchema
-}).register({
-  flowType: "recipe.v0",
-  eventType: "recipe.deleted.v0",
-  retryDelayMs: 1e4,
-  schema: recipeDeletedSchema
-}).register({
-  flowType: "recipe.v0",
-  eventType: "recipe-instructions.created.v0",
-  retryDelayMs: 1e4,
-  schema: recipeInstructionsSchema
-}).register({
-  flowType: "recipe.v0",
-  eventType: "recipe-ingredients.created.v0",
-  retryDelayMs: 1e4,
-  schema: recipeIngredientsSchema
-}).register({
-  flowType: "meal.v0",
-  eventType: "meal.created.v0",
-  retryDelayMs: 1e4,
-  schema: mealSchema
-}).register({
-  flowType: "meal.v0",
-  eventType: "meal-recipe.attached.v0",
-  retryDelayMs: 1e4,
-  schema: mealRecipeAttachSchema
-}).register({
-  flowType: "habit.v0",
-  eventType: "complex-habit.created.v0",
-  retryDelayMs: 1e4,
-  schema: habitsCreatedSchema
-}).register({
-  flowType: "todo.v0",
-  eventType: "todo.created.v0",
-  retryDelayMs: 1e4,
-  schema: todoSchema
-}).register({
-  flowType: "todo.v0",
-  eventType: "todo.completed.v0",
-  retryDelayMs: 1e4,
-  schema: todoCompletedSchema
-}).register({
-  flowType: "todo.v0",
-  eventType: "todo.generated.v0",
-  retryDelayMs: 1e4,
-  schema: todoGeneratedSchema
-}).handle("food-item.v0/food-item.created.v0", handleFoodItemCreated).handle("food-item.v0/food-item.deleted.v0", handleFoodItemDeleted).handle("food-item.v0/food-item.units.created.v0", handleFoodItemUnitsCreated).handle("food-item.v0/food-item.units.deleted.v0", handleFoodItemUnitsDeleted).handle("recipe.v0/recipe.created.v0", handleRecipeCreated).handle("recipe.v0/recipe.deleted.v0", handleRecipeDeleted).handle("recipe.v0/recipe-instructions.created.v0", handleRecipeInstructionsCreated).handle("recipe.v0/recipe-ingredients.created.v0", handleRecipeIngredientsCreated).handle("meal.v0/meal.created.v0", handleMealCreated).handle("meal.v0/meal-recipe.attached.v0", handleMealRecipeAttached).handle("todo.v0/todo.created.v0", handleTodoCreated).handle("todo.v0/todo.generated.v0", handleTodoGenerated).handle("habit.v0/complex-habit.created.v0", handleHabitsCreated).handle("todo.v0/todo.completed.v0", handleTodoCompleted);
-var pathwaysRouter = new PathwayRouter(FlowcorePathways, webhookApiKey);
+var cached;
+function initFlowcore() {
+  if (cached)
+    return cached;
+  const env = getEnv();
+  const webhookApiKey = env.FLOWCORE_WEBHOOK_API_KEY;
+  const postgresUrl = env.POSTGRES_CONNECTION_STRING;
+  const pathways2 = new PathwaysBuilder({
+    baseUrl: env.FLOWCORE_WEBHOOK_BASE_URL,
+    tenant: env.FLOWCORE_TENANT,
+    dataCore: env.FLOWCORE_DATA_CORE_NAME,
+    apiKey: webhookApiKey
+  }).withPathwayState(createPostgresPathwayState({
+    connectionString: postgresUrl
+  })).register({
+    flowType: "food-item.v0",
+    eventType: "food-item.created.v0",
+    retryDelayMs: 1e4,
+    schema: foodItemSchema
+  }).register({
+    flowType: "food-item.v0",
+    eventType: "food-item.deleted.v0",
+    retryDelayMs: 1e4,
+    schema: foodItemDeletedSchema
+  }).register({
+    flowType: "food-item.v0",
+    eventType: "food-item.units.created.v0",
+    retryDelayMs: 1e4,
+    schema: foodItemUnitSchema
+  }).register({
+    flowType: "food-item.v0",
+    eventType: "food-item.units.deleted.v0",
+    retryDelayMs: 1e4,
+    schema: foodItemUnitDeletedSchema
+  }).register({
+    flowType: "recipe.v0",
+    eventType: "recipe.created.v0",
+    retryDelayMs: 1e4,
+    schema: recipeSchema
+  }).register({
+    flowType: "recipe.v0",
+    eventType: "recipe.deleted.v0",
+    retryDelayMs: 1e4,
+    schema: recipeDeletedSchema
+  }).register({
+    flowType: "recipe.v0",
+    eventType: "recipe-instructions.created.v0",
+    retryDelayMs: 1e4,
+    schema: recipeInstructionsSchema
+  }).register({
+    flowType: "recipe.v0",
+    eventType: "recipe-ingredients.created.v0",
+    retryDelayMs: 1e4,
+    schema: recipeIngredientsSchema
+  }).register({
+    flowType: "meal.v0",
+    eventType: "meal.created.v0",
+    retryDelayMs: 1e4,
+    schema: mealSchema
+  }).register({
+    flowType: "meal.v0",
+    eventType: "meal-recipe.attached.v0",
+    retryDelayMs: 1e4,
+    schema: mealRecipeAttachSchema
+  }).register({
+    flowType: "habit.v0",
+    eventType: "complex-habit.created.v0",
+    retryDelayMs: 1e4,
+    schema: habitsCreatedSchema
+  }).register({
+    flowType: "todo.v0",
+    eventType: "todo.created.v0",
+    retryDelayMs: 1e4,
+    schema: todoSchema
+  }).register({
+    flowType: "todo.v0",
+    eventType: "todo.completed.v0",
+    retryDelayMs: 1e4,
+    schema: todoCompletedSchema
+  }).register({
+    flowType: "todo.v0",
+    eventType: "todo.generated.v0",
+    retryDelayMs: 1e4,
+    schema: todoGeneratedSchema
+  }).handle("food-item.v0/food-item.created.v0", handleFoodItemCreated).handle("food-item.v0/food-item.deleted.v0", handleFoodItemDeleted).handle("food-item.v0/food-item.units.created.v0", handleFoodItemUnitsCreated).handle("food-item.v0/food-item.units.deleted.v0", handleFoodItemUnitsDeleted).handle("recipe.v0/recipe.created.v0", handleRecipeCreated).handle("recipe.v0/recipe.deleted.v0", handleRecipeDeleted).handle("recipe.v0/recipe-instructions.created.v0", handleRecipeInstructionsCreated).handle("recipe.v0/recipe-ingredients.created.v0", handleRecipeIngredientsCreated).handle("meal.v0/meal.created.v0", handleMealCreated).handle("meal.v0/meal-recipe.attached.v0", handleMealRecipeAttached).handle("todo.v0/todo.created.v0", handleTodoCreated).handle("todo.v0/todo.generated.v0", handleTodoGenerated).handle("habit.v0/complex-habit.created.v0", handleHabitsCreated).handle("todo.v0/todo.completed.v0", handleTodoCompleted);
+  const router2 = new PathwayRouter(pathways2, webhookApiKey);
+  cached = { webhookApiKey, pathways: pathways2, router: router2 };
+  return cached;
+}
+function getFlowcorePathways() {
+  return initFlowcore().pathways;
+}
+function getPathwaysRouter() {
+  return initFlowcore().router;
+}
+var FlowcorePathways = new Proxy({}, {
+  get(_target, prop) {
+    const instance = getFlowcorePathways();
+    const value = instance[prop];
+    return typeof value === "function" ? value.bind(instance) : value;
+  }
+});
 
 // src/routes/api/transformer/index.ts
 var transformer = new Hono2;
@@ -59382,7 +59436,7 @@ transformer.post("/", async (c) => {
     if (secret !== zodEnv.FLOWCORE_WEBHOOK_API_KEY) {
       return c.json(ApiResponse.error("Secret key is incorrect or missing"), StatusCodes.UNAUTHORIZED);
     }
-    await pathwaysRouter.processEvent(event2, secret);
+    await getPathwaysRouter().processEvent(event2, secret);
     return c.json({
       message: "Event processed ✅"
     }, 200);
@@ -62321,6 +62375,13 @@ function registerListTodos(app) {
 
 // src/index.ts
 var app = new OpenAPIHono;
+app.onError((err2, c) => {
+  console.error("Unhandled error", err2);
+  return c.json({
+    error: "INTERNAL_SERVER_ERROR",
+    message: err2 instanceof Error ? err2.message : String(err2)
+  }, 500);
+});
 app.use("/*", cors({
   origin: [
     "https://flowday.io",
@@ -62333,6 +62394,12 @@ app.use("/*", cors({
   maxAge: 86400,
   credentials: true
 }));
+app.get("/health", (c) => {
+  return c.json({ ok: true }, 200);
+});
+app.get("/api/health", (c) => {
+  return c.json({ ok: true }, 200);
+});
 app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
   type: "http",
   scheme: "bearer",

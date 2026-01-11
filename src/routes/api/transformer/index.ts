@@ -2,7 +2,7 @@ import type { FlowcoreEvent } from "@flowcore/pathways";
 import { Hono } from "hono";
 import { zodEnv } from "../../../../env";
 import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
-import { pathwaysRouter } from "../../../utils/flowcore";
+import { getPathwaysRouter } from "../../../utils/flowcore";
 
 export const transformer = new Hono();
 
@@ -25,7 +25,7 @@ transformer.post("/", async (c) => {
             );
         }
 
-        await pathwaysRouter.processEvent(event, secret);
+        await getPathwaysRouter().processEvent(event, secret);
 
         return c.json(
             {

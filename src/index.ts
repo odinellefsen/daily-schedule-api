@@ -8,6 +8,17 @@ export const app = new OpenAPIHono();
 // which some deployment/build detectors rely on.
 export type App = Hono;
 
+app.onError((err, c) => {
+    console.error("Unhandled error", err);
+    return c.json(
+        {
+            error: "INTERNAL_SERVER_ERROR",
+            message: err instanceof Error ? err.message : String(err),
+        },
+        500,
+    );
+});
+
 // Configure CORS to allow requests from frontend
 app.use(
     "/*",
