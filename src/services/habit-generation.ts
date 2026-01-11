@@ -13,7 +13,7 @@ import {
     mealRecipes,
     recipeInstructions,
 } from "../db/schemas";
-import { FlowcorePathways } from "../utils/flowcore";
+import { getFlowcorePathways } from "../utils/flowcore";
 import { getTitleResolver } from "./domain-resolvers";
 
 /**
@@ -364,6 +364,7 @@ async function generateHabitInstance(
     todoEvents.push(mainEventTodo);
 
     // Batch write all todos for this instance
+    const FlowcorePathways = await getFlowcorePathways();
     await FlowcorePathways.write("todo.v0/todo.generated.v0", {
         batch: true,
         data: todoEvents,

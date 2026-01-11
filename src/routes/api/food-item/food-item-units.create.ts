@@ -8,7 +8,7 @@ import {
 } from "../../../contracts/food/food-item/food-item-units.contract";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
-import { FlowcorePathways } from "../../../utils/flowcore";
+import { getFlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
@@ -138,6 +138,7 @@ export function registerCreateFoodItemUnits(app: OpenAPIHono) {
         const safeCreateFoodItemUnitEvent = createdFoodItemUnitEvent.data;
 
         try {
+            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write(
                 "food-item.v0/food-item.units.created.v0",
                 {

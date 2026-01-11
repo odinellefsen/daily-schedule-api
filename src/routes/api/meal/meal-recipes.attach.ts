@@ -8,7 +8,7 @@ import {
 } from "../../../contracts/food/meal";
 import { db } from "../../../db";
 import { mealRecipes, meals, recipes } from "../../../db/schemas";
-import { FlowcorePathways } from "../../../utils/flowcore";
+import { getFlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const requestSchema = z.object({
@@ -171,6 +171,7 @@ export function registerAttachMealRecipes(app: OpenAPIHono) {
         }
 
         try {
+            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write("meal.v0/meal-recipe.attached.v0", {
                 data: attachEvent.data,
             });

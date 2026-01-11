@@ -10,7 +10,7 @@ import {
 } from "../../../contracts/habit/habit.contract";
 import { db } from "../../../db";
 import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
-import { FlowcorePathways } from "../../../utils/flowcore";
+import { getFlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const createComplexHabitRequestSchema = z.object({
@@ -231,6 +231,7 @@ export function registerCreateHabit(app: OpenAPIHono) {
         // This ensures habits always reflect the current meal state
 
         try {
+            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write("habit.v0/complex-habit.created.v0", {
                 data: safeCreateHabitEvent,
             });

@@ -2,7 +2,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
 import { type TodoType, todoSchema } from "../../../contracts/todo";
-import { FlowcorePathways } from "../../../utils/flowcore";
+import { getFlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const createTodoRequestSchema = z.object({
@@ -127,6 +127,7 @@ export function registerCreateTodo(app: OpenAPIHono) {
         const safeCreateTodoEvent = createTodoEvent.data;
 
         try {
+            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write("todo.v0/todo.created.v0", {
                 data: safeCreateTodoEvent,
             });

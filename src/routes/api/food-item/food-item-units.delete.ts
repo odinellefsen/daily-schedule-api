@@ -6,7 +6,7 @@ import { foodItemUnitDeletedSchema } from "../../../contracts/food/food-item";
 import type { UnitOfMeasurementEnum } from "../../../contracts/food/food-item/food-item.shared_utils";
 import { db } from "../../../db";
 import { foodItemUnits } from "../../../db/schemas";
-import { FlowcorePathways } from "../../../utils/flowcore";
+import { getFlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const deleteFoodItemUnitRequestSchema = z.object({
@@ -169,6 +169,7 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
         const safeDeleteFoodItemUnitEvent = newDeleteFoodItemUnitEvent.data;
 
         try {
+            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write(
                 "food-item.v0/food-item.units.deleted.v0",
                 {

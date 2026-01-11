@@ -2,7 +2,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
 import { type MealCreateType, mealSchema } from "../../../contracts/food/meal";
-import { FlowcorePathways } from "../../../utils/flowcore";
+import { getFlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const createMealRequestSchema = z.object({
@@ -107,6 +107,7 @@ export function registerCreateMeal(app: OpenAPIHono) {
         const safeCreateMealEvent = createMealEvent.data;
 
         try {
+            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write("meal.v0/meal.created.v0", {
                 data: safeCreateMealEvent,
             });
