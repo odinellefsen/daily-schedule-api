@@ -8,7 +8,7 @@ import {
 } from "../../../contracts/food/food-item/food-item.contract";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
-import { getFlowcorePathways } from "../../../utils/flowcore";
+import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const deleteFoodItemRequestSchema = z.object({
@@ -128,7 +128,6 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
         const safeFoodItemDeletedEvent = foodItemDeletedEvent.data;
 
         try {
-            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write("food-item.v0/food-item.deleted.v0", {
                 data: safeFoodItemDeletedEvent,
             });

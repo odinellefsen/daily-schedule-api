@@ -8,7 +8,7 @@ import {
 } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schemas";
-import { getFlowcorePathways } from "../../../utils/flowcore";
+import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const deleteRecipeRequestSchema = z.object({
@@ -127,7 +127,6 @@ export function registerDeleteRecipe(app: OpenAPIHono) {
         const safeRecipeDeletedEvent = recipeDeletedEvent.data;
 
         try {
-            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write("recipe.v0/recipe.deleted.v0", {
                 data: safeRecipeDeletedEvent,
             });

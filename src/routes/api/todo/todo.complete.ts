@@ -5,7 +5,7 @@ import {
     type TodoCompletedType,
     todoCompletedSchema,
 } from "../../../contracts/todo/todo.completed";
-import { getFlowcorePathways } from "../../../utils/flowcore";
+import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const completeTodoRequestSchema = z.object({
@@ -104,7 +104,6 @@ export function registerCompleteTodo(app: OpenAPIHono) {
         const safeCompleteTodoEvent = completeTodoEvent.data;
 
         try {
-            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write("todo.v0/todo.completed.v0", {
                 data: safeCompleteTodoEvent,
             });

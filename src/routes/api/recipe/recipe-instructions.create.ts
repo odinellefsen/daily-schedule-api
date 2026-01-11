@@ -8,7 +8,7 @@ import {
 } from "../../../contracts/food/recipe";
 import { db } from "../../../db";
 import { recipeInstructions, recipes } from "../../../db/schemas";
-import { getFlowcorePathways } from "../../../utils/flowcore";
+import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const createRecipeInstructionsRequestSchema = z.object({
@@ -172,7 +172,6 @@ export function registerCreateRecipeInstructions(app: OpenAPIHono) {
             createRecipeInstructionsEvent.data;
 
         try {
-            const FlowcorePathways = await getFlowcorePathways();
             await FlowcorePathways.write(
                 "recipe.v0/recipe-instructions.created.v0",
                 {
