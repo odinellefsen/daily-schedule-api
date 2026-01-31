@@ -20,19 +20,32 @@ app.onError((err, c) => {
     );
 });
 
-// Configure CORS to allow requests from frontend
-const defaultAllowedOrigins = [
-    "https://flowday.io",
-    "https://www.flowday.io",
-    "http://localhost:3000",
-    "http://localhost:3001",
-];
-const extraAllowedOrigins = (zodEnv.CORS_ALLOWED_ORIGINS ?? "")
-    .split(",")
-    .map((origin: string) => origin.trim())
-    .filter(Boolean);
+// Configure server binding and CORS for local frontend
+const defaultLocalApiBaseUrl = "http://localhost:3030";
+const localApiBaseUrl = zodEnv.LOCAL_IP ?? defaultLocalApiBaseUrl;
+let localApiUrl: URL | undefined;
 
-const allowedOrigins = [...defaultAllowedOrigins, ...extraAllowedOrigins];
+try {
+    localApiUrl = new URL(localApiBaseUrl);
+} catch {
+    localApiUrl = new URL(defaultLocalApiBaseUrl);
+}
+
+const defaultAllowedOrigins = ["https://flowday.io", "https://www.flowday.io"];
+const localFrontendOrigins = localApiUrl
+    ? (["3000", "3001"] as const).map((port) => {
+          const frontendUrl = new URL(localApiUrl?.origin ?? localApiBaseUrl);
+          frontendUrl.port = port;
+          return frontendUrl.origin;
+      })
+    : ["http://localhost:3000", "http://localhost:3001"];
+
+const allowedOrigins = Array.from(
+    new Set([...defaultAllowedOrigins, ...localFrontendOrigins]),
+);
+
+const localApiHost = localApiUrl?.hostname;
+const localApiPort = Number(localApiUrl?.port || "3030");
 
 app.use(
     "/*",
@@ -126,7 +139,7 @@ app.doc31("/api/openapi.json", {
     },
     servers: [
         {
-            url: "http://localhost:3030",
+            url: localApiUrl?.origin ?? defaultLocalApiBaseUrl,
             description: "Local development server",
         },
         {
@@ -164,7 +177,17 @@ app.get("/api/swagger", async (c, next) => {
     return handler(c, next);
 });
 
-export default {
-    port: 3030,
+const serverConfig: {
+    port: number;
+    fetch: typeof app.fetch;
+    hostname?: string;
+} = {
+    port: localApiPort,
     fetch: app.fetch,
 };
+
+if (localApiHost) {
+    serverConfig.hostname = localApiHost;
+}
+
+export default serverConfig;

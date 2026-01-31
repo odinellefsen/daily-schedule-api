@@ -7,7 +7,7 @@ export const envSchema = z.object({
     FLOWCORE_WEBHOOK_API_KEY: z.string(),
     FLOWCORE_WEBHOOK_BASE_URL: z.string(),
     CLERK_SECRET_KEY: z.string(),
-    CORS_ALLOWED_ORIGINS: z.string().optional(),
+    LOCAL_IP: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
