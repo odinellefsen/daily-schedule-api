@@ -22,7 +22,10 @@ app.onError((err, c) => {
 
 // Configure server binding and CORS for local frontend
 const defaultLocalApiBaseUrl = "http://localhost:3030";
-const localApiBaseUrl = zodEnv.LOCAL_IP ?? defaultLocalApiBaseUrl;
+const rawLocalApiBaseUrl = zodEnv.LOCAL_IP ?? defaultLocalApiBaseUrl;
+const localApiBaseUrl = rawLocalApiBaseUrl.includes("://")
+    ? rawLocalApiBaseUrl
+    : `http://${rawLocalApiBaseUrl}`;
 let localApiUrl: URL | undefined;
 
 try {
@@ -34,9 +37,9 @@ try {
 const defaultAllowedOrigins = ["https://flowday.io", "https://www.flowday.io"];
 const localFrontendOrigins = localApiUrl
     ? (["3000", "3001"] as const).map((port) => {
-          const frontendUrl = new URL(localApiUrl?.origin ?? localApiBaseUrl);
-          frontendUrl.port = port;
-          return frontendUrl.origin;
+          const protocol = localApiUrl?.protocol ?? "http:";
+          const hostname = localApiUrl?.hostname ?? "localhost";
+          return `${protocol}//${hostname}:${port}`;
       })
     : ["http://localhost:3000", "http://localhost:3001"];
 
