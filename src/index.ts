@@ -1,6 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Handler, Hono } from "hono";
 import { cors } from "hono/cors";
+import { zodEnv } from "../env";
 import api from "./routes/api";
 
 export const app = new OpenAPIHono();
@@ -20,15 +21,23 @@ app.onError((err, c) => {
 });
 
 // Configure CORS to allow requests from frontend
+const defaultAllowedOrigins = [
+    "https://flowday.io",
+    "https://www.flowday.io",
+    "http://localhost:3000",
+    "http://localhost:3001",
+];
+const extraAllowedOrigins = (zodEnv.CORS_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((origin: string) => origin.trim())
+    .filter(Boolean);
+
+const allowedOrigins = [...defaultAllowedOrigins, ...extraAllowedOrigins];
+
 app.use(
     "/*",
     cors({
-        origin: [
-            "https://flowday.io",
-            "https://www.flowday.io",
-            "http://localhost:3000",
-            "http://localhost:3001",
-        ],
+        origin: allowedOrigins,
         allowHeaders: ["Content-Type", "Authorization"],
         allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         maxAge: 86400,
