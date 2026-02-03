@@ -1,7 +1,7 @@
 // @ts-nocheck
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, isNull, lte, or } from "drizzle-orm";
 import { db } from "../../../db";
 import { todos } from "../../../db/schemas";
 import { generateMissingHabitTodos } from "../../../services/habit-generation";
@@ -153,8 +153,13 @@ export function registerListTodos(app: OpenAPIHono) {
             .where(
                 and(
                     eq(todos.userId, safeUserId),
-                    gte(todos.scheduledFor, startOfDayUTC),
-                    lte(todos.scheduledFor, endOfDayUTC),
+                    or(
+                        isNull(todos.scheduledFor),
+                        and(
+                            gte(todos.scheduledFor, startOfDayUTC),
+                            lte(todos.scheduledFor, endOfDayUTC),
+                        ),
+                    ),
                 ),
             )
             .orderBy(todos.scheduledFor);
