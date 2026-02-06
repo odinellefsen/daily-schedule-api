@@ -96,6 +96,7 @@ import { registerDeleteRecipe } from "./routes/api/recipe/recipe.delete";
 import { registerListRecipes } from "./routes/api/recipe/recipe.list";
 import { registerCreateRecipeIngredients } from "./routes/api/recipe/recipe-ingredients.create";
 import { registerCreateRecipeInstructions } from "./routes/api/recipe/recipe-instructions.create";
+import { registerCancelTodo } from "./routes/api/todo/todo.cancel";
 import { registerCompleteTodo } from "./routes/api/todo/todo.complete";
 import { registerCreateTodo } from "./routes/api/todo/todo.create";
 import { registerListTodos } from "./routes/api/todo/todo.list";
@@ -109,6 +110,7 @@ app.use("/api/meal/*", requireAuth());
 
 // Register OpenAPI routes directly on main app
 registerCreateTodo(app);
+registerCancelTodo(app);
 registerCompleteTodo(app);
 registerListTodos(app);
 registerCreateFoodItem(app);
