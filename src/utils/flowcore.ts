@@ -18,7 +18,11 @@ import {
     recipeSchema,
 } from "../contracts/food/recipe";
 import { habitsCreatedSchema } from "../contracts/habit/habit.contract";
-import { todoGeneratedSchema, todoSchema } from "../contracts/todo";
+import {
+    todoCancelledSchema,
+    todoGeneratedSchema,
+    todoSchema,
+} from "../contracts/todo";
 import { todoCompletedSchema } from "../contracts/todo/todo.completed";
 import {
     handleFoodItemCreated,
@@ -37,6 +41,7 @@ import {
 } from "../handlers/recipe/recipe.handler";
 import { handleRecipeIngredientsCreated } from "../handlers/recipe/recipe-ingredients.handler";
 import { handleRecipeInstructionsCreated } from "../handlers/recipe/recipe-instructions.handler";
+import { handleTodoCancelled } from "../handlers/todo/todo.cancelled";
 import { handleTodoCompleted } from "../handlers/todo/todo.completed";
 import { handleTodoGenerated } from "../handlers/todo/todo.generated";
 import { handleTodoCreated } from "../handlers/todo/todo.handler";
@@ -139,6 +144,12 @@ function buildFlowcorePathways(config: {
         })
         .register({
             flowType: "todo.v0",
+            eventType: "todo.cancelled.v0",
+            retryDelayMs: 10000,
+            schema: todoCancelledSchema,
+        })
+        .register({
+            flowType: "todo.v0",
             eventType: "todo.generated.v0",
             retryDelayMs: 10000,
             schema: todoGeneratedSchema,
@@ -168,7 +179,8 @@ function buildFlowcorePathways(config: {
         .handle("todo.v0/todo.created.v0", handleTodoCreated)
         .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
         .handle("habit.v0/complex-habit.created.v0", handleHabitsCreated)
-        .handle("todo.v0/todo.completed.v0", handleTodoCompleted);
+        .handle("todo.v0/todo.completed.v0", handleTodoCompleted)
+        .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled);
 }
 
 export type FlowcorePathwaysType = ReturnType<typeof buildFlowcorePathways>;
