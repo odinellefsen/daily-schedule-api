@@ -39,6 +39,7 @@ development:
         - todo.created.v0
         - todo.completed.v0
         - todo.generated.v0
+        - todo.cancelled.v0
       endpoints:
        - ""
     habit:
