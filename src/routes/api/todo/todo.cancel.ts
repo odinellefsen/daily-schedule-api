@@ -10,7 +10,6 @@ import { FlowcorePathways } from "../../../utils/flowcore";
 // Request schema
 const cancelTodoRequestSchema = z.object({
     id: z.string().uuid(),
-    reasonForCancelling: z.string().min(1).optional(),
 });
 
 // Response schemas
@@ -89,8 +88,6 @@ export function registerCancelTodo(app: OpenAPIHono) {
         const cancelledTodo: TodoCancelledType = {
             id: safeCancelTodoJsonBody.id,
             userId: safeUserId,
-            cancelledAt: new Date().toISOString(),
-            reasonForCancelling: safeCancelTodoJsonBody.reasonForCancelling,
         };
 
         const cancelTodoEvent = todoCancelledSchema.safeParse(cancelledTodo);

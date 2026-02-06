@@ -52,8 +52,6 @@ export const todoUpdateSchema = todoSchema.extend({
 export const todoCancelledSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),
-    cancelledAt: z.string().datetime(),
-    reasonForCancelling: z.string().min(1).optional(),
 });
 
 export const todoRelationsUpdatedSchema = z.object({
