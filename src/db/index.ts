@@ -1,4 +1,4 @@
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { getEnv } from "../../env";
 import * as schema from "./schemas";
@@ -6,7 +6,9 @@ import * as schema from "./schemas";
 let pool: Pool | undefined;
 let drizzleDb: Db | undefined;
 
-function initDb() {
+export type Db = NodePgDatabase<typeof schema>;
+
+function initDb(): Db {
     if (drizzleDb) return drizzleDb;
 
     const env = getEnv();
@@ -16,8 +18,6 @@ function initDb() {
     drizzleDb = drizzle(pool, { schema });
     return drizzleDb;
 }
-
-export type Db = ReturnType<typeof initDb>;
 
 // Keep the existing `db` import shape, but make initialization lazy so `/health`
 // can respond even if env vars are missing/misconfigured on cold start.

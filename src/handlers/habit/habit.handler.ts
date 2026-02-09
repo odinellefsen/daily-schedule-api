@@ -5,8 +5,10 @@ import type {
     habitsCreatedSchema,
     simpleHabitCreatedSchema,
 } from "../../contracts/habit/habit.contract";
-import { db } from "../../db";
+import { type Db, db } from "../../db";
 import { habitSubEntities, habits, habitTriggers } from "../../db/schemas";
+
+type TransactionClient = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 export async function handleHabitsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
@@ -54,7 +56,7 @@ export async function handleHabitsCreated(
     }));
 
     // 5. Insert all records in a transaction
-    await db.transaction(async (tx) => {
+    await db.transaction(async (tx: TransactionClient) => {
         await tx.insert(habits).values(habitRecord);
         await tx.insert(habitTriggers).values(triggerRecord);
         await tx.insert(habitSubEntities).values(subEntityRecords);
@@ -97,7 +99,7 @@ export async function handleSimpleHabitCreated(
         scheduledTime: payload.targetTime || null,
     };
 
-    await db.transaction(async (tx) => {
+    await db.transaction(async (tx: TransactionClient) => {
         await tx.insert(habits).values(habitRecord);
         await tx.insert(habitTriggers).values(triggerRecord);
         await tx.insert(habitSubEntities).values(subEntityRecord);
