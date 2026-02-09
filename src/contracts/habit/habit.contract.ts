@@ -42,5 +42,19 @@ const weeklyHabitCreationSchema = z.object({
         .min(1),
 });
 
+// Weekly simple habit creation schema (single todo per recurrence)
+const weeklySimpleHabitCreationSchema = z.object({
+    userId: z.string(),
+    description: z
+        .string()
+        .min(1, "Description is required")
+        .max(250, "Description must be less than 250 characters"),
+    recurrenceType: z.literal("weekly"),
+    targetWeekday: Weekday,
+    targetTime: HHMM.optional(),
+    startDate: YMD,
+});
+
 // Event schemas
 export const habitsCreatedSchema = weeklyHabitCreationSchema;
+export const simpleHabitCreatedSchema = weeklySimpleHabitCreationSchema;

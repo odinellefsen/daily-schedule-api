@@ -48,5 +48,6 @@ development:
       flowType: habit.v0
       events:
         - complex-habit.created.v0
+        - simple-habit.created.v0
       endpoints:
        - ""

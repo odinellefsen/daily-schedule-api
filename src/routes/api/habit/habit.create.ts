@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import {
     HHMM,
     habitsCreatedSchema,
+    simpleHabitCreatedSchema,
     Weekday,
     YMD,
 } from "../../../contracts/habit/habit.contract";
@@ -35,6 +36,17 @@ const createComplexHabitRequestSchema = z.object({
         .min(1),
 });
 
+const createSimpleHabitRequestSchema = z.object({
+    description: z
+        .string()
+        .min(1, "Description is required")
+        .max(250, "Description must be less than 250 characters"),
+    recurrenceType: z.literal("weekly"),
+    targetWeekday: Weekday,
+    targetTime: HHMM.optional(),
+    startDate: YMD,
+});
+
 // Response schemas
 const successResponseSchema = z.object({
     success: z.literal(true),
@@ -49,6 +61,15 @@ const errorResponseSchema = z.object({
     success: z.literal(false),
     message: z.string(),
     errors: z.any().optional(),
+});
+
+const simpleHabitSuccessResponseSchema = z.object({
+    success: z.literal(true),
+    message: z.string(),
+    data: z.object({
+        domain: z.literal("simple"),
+        description: z.string(),
+    }),
 });
 
 // Route definition
@@ -93,6 +114,56 @@ const createBatchHabitsRoute = createRoute({
         },
         404: {
             description: "Not Found",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        500: {
+            description: "Internal Server Error",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+const createSimpleHabitRoute = createRoute({
+    method: "post",
+    path: "/api/habit/simple",
+    tags: ["Habits"],
+    security: [{ Bearer: [] }],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: createSimpleHabitRequestSchema,
+                },
+            },
+        },
+    },
+    responses: {
+        201: {
+            description: "Simple habit created successfully",
+            content: {
+                "application/json": {
+                    schema: simpleHabitSuccessResponseSchema,
+                },
+            },
+        },
+        400: {
+            description: "Bad Request",
+            content: {
+                "application/json": {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
             content: {
                 "application/json": {
                     schema: errorResponseSchema,
@@ -253,6 +324,62 @@ export function registerCreateHabit(app: OpenAPIHono) {
                     domain: safeBatchHabitData.domain,
                     configuredSubEntitiesCount:
                         safeBatchHabitData.subEntities.length,
+                },
+            },
+            201,
+        );
+    });
+
+    // Create a simple weekly habit that generates exactly one todo each cycle
+    app.openapi(createSimpleHabitRoute, async (c) => {
+        const safeUserId = c.userId!;
+        const safeSimpleHabitData = c.req.valid("json");
+
+        const newSimpleHabit: z.infer<typeof simpleHabitCreatedSchema> = {
+            userId: safeUserId,
+            description: safeSimpleHabitData.description,
+            recurrenceType: safeSimpleHabitData.recurrenceType,
+            targetWeekday: safeSimpleHabitData.targetWeekday,
+            targetTime: safeSimpleHabitData.targetTime,
+            startDate: safeSimpleHabitData.startDate,
+        };
+
+        const createSimpleHabitEvent =
+            simpleHabitCreatedSchema.safeParse(newSimpleHabit);
+        if (!createSimpleHabitEvent.success) {
+            return c.json(
+                {
+                    success: false as const,
+                    message: "Invalid simple habit data",
+                    errors: createSimpleHabitEvent.error.errors,
+                },
+                400,
+            );
+        }
+        const safeCreateSimpleHabitEvent = createSimpleHabitEvent.data;
+
+        try {
+            await FlowcorePathways.write("habit.v0/simple-habit.created.v0", {
+                data: safeCreateSimpleHabitEvent,
+            });
+        } catch (error) {
+            return c.json(
+                {
+                    success: false as const,
+                    message: "Failed to create simple habit",
+                    errors: error,
+                },
+                500,
+            );
+        }
+
+        return c.json(
+            {
+                success: true as const,
+                message: "Simple habit created successfully",
+                data: {
+                    domain: "simple" as const,
+                    description: safeSimpleHabitData.description,
                 },
             },
             201,

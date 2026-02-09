@@ -1,5 +1,6 @@
 import type { DomainTitleResolver } from "./base";
 import { MealTitleResolver } from "./meal-resolver";
+import { SimpleTitleResolver } from "./simple-resolver";
 
 /**
  * Registry of all domain title resolvers
@@ -7,6 +8,7 @@ import { MealTitleResolver } from "./meal-resolver";
  */
 const RESOLVERS: Record<string, DomainTitleResolver> = {
     meal: new MealTitleResolver(),
+    simple: new SimpleTitleResolver(),
     // Future domains:
     // gym: new GymTitleResolver(),
     // school: new SchoolTitleResolver(),

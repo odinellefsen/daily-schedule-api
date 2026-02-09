@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { FlowcoreEvent } from "@flowcore/pathways";
 import type { z } from "@hono/zod-openapi";
-import { habitsCreatedSchema } from "../../contracts/habit/habit.contract";
+import type {
+    habitsCreatedSchema,
+    simpleHabitCreatedSchema,
+} from "../../contracts/habit/habit.contract";
 import { db } from "../../db";
 import { habitSubEntities, habits, habitTriggers } from "../../db/schemas";
 
@@ -37,7 +40,8 @@ export async function handleHabitsCreated(
         id: randomUUID(),
         habitId,
         triggerSubEntityId: triggerSubEntity.subEntityId || null,
-        triggerWeekday: triggerSubEntity.scheduledWeekday ?? payload.targetWeekday,
+        triggerWeekday:
+            triggerSubEntity.scheduledWeekday ?? payload.targetWeekday,
     };
 
     // 4. Create all subEntity records
@@ -54,6 +58,49 @@ export async function handleHabitsCreated(
         await tx.insert(habits).values(habitRecord);
         await tx.insert(habitTriggers).values(triggerRecord);
         await tx.insert(habitSubEntities).values(subEntityRecords);
+    });
+}
+
+export async function handleSimpleHabitCreated(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: z.infer<typeof simpleHabitCreatedSchema>;
+    },
+) {
+    const { payload } = event;
+    const habitId = randomUUID();
+
+    const habitRecord = {
+        id: habitId,
+        userId: payload.userId,
+        domain: "simple",
+        description: payload.description,
+        entityId: habitId,
+        recurrenceType: payload.recurrenceType,
+        targetWeekday: payload.targetWeekday,
+        targetTime: payload.targetTime || null,
+        startDate: payload.startDate,
+        isActive: true,
+    };
+
+    const triggerRecord = {
+        id: randomUUID(),
+        habitId,
+        triggerSubEntityId: null,
+        triggerWeekday: payload.targetWeekday,
+    };
+
+    const subEntityRecord = {
+        id: randomUUID(),
+        habitId,
+        subEntityId: null,
+        scheduledWeekday: payload.targetWeekday,
+        scheduledTime: payload.targetTime || null,
+    };
+
+    await db.transaction(async (tx) => {
+        await tx.insert(habits).values(habitRecord);
+        await tx.insert(habitTriggers).values(triggerRecord);
+        await tx.insert(habitSubEntities).values(subEntityRecord);
     });
 }
 

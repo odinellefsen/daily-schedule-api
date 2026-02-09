@@ -51,3 +51,5 @@ dataCore:
       eventTypes:
         complex-habit.created.v0:
           description: "Batch instruction habits created event"
+        simple-habit.created.v0:
+          description: "Simple weekly habit created event"

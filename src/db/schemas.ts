@@ -116,6 +116,7 @@ export const habits = pgTable("habits", {
     id: uuid("id").primaryKey(),
     userId: text("user_id").notNull(),
     domain: text("domain").notNull(), // e.g., "meal", "workout"
+    description: text("description"), // simple habit description
     entityId: uuid("entity_id").notNull(), // e.g., mealId, workoutId
     recurrenceType: text("recurrence_type").notNull(), // "weekly" only (for now)
     targetWeekday: text("target_weekday").notNull(), // when main event happens
