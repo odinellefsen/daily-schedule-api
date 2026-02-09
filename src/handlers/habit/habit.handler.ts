@@ -9,6 +9,28 @@ import { type Db, db } from "../../db";
 import { habitSubEntities, habits, habitTriggers } from "../../db/schemas";
 
 type TransactionClient = Parameters<Parameters<Db["transaction"]>[0]>[0];
+const weekdays = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+] as const;
+
+function getWeekdayFromYmd(dateStr: string): (typeof weekdays)[number] {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
+    }
+
+    const date = new Date(`${dateStr}T12:00:00.000Z`);
+    if (Number.isNaN(date.getTime())) {
+        throw new Error(`Invalid date created from: ${dateStr}`);
+    }
+
+    return weekdays[date.getDay()];
+}
 
 export async function handleHabitsCreated(
     event: Omit<FlowcoreEvent, "payload"> & {
@@ -70,6 +92,10 @@ export async function handleSimpleHabitCreated(
 ) {
     const { payload } = event;
     const habitId = randomUUID();
+    const effectiveTargetWeekday =
+        payload.recurrenceType === "daily"
+            ? getWeekdayFromYmd(payload.startDate)
+            : payload.targetWeekday;
 
     const habitRecord = {
         id: habitId,
@@ -78,7 +104,7 @@ export async function handleSimpleHabitCreated(
         description: payload.description,
         entityId: habitId,
         recurrenceType: payload.recurrenceType,
-        targetWeekday: payload.targetWeekday,
+        targetWeekday: effectiveTargetWeekday,
         targetTime: payload.targetTime || null,
         startDate: payload.startDate,
         isActive: true,
@@ -88,14 +114,14 @@ export async function handleSimpleHabitCreated(
         id: randomUUID(),
         habitId,
         triggerSubEntityId: null,
-        triggerWeekday: payload.targetWeekday,
+        triggerWeekday: effectiveTargetWeekday,
     };
 
     const subEntityRecord = {
         id: randomUUID(),
         habitId,
         subEntityId: null,
-        scheduledWeekday: payload.targetWeekday,
+        scheduledWeekday: effectiveTargetWeekday,
         scheduledTime: payload.targetTime || null,
     };
 

@@ -36,16 +36,24 @@ const createComplexHabitRequestSchema = z.object({
         .min(1),
 });
 
-const createSimpleHabitRequestSchema = z.object({
+const baseSimpleHabitRequestSchema = z.object({
     description: z
         .string()
         .min(1, "Description is required")
         .max(250, "Description must be less than 250 characters"),
-    recurrenceType: z.literal("weekly"),
-    targetWeekday: Weekday,
     targetTime: HHMM.optional(),
     startDate: YMD,
 });
+
+const createSimpleHabitRequestSchema = z.discriminatedUnion("recurrenceType", [
+    baseSimpleHabitRequestSchema.extend({
+        recurrenceType: z.literal("weekly"),
+        targetWeekday: Weekday,
+    }),
+    baseSimpleHabitRequestSchema.extend({
+        recurrenceType: z.literal("daily"),
+    }),
+]);
 
 // Response schemas
 const successResponseSchema = z.object({
@@ -330,18 +338,14 @@ export function registerCreateHabit(app: OpenAPIHono) {
         );
     });
 
-    // Create a simple weekly habit that generates exactly one todo each cycle
+    // Create a simple habit that generates exactly one todo each cycle
     app.openapi(createSimpleHabitRoute, async (c) => {
         const safeUserId = c.userId!;
         const safeSimpleHabitData = c.req.valid("json");
 
         const newSimpleHabit: z.infer<typeof simpleHabitCreatedSchema> = {
             userId: safeUserId,
-            description: safeSimpleHabitData.description,
-            recurrenceType: safeSimpleHabitData.recurrenceType,
-            targetWeekday: safeSimpleHabitData.targetWeekday,
-            targetTime: safeSimpleHabitData.targetTime,
-            startDate: safeSimpleHabitData.startDate,
+            ...safeSimpleHabitData,
         };
 
         const createSimpleHabitEvent =

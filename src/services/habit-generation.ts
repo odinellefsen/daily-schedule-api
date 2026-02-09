@@ -156,38 +156,45 @@ async function selectTriggersForDate(
     const weekday: WeekdayType = getWeekdayFromDate(targetDate);
 
     // Find all triggers that should fire today for weekly habits
-    const triggers = await db.query.habitTriggers.findMany({
+    const weeklyTriggers = await db.query.habitTriggers.findMany({
         where: eq(habitTriggers.triggerWeekday, weekday),
     });
 
-    const habitIds = Array.from(new Set(triggers.map((t) => t.habitId)));
+    const weeklyTriggerHabitIds = Array.from(
+        new Set(weeklyTriggers.map((t) => t.habitId)),
+    );
 
-    if (habitIds.length === 0) {
-        return [];
-    }
+    const weeklyHabits =
+        weeklyTriggerHabitIds.length > 0
+            ? await db.query.habits.findMany({
+                  where: and(
+                      inArray(habits.id, weeklyTriggerHabitIds),
+                      eq(habits.userId, userId),
+                      eq(habits.isActive, true),
+                      eq(habits.recurrenceType, "weekly"),
+                  ),
+              })
+            : [];
 
-    const habitsForToday = await db.query.habits.findMany({
+    const dailyHabits = await db.query.habits.findMany({
         where: and(
-            inArray(habits.id, habitIds),
             eq(habits.userId, userId),
             eq(habits.isActive, true),
-            eq(habits.recurrenceType, "weekly"),
+            eq(habits.recurrenceType, "daily"),
         ),
     });
 
-    // Create a map of habitId -> habit for quick lookup
-    const habitMap = new Map(habitsForToday.map((h) => [h.id, h]));
+    const allHabits = [...weeklyHabits, ...dailyHabits];
+    if (allHabits.length === 0) {
+        return [];
+    }
 
-    // Get the habitIds that actually matched our criteria
-    const validHabitIds = habitsForToday.map((h) => h.id);
-
-    // Batch query all subEntities at once
+    const allHabitIds = allHabits.map((habit) => habit.id);
     const allSubEntities = await db.query.habitSubEntities.findMany({
-        where: inArray(habitSubEntities.habitId, validHabitIds),
+        where: inArray(habitSubEntities.habitId, allHabitIds),
         orderBy: habitSubEntities.scheduledWeekday,
     });
 
-    // Group subEntities by habitId
     const subEntitiesByHabitId = new Map<
         string,
         Array<{
@@ -205,16 +212,32 @@ async function selectTriggersForDate(
         subEntitiesByHabitId.set(subEntity.habitId, existing);
     }
 
-    // Build the final result array by matching triggers with their habits and subEntities
+    // Build the final result array by matching weekly triggers with habits and subEntities
+    const weeklyHabitMap = new Map(weeklyHabits.map((h) => [h.id, h]));
     const triggersWithSubEntities = [];
-    for (const trigger of triggers) {
-        const habit = habitMap.get(trigger.habitId);
+    for (const trigger of weeklyTriggers) {
+        const habit = weeklyHabitMap.get(trigger.habitId);
         if (!habit) continue; // Skip if habit doesn't match user/active criteria
 
         const subEntities = subEntitiesByHabitId.get(habit.id) || [];
 
         triggersWithSubEntities.push({
             trigger,
+            habit,
+            subEntities,
+        });
+    }
+
+    // Daily habits fire every day
+    for (const habit of dailyHabits) {
+        const subEntities = subEntitiesByHabitId.get(habit.id) || [];
+        triggersWithSubEntities.push({
+            trigger: {
+                id: `daily-${habit.id}`,
+                habitId: habit.id,
+                triggerSubEntityId: null,
+                triggerWeekday: weekday,
+            },
             habit,
             subEntities,
         });
@@ -336,11 +359,14 @@ async function generateHabitInstance(
     }
 
     // Create todo for the main habit event (the actual goal)
-    const mainEventDate = calculateScheduledDateForSubEntity(
-        triggerDate,
-        habit.targetWeekday,
-        habit.targetWeekday, // Main event happens on target weekday
-    );
+    const mainEventDate =
+        habit.recurrenceType === "daily"
+            ? triggerDate
+            : calculateScheduledDateForSubEntity(
+                  triggerDate,
+                  habit.targetWeekday,
+                  habit.targetWeekday, // Main event happens on target weekday
+              );
 
     const mainEventTime = habit.targetTime || "09:00";
     const mainEventScheduledFor = calculateScheduledFor(
