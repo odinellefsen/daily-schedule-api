@@ -49,5 +49,6 @@ development:
       events:
         - complex-habit.created.v0
         - simple-habit.created.v0
+        - habit.deleted.v0
       endpoints:
        - ""

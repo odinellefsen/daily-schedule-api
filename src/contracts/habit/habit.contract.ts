@@ -67,3 +67,9 @@ export const simpleHabitCreatedSchema = z.discriminatedUnion("recurrenceType", [
     weeklySimpleHabitCreationSchema,
     dailySimpleHabitCreationSchema,
 ]);
+
+export const habitDeletedSchema = z.object({
+    habitId: z.string().uuid(),
+});
+
+export type HabitDeletedType = z.infer<typeof habitDeletedSchema>;

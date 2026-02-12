@@ -53,3 +53,5 @@ dataCore:
           description: "Batch instruction habits created event"
         simple-habit.created.v0:
           description: "Simple weekly habit created event"
+        habit.deleted.v0:
+          description: "Habit deleted event"

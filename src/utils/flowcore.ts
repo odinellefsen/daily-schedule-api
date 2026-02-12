@@ -18,6 +18,7 @@ import {
     recipeSchema,
 } from "../contracts/food/recipe";
 import {
+    habitDeletedSchema,
     habitsCreatedSchema,
     simpleHabitCreatedSchema,
 } from "../contracts/habit/habit.contract";
@@ -36,6 +37,7 @@ import {
     handleFoodItemUnitsDeleted,
 } from "../handlers/food-item/food-item-units.handler";
 import {
+    handleHabitDeleted,
     handleHabitsCreated,
     handleSimpleHabitCreated,
 } from "../handlers/habit/habit.handler";
@@ -143,6 +145,12 @@ function buildFlowcorePathways(config: {
             schema: simpleHabitCreatedSchema,
         })
         .register({
+            flowType: "habit.v0",
+            eventType: "habit.deleted.v0",
+            retryDelayMs: 10000,
+            schema: habitDeletedSchema,
+        })
+        .register({
             flowType: "todo.v0",
             eventType: "todo.created.v0",
             retryDelayMs: 10000,
@@ -192,6 +200,7 @@ function buildFlowcorePathways(config: {
         .handle("todo.v0/todo.generated.v0", handleTodoGenerated)
         .handle("habit.v0/complex-habit.created.v0", handleHabitsCreated)
         .handle("habit.v0/simple-habit.created.v0", handleSimpleHabitCreated)
+        .handle("habit.v0/habit.deleted.v0", handleHabitDeleted)
         .handle("todo.v0/todo.completed.v0", handleTodoCompleted)
         .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled);
 }

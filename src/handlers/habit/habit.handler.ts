@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { FlowcoreEvent } from "@flowcore/pathways";
 import type { z } from "@hono/zod-openapi";
+import { eq } from "drizzle-orm";
 import type {
+    habitDeletedSchema,
     habitsCreatedSchema,
     simpleHabitCreatedSchema,
 } from "../../contracts/habit/habit.contract";
@@ -130,6 +132,16 @@ export async function handleSimpleHabitCreated(
         await tx.insert(habitTriggers).values(triggerRecord);
         await tx.insert(habitSubEntities).values(subEntityRecord);
     });
+}
+
+export async function handleHabitDeleted(
+    event: Omit<FlowcoreEvent, "payload"> & {
+        payload: z.infer<typeof habitDeletedSchema>;
+    },
+) {
+    const { payload } = event;
+
+    await db.delete(habits).where(eq(habits.id, payload.habitId));
 }
 
 /**

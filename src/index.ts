@@ -87,6 +87,7 @@ import { registerCreateFoodItemUnits } from "./routes/api/food-item/food-item-un
 import { registerDeleteFoodItemUnits } from "./routes/api/food-item/food-item-units.delete";
 import { registerListFoodItemUnits } from "./routes/api/food-item/food-item-units.list";
 import { registerCreateHabit } from "./routes/api/habit/habit.create";
+import { registerDeleteHabit } from "./routes/api/habit/habit.delete";
 import { registerCreateMeal } from "./routes/api/meal/meal.create";
 import { registerGetMeal } from "./routes/api/meal/meal.get";
 import { registerListMeals } from "./routes/api/meal/meal.list";
@@ -120,6 +121,7 @@ registerCreateFoodItemUnits(app);
 registerListFoodItemUnits(app);
 registerDeleteFoodItemUnits(app);
 registerCreateHabit(app);
+registerDeleteHabit(app);
 registerCreateRecipe(app);
 registerDeleteRecipe(app);
 registerListRecipes(app);
