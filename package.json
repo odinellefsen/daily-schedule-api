@@ -17,7 +17,7 @@
 		"flowcore:apply:data-core": "flowcore data-core apply -f flowcore.yaml",
 		"flowcore:apply:scenario": "flowcore scenario apply -f flowcore.yaml",
 		"flowcore:apply:proxy": "flowcore scenario apply -f flowcore.yaml",
-		"flowcore:local:proxy": "env-cmd -f .env -- sh -c 'flowcore scenario local -f flowcore.yaml -f flowcore.dev.yaml -s now -e http://192.168.178.88:3030/api/transformer -H \"X-Secret: $FLOWCORE_WEBHOOK_API_KEY\"'"
+		"flowcore:local:proxy": "env-cmd -f .env -- sh -c 'flowcore scenario local -f flowcore.yaml -f flowcore.dev.yaml -s now -e http://192.168.178.88:3030/api/transformer -H \"X-Secret: $TRANSFORMER_SECRET\"'"
 	},
 	"dependencies": {
 		"@clerk/backend": "^2.5.0",

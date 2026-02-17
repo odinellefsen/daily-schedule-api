@@ -3,12 +3,14 @@ import { z } from "zod";
 export const envSchema = z.object({
     POSTGRES_CONNECTION_STRING: z.string(),
     POSTGRES_SSL_REJECT_UNAUTHORIZED: z.enum(["true", "false"]).optional(),
+    POSTGRES_SSL_CA_CERT: z.string().optional(),
     FLOWCORE_TENANT: z.string(),
     FLOWCORE_DATA_CORE_NAME: z.string(),
     FLOWCORE_WEBHOOK_API_KEY: z.string(),
     FLOWCORE_WEBHOOK_BASE_URL: z.string(),
     CLERK_SECRET_KEY: z.string(),
     LOCAL_IP: z.string().optional(),
+    TRANSFORMER_SECRET: z.string().default("123"),
 });
 
 export type Env = z.infer<typeof envSchema>;

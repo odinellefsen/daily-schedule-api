@@ -40082,6 +40082,7 @@ init_esm();
 var envSchema = exports_external.object({
   POSTGRES_CONNECTION_STRING: exports_external.string(),
   POSTGRES_SSL_REJECT_UNAUTHORIZED: exports_external.enum(["true", "false"]).optional(),
+  POSTGRES_SSL_CA_CERT: exports_external.string().optional(),
   FLOWCORE_TENANT: exports_external.string(),
   FLOWCORE_DATA_CORE_NAME: exports_external.string(),
   FLOWCORE_WEBHOOK_API_KEY: exports_external.string(),
@@ -46676,7 +46677,7 @@ var habitTriggerExecutions = pgTable("habit_trigger_executions", {
 // src/db/index.ts
 var pool;
 var drizzleDb;
-function getPoolSslConfig(connectionString, envRejectUnauthorized) {
+function getPoolSslConfig(connectionString, envRejectUnauthorized, caCert) {
   const connectionUrl = new URL(connectionString);
   const hostname = connectionUrl.hostname.toLowerCase();
   const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
@@ -46684,6 +46685,10 @@ function getPoolSslConfig(connectionString, envRejectUnauthorized) {
     return;
   const sslMode = connectionUrl.searchParams.get("sslmode")?.toLowerCase();
   const rejectUnauthorized = envRejectUnauthorized === "true" ? true : envRejectUnauthorized === "false" ? false : sslMode === "no-verify" ? false : true;
+  if (caCert) {
+    return { rejectUnauthorized, ca: caCert.replace(/\\n/g, `
+`) };
+  }
   return { rejectUnauthorized };
 }
 function initDb() {
@@ -46692,7 +46697,7 @@ function initDb() {
   const env = getEnv();
   pool ??= new Pool({
     connectionString: env.POSTGRES_CONNECTION_STRING,
-    ssl: getPoolSslConfig(env.POSTGRES_CONNECTION_STRING, env.POSTGRES_SSL_REJECT_UNAUTHORIZED)
+    ssl: getPoolSslConfig(env.POSTGRES_CONNECTION_STRING, env.POSTGRES_SSL_REJECT_UNAUTHORIZED, env.POSTGRES_SSL_CA_CERT)
   });
   drizzleDb = drizzle(pool, { schema: exports_schemas });
   return drizzleDb;
@@ -50590,7 +50595,9 @@ function registerListTodos(app) {
     const safeUserId = c.userId;
     const userTimezone = c.req.header("X-Timezone") || "UTC";
     const todayDate = getCurrentDateInTimezone(userTimezone);
-    generateMissingHabitTodos(safeUserId, todayDate);
+    generateMissingHabitTodos(safeUserId, todayDate).catch((error2) => {
+      console.error("Failed to generate habit todos in background:", error2);
+    });
     const { startOfDay: startOfDayUTC, endOfDay: endOfDayUTC } = getDayBoundsInTimezone(userTimezone);
     const now = new Date;
     const todaysTodos = await db.select().from(todos).where(and(eq(todos.userId, safeUserId), or(isNull(todos.scheduledFor), and(gte(todos.scheduledFor, startOfDayUTC), lte(todos.scheduledFor, endOfDayUTC))))).orderBy(todos.scheduledFor);

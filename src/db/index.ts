@@ -11,6 +11,7 @@ export type Db = NodePgDatabase<typeof schema>;
 function getPoolSslConfig(
     connectionString: string,
     envRejectUnauthorized?: "true" | "false",
+    caCert?: string,
 ) {
     const connectionUrl = new URL(connectionString);
     const hostname = connectionUrl.hostname.toLowerCase();
@@ -31,6 +32,10 @@ function getPoolSslConfig(
                 ? false
                 : true;
 
+    if (caCert) {
+        return { rejectUnauthorized, ca: caCert.replace(/\\n/g, "\n") };
+    }
+
     return { rejectUnauthorized };
 }
 
@@ -44,6 +49,7 @@ function initDb(): Db {
         ssl: getPoolSslConfig(
             env.POSTGRES_CONNECTION_STRING,
             env.POSTGRES_SSL_REJECT_UNAUTHORIZED,
+            env.POSTGRES_SSL_CA_CERT,
         ),
     });
     drizzleDb = drizzle(pool, { schema });
