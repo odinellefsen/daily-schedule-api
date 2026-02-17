@@ -142,7 +142,8 @@ function buildFlowcorePathways(config: {
             flowType: "habit.v0",
             eventType: "simple-habit.created.v0",
             retryDelayMs: 10000,
-            schema: simpleHabitCreatedSchema,
+            // Flowcore register typing currently expects ZodObject; this schema is a discriminated union.
+            schema: simpleHabitCreatedSchema as never,
         })
         .register({
             flowType: "habit.v0",
