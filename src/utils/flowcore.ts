@@ -1,8 +1,4 @@
-import {
-    createPostgresPathwayState,
-    PathwayRouter,
-    PathwaysBuilder,
-} from "@flowcore/pathways";
+import type { PathwayRouter as FlowcorePathwayRouter } from "@flowcore/pathways";
 import { getEnv } from "../../env";
 import {
     foodItemDeletedSchema,
@@ -54,13 +50,27 @@ import { handleTodoCompleted } from "../handlers/todo/todo.completed";
 import { handleTodoGenerated } from "../handlers/todo/todo.generated";
 import { handleTodoCreated } from "../handlers/todo/todo.handler";
 
-function buildFlowcorePathways(config: {
+type FlowcoreModule = typeof import("@flowcore/pathways");
+
+let flowcoreModulePromise: Promise<FlowcoreModule> | undefined;
+
+async function loadFlowcoreModule(): Promise<FlowcoreModule> {
+    // Load lazily via dynamic import so Node/CJS runtimes (like Vercel)
+    // don't try to `require()` ESM-only transitive deps at cold start.
+    flowcoreModulePromise ??= import("@flowcore/pathways");
+    return flowcoreModulePromise;
+}
+
+async function buildFlowcorePathways(config: {
     baseUrl: string;
     tenant: string;
     dataCore: string;
     apiKey: string;
     postgresUrl: string;
 }) {
+    const { createPostgresPathwayState, PathwaysBuilder } =
+        await loadFlowcoreModule();
+
     return new PathwaysBuilder({
         baseUrl: config.baseUrl,
         tenant: config.tenant,
@@ -206,54 +216,55 @@ function buildFlowcorePathways(config: {
         .handle("todo.v0/todo.cancelled.v0", handleTodoCancelled);
 }
 
-export type FlowcorePathwaysType = ReturnType<typeof buildFlowcorePathways>;
+export type FlowcorePathwaysType = Awaited<
+    ReturnType<typeof buildFlowcorePathways>
+>;
 
-let cached:
-    | {
-          webhookApiKey: string;
-          pathways: FlowcorePathwaysType;
-          router: PathwayRouter;
-      }
-    | undefined;
+type FlowcoreCache = {
+    webhookApiKey: string;
+    pathways: FlowcorePathwaysType;
+    router: FlowcorePathwayRouter;
+};
 
-function initFlowcore() {
-    if (cached) return cached;
+let cachedPromise: Promise<FlowcoreCache> | undefined;
 
-    const env = getEnv();
-    const webhookApiKey = env.FLOWCORE_WEBHOOK_API_KEY;
-    const postgresUrl = env.POSTGRES_CONNECTION_STRING;
+async function initFlowcore(): Promise<FlowcoreCache> {
+    if (cachedPromise) return cachedPromise;
 
-    const pathways = buildFlowcorePathways({
-        baseUrl: env.FLOWCORE_WEBHOOK_BASE_URL,
-        tenant: env.FLOWCORE_TENANT,
-        dataCore: env.FLOWCORE_DATA_CORE_NAME,
-        apiKey: webhookApiKey,
-        postgresUrl,
-    });
+    cachedPromise = (async () => {
+        const env = getEnv();
+        const webhookApiKey = env.FLOWCORE_WEBHOOK_API_KEY;
+        const postgresUrl = env.POSTGRES_CONNECTION_STRING;
 
-    const router = new PathwayRouter(pathways, webhookApiKey);
+        const pathways = await buildFlowcorePathways({
+            baseUrl: env.FLOWCORE_WEBHOOK_BASE_URL,
+            tenant: env.FLOWCORE_TENANT,
+            dataCore: env.FLOWCORE_DATA_CORE_NAME,
+            apiKey: webhookApiKey,
+            postgresUrl,
+        });
 
-    cached = { webhookApiKey, pathways, router };
-    return cached;
+        const { PathwayRouter } = await loadFlowcoreModule();
+        const router = new PathwayRouter(pathways, webhookApiKey);
+
+        return { webhookApiKey, pathways, router };
+    })();
+
+    return cachedPromise;
 }
 
-export function getFlowcorePathways() {
-    return initFlowcore().pathways;
+export async function getFlowcorePathways() {
+    return (await initFlowcore()).pathways;
 }
 
-export function getPathwaysRouter() {
-    return initFlowcore().router;
+export async function getPathwaysRouter() {
+    return (await initFlowcore()).router;
 }
 
 // Keep existing import shape for all route handlers that call `FlowcorePathways.write(...)`.
-// Ensure methods are bound to the underlying instance so `this` works as expected.
-export const FlowcorePathways: FlowcorePathwaysType = new Proxy(
-    {} as FlowcorePathwaysType,
-    {
-        get(_target, prop) {
-            const instance = getFlowcorePathways();
-            const value = instance[prop as keyof FlowcorePathwaysType];
-            return typeof value === "function" ? value.bind(instance) : value;
-        },
+export const FlowcorePathways = {
+    async write(...args: Parameters<FlowcorePathwaysType["write"]>) {
+        const pathways = await getFlowcorePathways();
+        return pathways.write(...args);
     },
-) as FlowcorePathwaysType;
+};

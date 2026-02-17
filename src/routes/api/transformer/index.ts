@@ -25,7 +25,8 @@ transformer.post("/", async (c) => {
             );
         }
 
-        await getPathwaysRouter().processEvent(event, secret);
+        const router = await getPathwaysRouter();
+        await router.processEvent(event, secret);
 
         return c.json(
             {
