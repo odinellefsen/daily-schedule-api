@@ -166,9 +166,17 @@ export function registerListTodos(app: OpenAPIHono) {
 
         // Transform for landing page consumption
         const transformedTodos = todaysTodos.map((todo) => {
-            const relations = todo.relations
-                ? JSON.parse(todo.relations)
-                : null;
+            let relations: unknown = null;
+            if (todo.relations) {
+                try {
+                    relations = JSON.parse(todo.relations);
+                } catch (error) {
+                    console.warn("Invalid todo relations JSON", {
+                        todoId: todo.id,
+                        error,
+                    });
+                }
+            }
             const mealRelation = relations?.[0]?.mealInstruction;
 
             // For time comparisons, we can work directly with UTC times since DB stores UTC
@@ -258,7 +266,18 @@ export function registerListTodos(app: OpenAPIHono) {
             completed: todo.completed,
             scheduledFor: todo.scheduledFor?.toISOString(),
             completedAt: todo.completedAt?.toISOString(),
-            relations: todo.relations ? JSON.parse(todo.relations) : null,
+            relations: (() => {
+                if (!todo.relations) return null;
+                try {
+                    return JSON.parse(todo.relations);
+                } catch (error) {
+                    console.warn("Invalid todo relations JSON", {
+                        todoId: todo.id,
+                        error,
+                    });
+                    return null;
+                }
+            })(),
         }));
 
         return c.json(
