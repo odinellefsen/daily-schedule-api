@@ -16,13 +16,13 @@ function getPoolSslConfig(
     const connectionUrl = new URL(connectionString);
     const hostname = connectionUrl.hostname.toLowerCase();
     const isLocalHost =
-        hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+        hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname === "::1";
 
     if (isLocalHost) return undefined;
 
-    const sslMode = connectionUrl.searchParams
-        .get("sslmode")
-        ?.toLowerCase();
+    const sslMode = connectionUrl.searchParams.get("sslmode")?.toLowerCase();
     const rejectUnauthorized =
         envRejectUnauthorized === "true"
             ? true
@@ -49,7 +49,6 @@ function initDb(): Db {
         ssl: getPoolSslConfig(
             env.POSTGRES_CONNECTION_STRING,
             env.POSTGRES_SSL_REJECT_UNAUTHORIZED,
-            env.POSTGRES_SSL_CA_CERT,
         ),
     });
     drizzleDb = drizzle(pool, { schema });
