@@ -40081,6 +40081,7 @@ var cors = (options) => {
 init_esm();
 var envSchema = exports_external.object({
   POSTGRES_CONNECTION_STRING: exports_external.string(),
+  POSTGRES_SSL_REJECT_UNAUTHORIZED: exports_external.enum(["true", "false"]).optional(),
   FLOWCORE_TENANT: exports_external.string(),
   FLOWCORE_DATA_CORE_NAME: exports_external.string(),
   FLOWCORE_WEBHOOK_API_KEY: exports_external.string(),
@@ -46675,12 +46676,23 @@ var habitTriggerExecutions = pgTable("habit_trigger_executions", {
 // src/db/index.ts
 var pool;
 var drizzleDb;
+function getPoolSslConfig(connectionString, envRejectUnauthorized) {
+  const connectionUrl = new URL(connectionString);
+  const hostname = connectionUrl.hostname.toLowerCase();
+  const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  if (isLocalHost)
+    return;
+  const sslMode = connectionUrl.searchParams.get("sslmode")?.toLowerCase();
+  const rejectUnauthorized = envRejectUnauthorized === "true" ? true : envRejectUnauthorized === "false" ? false : sslMode === "no-verify" ? false : true;
+  return { rejectUnauthorized };
+}
 function initDb() {
   if (drizzleDb)
     return drizzleDb;
   const env = getEnv();
   pool ??= new Pool({
-    connectionString: env.POSTGRES_CONNECTION_STRING
+    connectionString: env.POSTGRES_CONNECTION_STRING,
+    ssl: getPoolSslConfig(env.POSTGRES_CONNECTION_STRING, env.POSTGRES_SSL_REJECT_UNAUTHORIZED)
   });
   drizzleDb = drizzle(pool, { schema: exports_schemas });
   return drizzleDb;
