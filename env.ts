@@ -3,6 +3,7 @@ import { z } from "zod";
 export const envSchema = z.object({
     POSTGRES_CONNECTION_STRING: z.string(),
     POSTGRES_SSL_REJECT_UNAUTHORIZED: z.enum(["true", "false"]).optional(),
+    POSTGRES_SSL_CA_CERT: z.string().optional(),
     FLOWCORE_TENANT: z.string(),
     FLOWCORE_DATA_CORE_NAME: z.string(),
     FLOWCORE_WEBHOOK_API_KEY: z.string(),

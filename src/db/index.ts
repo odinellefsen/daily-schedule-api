@@ -8,12 +8,21 @@ let drizzleDb: Db | undefined;
 
 export type Db = NodePgDatabase<typeof schema>;
 
+function normalizeConnectionString(raw: string): string {
+    const trimmed = raw.trim().replace(/^['"]|['"]$/g, "");
+    const withoutPrefix = trimmed.replace(
+        /^POSTGRES_CONNECTION_STRING=/i,
+        "",
+    );
+    return withoutPrefix.trim();
+}
+
 function getPoolSslConfig(
     connectionString: string,
     envRejectUnauthorized?: "true" | "false",
     caCert?: string,
 ) {
-    const connectionUrl = new URL(connectionString);
+    const connectionUrl = new URL(normalizeConnectionString(connectionString));
     const hostname = connectionUrl.hostname.toLowerCase();
     const isLocalHost =
         hostname === "localhost" ||
@@ -43,12 +52,16 @@ function initDb(): Db {
     if (drizzleDb) return drizzleDb;
 
     const env = getEnv();
+    const connectionString = normalizeConnectionString(
+        env.POSTGRES_CONNECTION_STRING,
+    );
 
     pool ??= new Pool({
-        connectionString: env.POSTGRES_CONNECTION_STRING,
+        connectionString,
         ssl: getPoolSslConfig(
-            env.POSTGRES_CONNECTION_STRING,
+            connectionString,
             env.POSTGRES_SSL_REJECT_UNAUTHORIZED,
+            env.POSTGRES_SSL_CA_CERT,
         ),
     });
     drizzleDb = drizzle(pool, { schema });

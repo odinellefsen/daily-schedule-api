@@ -40082,13 +40082,13 @@ init_esm();
 var envSchema = exports_external.object({
   POSTGRES_CONNECTION_STRING: exports_external.string(),
   POSTGRES_SSL_REJECT_UNAUTHORIZED: exports_external.enum(["true", "false"]).optional(),
-  POSTGRES_SSL_CA_CERT: exports_external.string().optional(),
   FLOWCORE_TENANT: exports_external.string(),
   FLOWCORE_DATA_CORE_NAME: exports_external.string(),
   FLOWCORE_WEBHOOK_API_KEY: exports_external.string(),
   FLOWCORE_WEBHOOK_BASE_URL: exports_external.string(),
   CLERK_SECRET_KEY: exports_external.string(),
-  LOCAL_IP: exports_external.string().optional()
+  LOCAL_IP: exports_external.string().optional(),
+  TRANSFORMER_SECRET: exports_external.string().default("123")
 });
 var cachedEnv;
 function getEnv() {
@@ -46677,8 +46677,13 @@ var habitTriggerExecutions = pgTable("habit_trigger_executions", {
 // src/db/index.ts
 var pool;
 var drizzleDb;
+function normalizeConnectionString(raw2) {
+  const trimmed = raw2.trim().replace(/^['"]|['"]$/g, "");
+  const withoutPrefix = trimmed.replace(/^POSTGRES_CONNECTION_STRING=/i, "");
+  return withoutPrefix.trim();
+}
 function getPoolSslConfig(connectionString, envRejectUnauthorized, caCert) {
-  const connectionUrl = new URL(connectionString);
+  const connectionUrl = new URL(normalizeConnectionString(connectionString));
   const hostname = connectionUrl.hostname.toLowerCase();
   const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
   if (isLocalHost)
@@ -46695,9 +46700,10 @@ function initDb() {
   if (drizzleDb)
     return drizzleDb;
   const env = getEnv();
+  const connectionString = normalizeConnectionString(env.POSTGRES_CONNECTION_STRING);
   pool ??= new Pool({
-    connectionString: env.POSTGRES_CONNECTION_STRING,
-    ssl: getPoolSslConfig(env.POSTGRES_CONNECTION_STRING, env.POSTGRES_SSL_REJECT_UNAUTHORIZED, env.POSTGRES_SSL_CA_CERT)
+    connectionString,
+    ssl: getPoolSslConfig(connectionString, env.POSTGRES_SSL_REJECT_UNAUTHORIZED, env.POSTGRES_SSL_CA_CERT)
   });
   drizzleDb = drizzle(pool, { schema: exports_schemas });
   return drizzleDb;
