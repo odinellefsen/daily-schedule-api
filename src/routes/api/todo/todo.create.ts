@@ -103,6 +103,8 @@ export function registerCreateTodo(app: OpenAPIHono) {
         const safeUserId = c.userId!;
         const safeCreateTodoJsonBody = c.req.valid("json");
 
+        console.log("valid json atleast");
+
         const newTodo: TodoType = {
             id: crypto.randomUUID(),
             userId: safeUserId,
@@ -126,11 +128,14 @@ export function registerCreateTodo(app: OpenAPIHono) {
         }
         const safeCreateTodoEvent = createTodoEvent.data;
 
+        console.log("valid event payload, trying to send event");
+
         try {
             await FlowcorePathways.write("todo.v0/todo.created.v0", {
                 data: safeCreateTodoEvent,
             });
         } catch (error) {
+            console.log("event failed");
             return c.json(
                 {
                     success: false as const,
