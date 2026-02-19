@@ -234,14 +234,13 @@ async function initFlowcore(): Promise<FlowcoreCache> {
     cachedPromise = (async () => {
         const env = getEnv();
         const webhookApiKey = env.FLOWCORE_WEBHOOK_API_KEY;
-        const postgresUrl = env.POSTGRES_CONNECTION_STRING;
 
         const pathways = await buildFlowcorePathways({
             baseUrl: env.FLOWCORE_WEBHOOK_BASE_URL,
             tenant: env.FLOWCORE_TENANT,
             dataCore: env.FLOWCORE_DATA_CORE_NAME,
             apiKey: webhookApiKey,
-            postgresUrl,
+            postgresUrl: env.POSTGRES_CONNECTION_STRING,
         });
 
         const { PathwayRouter } = await loadFlowcoreModule();
