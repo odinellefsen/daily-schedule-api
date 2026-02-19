@@ -18,7 +18,7 @@ transformer.post("/", async (c) => {
             payload: event.payload,
         });
 
-        if (secret !== zodEnv.FLOWCORE_WEBHOOK_API_KEY) {
+        if (secret !== zodEnv.TRANSFORMER_SECRET) {
             return c.json(
                 ApiResponse.error("Secret key is incorrect or missing"),
                 StatusCodes.UNAUTHORIZED,
