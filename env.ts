@@ -10,7 +10,7 @@ export const envSchema = z.object({
     FLOWCORE_WEBHOOK_BASE_URL: z.string(),
     CLERK_SECRET_KEY: z.string(),
     LOCAL_IP: z.string().optional(),
-    TRANSFORMER_SECRET: z.string().default("123"),
+    TRANSFORMER_SECRET: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;
