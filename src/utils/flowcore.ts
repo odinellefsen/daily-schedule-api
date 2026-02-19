@@ -244,7 +244,7 @@ async function initFlowcore(): Promise<FlowcoreCache> {
         });
 
         const { PathwayRouter } = await loadFlowcoreModule();
-        const router = new PathwayRouter(pathways, webhookApiKey);
+        const router = new PathwayRouter(pathways, env.TRANSFORMER_SECRET);
 
         return { webhookApiKey, pathways, router };
     })();
