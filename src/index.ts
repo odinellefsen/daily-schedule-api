@@ -53,12 +53,33 @@ const localApiPort = Number(localApiUrl?.port || "3030");
 app.use(
     "/*",
     cors({
-        origin: allowedOrigins,
+        origin: (origin) => {
+            if (!origin) return "";
+            if (allowedOrigins.includes(origin)) return origin;
+
+            // Allow trusted Flowday subdomains and Vercel previews.
+            try {
+                const { hostname, protocol } = new URL(origin);
+                if (
+                    protocol === "https:" &&
+                    (hostname.endsWith(".flowday.io") ||
+                        hostname.endsWith(".vercel.app"))
+                ) {
+                    return origin;
+                }
+            } catch {
+                return "";
+            }
+
+            return "";
+        },
         allowHeaders: [
             "Content-Type",
             "Authorization",
             "X-Timezone",
             "X-Secret",
+            "baggage",
+            "sentry-trace",
         ],
         allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         maxAge: 86400,
