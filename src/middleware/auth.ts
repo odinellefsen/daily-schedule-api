@@ -30,6 +30,12 @@ declare module "hono" {
 export const clerkAuth = () => {
     return async (c: Context, next: Next) => {
         try {
+            // Never require auth on CORS preflight requests.
+            if (c.req.method === "OPTIONS") {
+                await next();
+                return;
+            }
+
             // Extract Bearer token from Authorization header
             const authHeader = c.req.header("Authorization");
             if (!authHeader?.startsWith("Bearer ")) {
