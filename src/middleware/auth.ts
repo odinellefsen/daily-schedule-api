@@ -3,6 +3,23 @@ import type { Context, Next } from "hono";
 import { zodEnv } from "../../env";
 import { ApiResponse, StatusCodes } from "../utils/api-responses";
 
+const CLERK_VERIFY_TIMEOUT_MS = 8000;
+
+async function verifyTokenWithTimeout(token: string, secretKey: string) {
+    return await Promise.race([
+        verifyToken(token, { secretKey }),
+        new Promise<never>((_, reject) => {
+            setTimeout(() => {
+                reject(
+                    new Error(
+                        `Clerk token verification timed out after ${CLERK_VERIFY_TIMEOUT_MS}ms`,
+                    ),
+                );
+            }, CLERK_VERIFY_TIMEOUT_MS);
+        }),
+    ]);
+}
+
 export interface ClerkUser {
     id: string;
     email?: string;
@@ -51,9 +68,10 @@ export const clerkAuth = () => {
             const token = authHeader.substring(7);
 
             // Verify the JWT token with Clerk
-            const payload = await verifyToken(token, {
-                secretKey: zodEnv.CLERK_SECRET_KEY,
-            });
+            const payload = await verifyTokenWithTimeout(
+                token,
+                zodEnv.CLERK_SECRET_KEY,
+            );
 
             if (!payload || !payload.sub) {
                 return c.json(
@@ -70,9 +88,21 @@ export const clerkAuth = () => {
             await next();
         } catch (error) {
             console.error("Authentication error:", error);
+
+            const message =
+                error instanceof Error &&
+                error.message.includes("timed out after")
+                    ? "Authentication service timed out"
+                    : "Authentication failed";
+
+            const statusCode =
+                message === "Authentication service timed out"
+                    ? StatusCodes.SERVICE_UNAVAILABLE
+                    : StatusCodes.UNAUTHORIZED;
+
             return c.json(
-                ApiResponse.error("Authentication failed", error),
-                StatusCodes.UNAUTHORIZED,
+                ApiResponse.error(message, error),
+                statusCode,
             );
         }
     };
