@@ -107,12 +107,19 @@ import { registerCompleteTodo } from "./routes/api/todo/todo.complete";
 import { registerCreateTodo } from "./routes/api/todo/todo.create";
 import { registerListTodos } from "./routes/api/todo/todo.list";
 
-// Apply auth middleware
-app.use("/api/todo/*", requireAuth());
-app.use("/api/food-item/*", requireAuth());
-app.use("/api/habit/*", requireAuth());
-app.use("/api/recipe/*", requireAuth());
-app.use("/api/meal/*", requireAuth());
+// Apply auth middleware on both collection and nested routes
+const protectedApiBasePaths = [
+    "/api/todo",
+    "/api/food-item",
+    "/api/habit",
+    "/api/recipe",
+    "/api/meal",
+] as const;
+
+for (const basePath of protectedApiBasePaths) {
+    app.use(basePath, requireAuth());
+    app.use(`${basePath}/*`, requireAuth());
+}
 
 // Register OpenAPI routes directly on main app
 registerCreateTodo(app);
