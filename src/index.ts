@@ -97,6 +97,16 @@ app.get("/api/health", (c) => {
     return c.json({ ok: true }, 200);
 });
 
+// Debug endpoint to verify plain POST routing (no OpenAPI wrapper)
+app.post("/api/_post-debug", async (c) => {
+    console.log("[debug] /api/_post-debug entered", {
+        method: c.req.method,
+        path: c.req.path,
+        origin: c.req.header("Origin") ?? null,
+    });
+    return c.json({ ok: true, route: "_post-debug" }, 200);
+});
+
 // Register security schemes
 app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
     type: "http",
