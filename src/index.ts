@@ -107,6 +107,17 @@ app.post("/api/_post-debug", async (c) => {
     return c.json({ ok: true, route: "_post-debug" }, 200);
 });
 
+// Auth-protected debug endpoint to isolate auth vs OpenAPI behavior.
+app.post("/api/todo/_post-debug-auth", async (c) => {
+    console.log("[debug] /api/todo/_post-debug-auth entered", {
+        method: c.req.method,
+        path: c.req.path,
+        origin: c.req.header("Origin") ?? null,
+        userId: c.userId ?? null,
+    });
+    return c.json({ ok: true, route: "_post-debug-auth", userId: c.userId }, 200);
+});
+
 // Register security schemes
 app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
     type: "http",
@@ -151,6 +162,17 @@ for (const basePath of protectedApiBasePaths) {
     app.use(basePath, requireAuth());
     app.use(`${basePath}/*`, requireAuth());
 }
+
+// Debug endpoint to verify authenticated plain POST routing (no OpenAPI wrapper)
+app.post("/api/todo/_post-debug-auth", async (c) => {
+    console.log("[debug] /api/todo/_post-debug-auth entered", {
+        method: c.req.method,
+        path: c.req.path,
+        origin: c.req.header("Origin") ?? null,
+        userId: c.userId ?? null,
+    });
+    return c.json({ ok: true, route: "_post-debug-auth" }, 200);
+});
 
 // Register OpenAPI routes directly on main app
 registerCreateTodo(app);
