@@ -46,24 +46,10 @@ declare module "hono" {
  */
 export const clerkAuth = () => {
     return async (c: Context, next: Next) => {
-        const startedAt = Date.now();
-        const requestMeta = {
-            method: c.req.method,
-            path: c.req.path,
-            origin: c.req.header("Origin") ?? null,
-        };
-
         try {
-            console.log("[auth] start", requestMeta);
-
             // Never require auth on CORS preflight requests.
             if (c.req.method === "OPTIONS") {
-                console.log("[auth] skip options", requestMeta);
                 await next();
-                console.log("[auth] done", {
-                    ...requestMeta,
-                    durationMs: Date.now() - startedAt,
-                });
                 return;
             }
 
@@ -82,15 +68,10 @@ export const clerkAuth = () => {
             const token = authHeader.substring(7);
 
             // Verify the JWT token with Clerk
-            console.log("[auth] verify start", requestMeta);
             const payload = await verifyTokenWithTimeout(
                 token,
                 zodEnv.CLERK_SECRET_KEY,
             );
-            console.log("[auth] verify success", {
-                ...requestMeta,
-                userId: payload?.sub ?? null,
-            });
 
             if (!payload || !payload.sub) {
                 return c.json(
@@ -105,16 +86,8 @@ export const clerkAuth = () => {
             // Optional: Fetch full user details from Clerk if needed
             // This can be done lazily in route handlers to avoid extra API calls
             await next();
-            console.log("[auth] done", {
-                ...requestMeta,
-                durationMs: Date.now() - startedAt,
-            });
         } catch (error) {
-            console.error("[auth] error", {
-                ...requestMeta,
-                durationMs: Date.now() - startedAt,
-                error: error instanceof Error ? error.message : String(error),
-            });
+            console.error("Authentication error:", error);
 
             const message =
                 error instanceof Error &&
