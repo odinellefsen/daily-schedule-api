@@ -1,6 +1,6 @@
 // @ts-nocheck
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { createRoute, z } from "@hono/zod-openapi";
+import { z } from "@hono/zod-openapi";
 import { type TodoType, todoSchema } from "../../../contracts/todo";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
@@ -30,78 +30,25 @@ const createTodoRequestSchema = z.object({
         .optional(),
 });
 
-// Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: todoSchema,
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
-
-// OpenAPI route definition
-const createTodoRoute = createRoute({
-    method: "post",
-    path: "/api/todo",
-    tags: ["Todos"],
-    security: [
-        {
-            Bearer: [],
-        },
-    ],
-    request: {
-        body: {
-            content: {
-                "application/json": {
-                    schema: createTodoRequestSchema,
-                },
-            },
-        },
-    },
-    responses: {
-        200: {
-            description: "Todo created successfully",
-            content: {
-                "application/json": {
-                    schema: successResponseSchema,
-                },
-            },
-        },
-        400: {
-            description: "Bad Request",
-            content: {
-                "application/json": {
-                    schema: errorResponseSchema,
-                },
-            },
-        },
-        401: {
-            description: "Unauthorized",
-            content: {
-                "application/json": {
-                    schema: errorResponseSchema,
-                },
-            },
-        },
-        500: {
-            description: "Internal Server Error",
-            content: {
-                "application/json": {
-                    schema: errorResponseSchema,
-                },
-            },
-        },
-    },
-});
-
 export function registerCreateTodo(app: OpenAPIHono) {
-    app.openapi(createTodoRoute, async (c) => {
+    app.post("/api/todo", async (c) => {
+        console.log("[todo.create/plain] entered handler");
         const safeUserId = c.userId!;
-        const safeCreateTodoJsonBody = c.req.valid("json");
+        const jsonBody = await c.req.json();
+        const parsedBody = createTodoRequestSchema.safeParse(jsonBody);
+
+        if (!parsedBody.success) {
+            return c.json(
+                {
+                    success: false as const,
+                    message: "Invalid request body",
+                    errors: parsedBody.error.errors,
+                },
+                400,
+            );
+        }
+
+        const safeCreateTodoJsonBody = parsedBody.data;
 
         const newTodo: TodoType = {
             id: crypto.randomUUID(),
@@ -127,10 +74,13 @@ export function registerCreateTodo(app: OpenAPIHono) {
         const safeCreateTodoEvent = createTodoEvent.data;
 
         try {
+            console.log("[todo.create/plain] before flowcore write");
             await FlowcorePathways.write("todo.v0/todo.created.v0", {
                 data: safeCreateTodoEvent,
             });
+            console.log("[todo.create/plain] after flowcore write");
         } catch (error) {
+            console.log("[todo.create/plain] flowcore write failed");
             return c.json(
                 {
                     success: false as const,
