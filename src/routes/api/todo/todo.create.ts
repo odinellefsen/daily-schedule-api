@@ -73,6 +73,11 @@ export function registerCreateTodo(app: OpenAPIHono) {
         }
         const safeCreateTodoEvent = createTodoEvent.data;
 
+        console.log(
+            "[todo.create/plain] safeCreateTodoEvent",
+            safeCreateTodoEvent,
+        );
+
         try {
             console.log("[todo.create/plain] before flowcore write");
             await FlowcorePathways.write("todo.v0/todo.created.v0", {
