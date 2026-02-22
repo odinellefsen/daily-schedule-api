@@ -32,9 +32,9 @@ const createTodoRequestSchema = z.object({
 
 export function registerCreateTodo(app: OpenAPIHono) {
     app.post("/api/todo", async (c) => {
-        console.log("[todo.create/plain] entered handler");
         const safeUserId = c.userId!;
         const jsonBody = await c.req.json();
+        console.log("[todo.create/plain] jsonBody", jsonBody);
         const parsedBody = createTodoRequestSchema.safeParse(jsonBody);
 
         if (!parsedBody.success) {
@@ -50,6 +50,11 @@ export function registerCreateTodo(app: OpenAPIHono) {
 
         const safeCreateTodoJsonBody = parsedBody.data;
 
+        console.log(
+            "[todo.create/plain] safeCreateTodoJsonBody",
+            safeCreateTodoJsonBody,
+        );
+
         const newTodo: TodoType = {
             id: crypto.randomUUID(),
             userId: safeUserId,
@@ -59,6 +64,8 @@ export function registerCreateTodo(app: OpenAPIHono) {
             completedAt: undefined,
             relations: safeCreateTodoJsonBody.relations,
         };
+
+        console.log("[todo.create/plain] newTodo", newTodo);
 
         const createTodoEvent = todoSchema.safeParse(newTodo);
         if (!createTodoEvent.success) {
