@@ -134,9 +134,14 @@ const protectedApiBasePaths = [
 const authMiddleware = requireAuth();
 
 app.use("/*", async (c, next) => {
+    const pathWithoutApiPrefix = c.req.path.startsWith("/api")
+        ? c.req.path.slice(4) || "/"
+        : c.req.path;
+
     const isProtectedPath = protectedApiBasePaths.some(
         (basePath) =>
-            c.req.path === basePath || c.req.path.startsWith(`${basePath}/`),
+            pathWithoutApiPrefix === basePath ||
+            pathWithoutApiPrefix.startsWith(`${basePath}/`),
     );
 
     if (!isProtectedPath) {
