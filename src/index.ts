@@ -144,7 +144,7 @@ app.use("/api/*", async (c, next) => {
         return;
     }
 
-    await authMiddleware(c, next);
+    return authMiddleware(c, next);
 });
 
 // Register OpenAPI routes directly on main app
