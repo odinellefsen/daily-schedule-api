@@ -128,7 +128,7 @@ import { registerCompleteTodo } from "./routes/api/todo/todo.complete";
 import { registerCreateTodo } from "./routes/api/todo/todo.create";
 import { registerListTodos } from "./routes/api/todo/todo.list";
 
-// Apply auth middleware on both collection and nested routes
+// Apply auth middleware once for protected API groups.
 const protectedApiBasePaths = [
     "/api/todo",
     "/api/food-item",
@@ -136,11 +136,21 @@ const protectedApiBasePaths = [
     "/api/recipe",
     "/api/meal",
 ] as const;
+const authMiddleware = requireAuth();
 
-for (const basePath of protectedApiBasePaths) {
-    app.use(basePath, requireAuth());
-    app.use(`${basePath}/*`, requireAuth());
-}
+app.use("/api/*", async (c, next) => {
+    const isProtectedPath = protectedApiBasePaths.some(
+        (basePath) =>
+            c.req.path === basePath || c.req.path.startsWith(`${basePath}/`),
+    );
+
+    if (!isProtectedPath) {
+        await next();
+        return;
+    }
+
+    await authMiddleware(c, next);
+});
 
 // Register OpenAPI routes directly on main app
 registerCreateTodo(app);
