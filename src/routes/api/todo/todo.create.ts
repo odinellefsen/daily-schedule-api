@@ -30,13 +30,42 @@ const createTodoRequestSchema = z.object({
         .optional(),
 });
 
+const REQUEST_BODY_TIMEOUT_MS = 8000;
+
 export function registerCreateTodo(app: OpenAPIHono) {
     app.post("/api/todo", async (c) => {
         console.log("[todo.create/plain] entered handler");
         const safeUserId = c.userId!;
-        console.log("[todo.create/plain] before req.json");
-        console.log("[todo.create/plain] req.body", await c.req.body());
-        const jsonBody = await c.req.json();
+        console.log("[todo.create/plain] before req.text");
+        const rawBody = await Promise.race([
+            c.req.raw.text(),
+            new Promise<never>((_, reject) => {
+                setTimeout(() => {
+                    reject(
+                        new Error(
+                            `Request body timed out after ${REQUEST_BODY_TIMEOUT_MS}ms`,
+                        ),
+                    );
+                }, REQUEST_BODY_TIMEOUT_MS);
+            }),
+        ]);
+        console.log("[todo.create/plain] after req.text", {
+            bodyLength: rawBody.length,
+        });
+
+        let jsonBody: unknown;
+        try {
+            jsonBody = JSON.parse(rawBody);
+        } catch {
+            return c.json(
+                {
+                    success: false as const,
+                    message: "Invalid JSON body",
+                },
+                400,
+            );
+        }
+
         console.log("[todo.create/plain] jsonBody", jsonBody);
         const parsedBody = createTodoRequestSchema.safeParse(jsonBody);
 
