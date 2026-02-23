@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import { zodEnv } from "../env";
 import api from "./routes/api";
 
-export const app = new OpenAPIHono().basePath("/api");
+export const app = new OpenAPIHono();
 // Exporting this type also ensures the module has a direct `from "hono"` import,
 // which some deployment/build detectors rely on.
 export type App = Hono;
