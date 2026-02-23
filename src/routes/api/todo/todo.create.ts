@@ -35,6 +35,7 @@ export function registerCreateTodo(app: OpenAPIHono) {
         console.log("[todo.create/plain] entered handler");
         const safeUserId = c.userId!;
         console.log("[todo.create/plain] before req.json");
+        console.log("[todo.create/plain] req.body", await c.req.body());
         const jsonBody = await c.req.json();
         console.log("[todo.create/plain] jsonBody", jsonBody);
         const parsedBody = createTodoRequestSchema.safeParse(jsonBody);
