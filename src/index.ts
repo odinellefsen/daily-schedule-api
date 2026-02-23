@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import { zodEnv } from "../env";
 import api from "./routes/api";
 
-export const app = new OpenAPIHono();
+export const app = new OpenAPIHono().basePath("/api");
 // Exporting this type also ensures the module has a direct `from "hono"` import,
 // which some deployment/build detectors rely on.
 export type App = Hono;
@@ -92,11 +92,6 @@ app.get("/health", (c) => {
     return c.json({ ok: true }, 200);
 });
 
-// Convenience alias under /api (also unauthenticated)
-app.get("/api/health", (c) => {
-    return c.json({ ok: true }, 200);
-});
-
 // Register security schemes
 app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
     type: "http",
@@ -130,15 +125,15 @@ import { registerListTodos } from "./routes/api/todo/todo.list";
 
 // Apply auth middleware once for protected API groups.
 const protectedApiBasePaths = [
-    "/api/todo",
-    "/api/food-item",
-    "/api/habit",
-    "/api/recipe",
-    "/api/meal",
+    "/todo",
+    "/food-item",
+    "/habit",
+    "/recipe",
+    "/meal",
 ] as const;
 const authMiddleware = requireAuth();
 
-app.use("/api/*", async (c, next) => {
+app.use("/*", async (c, next) => {
     const isProtectedPath = protectedApiBasePaths.some(
         (basePath) =>
             c.req.path === basePath || c.req.path.startsWith(`${basePath}/`),
@@ -176,10 +171,10 @@ registerGetMeal(app);
 registerAttachMealRecipes(app);
 
 // Mount other regular API routes (non-OpenAPI for now)
-app.route("/api", api);
+app.route("/", api);
 
 // Generate OpenAPI spec (using doc31 for v3.1 with proper schema conversion)
-app.doc31("/api/openapi.json", {
+app.doc31("/openapi.json", {
     openapi: "3.1.0",
     info: {
         title: "Daily Scheduler API",
@@ -222,7 +217,7 @@ async function getScalarHandler(): Promise<ScalarHandler> {
 }
 
 // Scalar API Reference (modern, beautiful UI)
-app.get("/api/swagger", async (c, next) => {
+app.get("/swagger", async (c, next) => {
     const handler = await getScalarHandler();
     return handler(c, next);
 });

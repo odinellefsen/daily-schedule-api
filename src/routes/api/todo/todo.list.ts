@@ -64,7 +64,7 @@ const allTodosResponseSchema = z.object({
 // Route definitions
 const getTodayTodosRoute = createRoute({
     method: "get",
-    path: "/api/todo/today",
+    path: "/todo/today",
     tags: ["Todos"],
     security: [{ Bearer: [] }],
     request: {
@@ -97,7 +97,7 @@ const getTodayTodosRoute = createRoute({
 
 const getAllTodosRoute = createRoute({
     method: "get",
-    path: "/api/todo",
+    path: "/todo",
     tags: ["Todos"],
     security: [{ Bearer: [] }],
     request: {

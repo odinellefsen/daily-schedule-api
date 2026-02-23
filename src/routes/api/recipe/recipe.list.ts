@@ -70,7 +70,7 @@ const recipeBasicSchema = z.object({
 // Route definitions
 const listRecipesRoute = createRoute({
     method: "get",
-    path: "/api/recipe",
+    path: "/recipe",
     tags: ["Recipes"],
     security: [{ Bearer: [] }],
     responses: {
@@ -102,7 +102,7 @@ const listRecipesRoute = createRoute({
 
 const getRecipeByIdRoute = createRoute({
     method: "get",
-    path: "/api/recipe/{recipeId}",
+    path: "/recipe/{recipeId}",
     tags: ["Recipes"],
     security: [{ Bearer: [] }],
     request: {
@@ -150,7 +150,7 @@ const getRecipeByIdRoute = createRoute({
 
 const searchRecipesRoute = createRoute({
     method: "get",
-    path: "/api/recipe/search",
+    path: "/recipe/search",
     tags: ["Recipes"],
     security: [{ Bearer: [] }],
     request: {

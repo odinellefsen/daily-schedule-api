@@ -35,7 +35,7 @@ const searchFoodItemsResponseSchema = z.object({
 // Route definitions
 const listFoodItemsRoute = createRoute({
     method: "get",
-    path: "/api/food-item",
+    path: "/food-item",
     tags: ["Food Items"],
     security: [{ Bearer: [] }],
     responses: {
@@ -63,7 +63,7 @@ const listFoodItemsRoute = createRoute({
 
 const searchFoodItemsRoute = createRoute({
     method: "get",
-    path: "/api/food-item/search",
+    path: "/food-item/search",
     tags: ["Food Items"],
     security: [{ Bearer: [] }],
     request: {

@@ -31,7 +31,7 @@ const errorResponseSchema = z.object({
 // Route definition
 const deleteRecipeRoute = createRoute({
     method: "delete",
-    path: "/api/recipe",
+    path: "/recipe",
     tags: ["Recipes"],
     security: [{ Bearer: [] }],
     request: {

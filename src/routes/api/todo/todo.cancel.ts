@@ -28,7 +28,7 @@ const errorResponseSchema = z.object({
 // OpenAPI route definition
 const cancelTodoRoute = createRoute({
     method: "post",
-    path: "/api/todo/cancel",
+    path: "/todo/cancel",
     tags: ["Todos"],
     security: [
         {

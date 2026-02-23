@@ -28,7 +28,7 @@ const errorResponseSchema = z.object({
 // OpenAPI route definition
 const completeTodoRoute = createRoute({
     method: "post",
-    path: "/api/todo/complete",
+    path: "/todo/complete",
     tags: ["Todos"],
     security: [
         {

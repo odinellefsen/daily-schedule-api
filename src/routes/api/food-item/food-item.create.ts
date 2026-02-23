@@ -88,7 +88,7 @@ const createFoodItemResponses: Record<string, OpenApiResponseDef> = {
 
 const createFoodItemRoute = createRoute({
     method: "post",
-    path: "/api/food-item",
+    path: "/food-item",
     tags: ["Food Items"],
     security: [{ Bearer: [] }],
     request: {
