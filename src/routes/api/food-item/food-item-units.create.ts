@@ -41,7 +41,7 @@ const errorResponseSchema = z.object({
 // Route definition
 const createFoodItemUnitsRoute = createRoute({
     method: "post",
-    path: "/food-item/:foodItemId/units",
+    path: "/api/food-item/:foodItemId/units",
     tags: ["Food Item Units"],
     security: [{ Bearer: [] }],
     request: {

@@ -33,7 +33,7 @@ const createTodoRequestSchema = z.object({
 const REQUEST_BODY_TIMEOUT_MS = 8000;
 
 export function registerCreateTodo(app: OpenAPIHono) {
-    app.post("/todo", async (c) => {
+    app.post("/api/todo", async (c) => {
         console.log("[todo.create/plain] entered handler");
         const safeUserId = c.userId!;
         console.log("[todo.create/plain] before req.text");

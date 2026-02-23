@@ -125,23 +125,18 @@ import { registerListTodos } from "./routes/api/todo/todo.list";
 
 // Apply auth middleware once for protected API groups.
 const protectedApiBasePaths = [
-    "/todo",
-    "/food-item",
-    "/habit",
-    "/recipe",
-    "/meal",
+    "/api/todo",
+    "/api/food-item",
+    "/api/habit",
+    "/api/recipe",
+    "/api/meal",
 ] as const;
 const authMiddleware = requireAuth();
 
-app.use("/*", async (c, next) => {
-    const pathWithoutApiPrefix = c.req.path.startsWith("/api")
-        ? c.req.path.slice(4) || "/"
-        : c.req.path;
-
+app.use("/api/*", async (c, next) => {
     const isProtectedPath = protectedApiBasePaths.some(
         (basePath) =>
-            pathWithoutApiPrefix === basePath ||
-            pathWithoutApiPrefix.startsWith(`${basePath}/`),
+            c.req.path === basePath || c.req.path.startsWith(`${basePath}/`),
     );
 
     if (!isProtectedPath) {
@@ -176,10 +171,10 @@ registerGetMeal(app);
 registerAttachMealRecipes(app);
 
 // Mount other regular API routes (non-OpenAPI for now)
-app.route("/", api);
+app.route("/api", api);
 
 // Generate OpenAPI spec (using doc31 for v3.1 with proper schema conversion)
-app.doc31("/openapi.json", {
+app.doc31("/api/openapi.json", {
     openapi: "3.1.0",
     info: {
         title: "Daily Scheduler API",
@@ -222,7 +217,7 @@ async function getScalarHandler(): Promise<ScalarHandler> {
 }
 
 // Scalar API Reference (modern, beautiful UI)
-app.get("/swagger", async (c, next) => {
+app.get("/api/swagger", async (c, next) => {
     const handler = await getScalarHandler();
     return handler(c, next);
 });

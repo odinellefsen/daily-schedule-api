@@ -15,7 +15,7 @@ const mealSummarySchema = z.object({
 // Route definition
 const listMealsRoute = createRoute({
     method: "get",
-    path: "/meal",
+    path: "/api/meal",
     tags: ["Meals"],
     security: [{ Bearer: [] }],
     responses: {

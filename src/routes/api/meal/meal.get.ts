@@ -38,7 +38,7 @@ const fullMealSchema = z.object({
 // Route definition
 const getMealRoute = createRoute({
     method: "get",
-    path: "/meal/{mealId}",
+    path: "/api/meal/{mealId}",
     tags: ["Meals"],
     security: [{ Bearer: [] }],
     request: {

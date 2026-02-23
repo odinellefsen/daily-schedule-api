@@ -83,7 +83,7 @@ const simpleHabitSuccessResponseSchema = z.object({
 // Route definition
 const createBatchHabitsRoute = createRoute({
     method: "post",
-    path: "/habit/batch",
+    path: "/api/habit/batch",
     tags: ["Habits"],
     security: [{ Bearer: [] }],
     request: {
@@ -141,7 +141,7 @@ const createBatchHabitsRoute = createRoute({
 
 const createSimpleHabitRoute = createRoute({
     method: "post",
-    path: "/habit/simple",
+    path: "/api/habit/simple",
     tags: ["Habits"],
     security: [{ Bearer: [] }],
     request: {

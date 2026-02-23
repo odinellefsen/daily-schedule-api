@@ -16,7 +16,7 @@ const deleteFoodItemUnitRequestSchema = z.object({
 // Route definition
 const deleteFoodItemUnitsRoute = createRoute({
     method: "delete",
-    path: "/food-item/:foodItemId/units",
+    path: "/api/food-item/:foodItemId/units",
     tags: ["Food Item Units"],
     security: [{ Bearer: [] }],
     request: {

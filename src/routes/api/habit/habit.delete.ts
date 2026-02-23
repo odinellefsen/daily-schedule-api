@@ -28,7 +28,7 @@ const errorResponseSchema = z.object({
 
 const deleteHabitRoute = createRoute({
     method: "delete",
-    path: "/habit",
+    path: "/api/habit",
     tags: ["Habits"],
     security: [{ Bearer: [] }],
     request: {

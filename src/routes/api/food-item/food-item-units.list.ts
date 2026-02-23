@@ -38,7 +38,7 @@ const allFoodItemUnitsSchema = z.object({
 // Route definitions
 const listFoodItemUnitsByFoodItemIdRoute = createRoute({
     method: "get",
-    path: "/food-item/:foodItemId/units",
+    path: "/api/food-item/:foodItemId/units",
     tags: ["Food Item Units"],
     security: [{ Bearer: [] }],
     request: {
@@ -86,7 +86,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
 
 const listAllFoodItemUnitsRoute = createRoute({
     method: "get",
-    path: "/food-item/units",
+    path: "/api/food-item/units",
     tags: ["Food Item Units"],
     security: [{ Bearer: [] }],
     responses: {
