@@ -19,8 +19,6 @@ function normalizeConnectionString(raw: string): string {
 
 function getPoolSslConfig(
     connectionString: string,
-    envRejectUnauthorized?: "true" | "false",
-    caCert?: string,
 ) {
     const connectionUrl = new URL(normalizeConnectionString(connectionString));
     const hostname = connectionUrl.hostname.toLowerCase();
@@ -32,20 +30,23 @@ function getPoolSslConfig(
     if (isLocalHost) return undefined;
 
     const sslMode = connectionUrl.searchParams.get("sslmode")?.toLowerCase();
-    const rejectUnauthorized =
-        envRejectUnauthorized === "true"
-            ? true
-            : envRejectUnauthorized === "false"
-              ? false
-              : sslMode === "no-verify"
-                ? false
-                : true;
-
-    if (caCert) {
-        return { rejectUnauthorized, ca: caCert.replace(/\\n/g, "\n") };
+    // Map postgres sslmode semantics for Node TLS behavior.
+    // Supabase URLs commonly use sslmode=require, which should not enforce CA verification.
+    switch (sslMode) {
+        case "disable":
+            return false;
+        case "allow":
+        case "prefer":
+        case "require":
+        case "no-verify":
+            return { rejectUnauthorized: false };
+        case "verify-ca":
+        case "verify-full":
+            return { rejectUnauthorized: true };
+        default:
+            // Secure default when sslmode is omitted.
+            return { rejectUnauthorized: true };
     }
-
-    return { rejectUnauthorized };
 }
 
 function initDb(): Db {
@@ -58,11 +59,7 @@ function initDb(): Db {
 
     pool ??= new Pool({
         connectionString,
-        ssl: getPoolSslConfig(
-            connectionString,
-            env.POSTGRES_SSL_REJECT_UNAUTHORIZED,
-            env.POSTGRES_SSL_CA_CERT,
-        ),
+        ssl: getPoolSslConfig(connectionString),
     });
     drizzleDb = drizzle(pool, { schema });
     return drizzleDb;
