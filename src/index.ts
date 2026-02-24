@@ -48,9 +48,6 @@ const allowedOrigins = Array.from(
     new Set([...defaultAllowedOrigins, ...localFrontendOrigins]),
 );
 
-const localApiHost = localApiUrl?.hostname;
-const localApiPort = Number(localApiUrl?.port || "3030");
-
 app.use(
     "/*",
     cors({
@@ -224,18 +221,4 @@ openApiApp.get("/api/swagger", async (c, next) => {
 });
 
 app.route("/", openApiApp);
-
-const serverConfig: {
-    port: number;
-    fetch: typeof app.fetch;
-    hostname?: string;
-} = {
-    port: localApiPort,
-    fetch: app.fetch,
-};
-
-if (localApiHost) {
-    serverConfig.hostname = localApiHost;
-}
-
-export default serverConfig;
+export default app;

@@ -1,9 +1,9 @@
 {
 	"name": "daily-scheduler-api",
 	"scripts": {
-		"dev": "bun run --hot src/index.ts",
-		"vercel-build": "rm -rf dist && bun build src/index.ts --outdir dist --target=node --format=cjs",
-		"build": "bun build src/index.ts --outdir dist --target=bun",
+		"dev": "bun run --hot src/server.ts",
+		"vercel-build": "rm -rf dist && bun build src/server.ts --outdir dist --target=node --format=cjs",
+		"build": "bun build src/server.ts --outdir dist --target=bun",
 		"lint": "biome lint src/",
 		"lint:fix": "biome lint --write src/",
 		"format": "biome format src/",
