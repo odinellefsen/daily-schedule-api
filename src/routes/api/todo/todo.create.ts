@@ -94,8 +94,14 @@ const createTodoRoute = createRoute({
 
 export function registerCreateTodo(app: OpenAPIHono) {
     app.openapi(createTodoRoute, async (c) => {
+        console.log("[todo.create/plain] entered handler");
         const safeUserId = c.userId!;
+        console.log("[todo.create/plain] safeUserId", safeUserId);
         const safeCreateTodoJsonBody = c.req.valid("json");
+        console.log(
+            "[todo.create/plain] safeCreateTodoJsonBody",
+            safeCreateTodoJsonBody,
+        );
 
         const newTodo: TodoType = {
             id: crypto.randomUUID(),
