@@ -1,10 +1,11 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import type { Handler, Hono } from "hono";
+import { type Handler, Hono } from "hono";
 import { cors } from "hono/cors";
 import { zodEnv } from "../env";
 import api from "./routes/api";
 
-export const app = new OpenAPIHono();
+const openApiApp = new OpenAPIHono();
+export const app = new Hono();
 // Exporting this type also ensures the module has a direct `from "hono"` import,
 // which some deployment/build detectors rely on.
 export type App = Hono;
@@ -93,7 +94,7 @@ app.get("/health", (c) => {
 });
 
 // Register security schemes
-app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
+openApiApp.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
     type: "http",
     scheme: "bearer",
     bearerFormat: "JWT",
@@ -133,7 +134,7 @@ const protectedApiBasePaths = [
 ] as const;
 const authMiddleware = requireAuth();
 
-app.use("/api/*", async (c, next) => {
+openApiApp.use("/api/*", async (c, next) => {
     const isProtectedPath = protectedApiBasePaths.some(
         (basePath) =>
             c.req.path === basePath || c.req.path.startsWith(`${basePath}/`),
@@ -148,33 +149,33 @@ app.use("/api/*", async (c, next) => {
 });
 
 // Register OpenAPI routes directly on main app
-registerCreateTodo(app);
-registerCancelTodo(app);
-registerCompleteTodo(app);
-registerListTodos(app);
-registerCreateFoodItem(app);
-registerListFoodItems(app);
-registerDeleteFoodItem(app);
-registerCreateFoodItemUnits(app);
-registerListFoodItemUnits(app);
-registerDeleteFoodItemUnits(app);
-registerCreateHabit(app);
-registerDeleteHabit(app);
-registerCreateRecipe(app);
-registerDeleteRecipe(app);
-registerListRecipes(app);
-registerCreateRecipeIngredients(app);
-registerCreateRecipeInstructions(app);
-registerCreateMeal(app);
-registerListMeals(app);
-registerGetMeal(app);
-registerAttachMealRecipes(app);
+registerCreateTodo(openApiApp);
+registerCancelTodo(openApiApp);
+registerCompleteTodo(openApiApp);
+registerListTodos(openApiApp);
+registerCreateFoodItem(openApiApp);
+registerListFoodItems(openApiApp);
+registerDeleteFoodItem(openApiApp);
+registerCreateFoodItemUnits(openApiApp);
+registerListFoodItemUnits(openApiApp);
+registerDeleteFoodItemUnits(openApiApp);
+registerCreateHabit(openApiApp);
+registerDeleteHabit(openApiApp);
+registerCreateRecipe(openApiApp);
+registerDeleteRecipe(openApiApp);
+registerListRecipes(openApiApp);
+registerCreateRecipeIngredients(openApiApp);
+registerCreateRecipeInstructions(openApiApp);
+registerCreateMeal(openApiApp);
+registerListMeals(openApiApp);
+registerGetMeal(openApiApp);
+registerAttachMealRecipes(openApiApp);
 
 // Mount other regular API routes (non-OpenAPI for now)
-app.route("/api", api);
+openApiApp.route("/api", api);
 
 // Generate OpenAPI spec (using doc31 for v3.1 with proper schema conversion)
-app.doc31("/api/openapi.json", {
+openApiApp.doc31("/api/openapi.json", {
     openapi: "3.1.0",
     info: {
         title: "Daily Scheduler API",
@@ -217,10 +218,12 @@ async function getScalarHandler(): Promise<ScalarHandler> {
 }
 
 // Scalar API Reference (modern, beautiful UI)
-app.get("/api/swagger", async (c, next) => {
+openApiApp.get("/api/swagger", async (c, next) => {
     const handler = await getScalarHandler();
     return handler(c, next);
 });
+
+app.route("/", openApiApp);
 
 const serverConfig: {
     port: number;
