@@ -17,6 +17,24 @@ function normalizeConnectionString(raw: string): string {
     return withoutPrefix.trim();
 }
 
+function stripSslParams(connectionString: string): string {
+    const url = new URL(normalizeConnectionString(connectionString));
+    const sslParams = [
+        "ssl",
+        "sslmode",
+        "sslcert",
+        "sslkey",
+        "sslrootcert",
+        "sslca",
+    ] as const;
+
+    for (const param of sslParams) {
+        url.searchParams.delete(param);
+    }
+
+    return url.toString();
+}
+
 function getPoolSslConfig(
     connectionString: string,
 ) {
@@ -56,9 +74,10 @@ function initDb(): Db {
     const connectionString = normalizeConnectionString(
         env.POSTGRES_CONNECTION_STRING,
     );
+    const connectionStringWithoutSslParams = stripSslParams(connectionString);
 
     pool ??= new Pool({
-        connectionString,
+        connectionString: connectionStringWithoutSslParams,
         ssl: getPoolSslConfig(connectionString),
     });
     drizzleDb = drizzle(pool, { schema });
