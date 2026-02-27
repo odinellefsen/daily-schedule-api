@@ -6,6 +6,10 @@ import {
     type MealRecipeAttachType,
     mealRecipeAttachSchema,
 } from "../../../contracts/food/meal";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { db } from "../../../db";
 import { mealRecipes, meals, recipes } from "../../../db/schemas";
 import { FlowcorePathways } from "../../../utils/flowcore";
@@ -18,19 +22,11 @@ const requestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: z.object({
+const successResponseSchema = createSuccessResponseSchema(
+    z.object({
         mealRecipe: mealRecipeAttachSchema,
     }),
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
+);
 
 // Route definition
 const attachRecipesToMealRoute = createRoute({

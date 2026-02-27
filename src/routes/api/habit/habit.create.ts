@@ -9,6 +9,10 @@ import {
     Weekday,
     YMD,
 } from "../../../contracts/habit/habit.contract";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { db } from "../../../db";
 import { mealRecipes, meals, recipeInstructions } from "../../../db/schemas";
 import { FlowcorePathways } from "../../../utils/flowcore";
@@ -56,29 +60,19 @@ const createSimpleHabitRequestSchema = z.discriminatedUnion("recurrenceType", [
 ]);
 
 // Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: z.object({
+const successResponseSchema = createSuccessResponseSchema(
+    z.object({
         domain: z.string(),
         configuredSubEntitiesCount: z.number(),
     }),
-});
+);
 
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
-
-const simpleHabitSuccessResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: z.object({
+const simpleHabitSuccessResponseSchema = createSuccessResponseSchema(
+    z.object({
         domain: z.literal("simple"),
         description: z.string(),
     }),
-});
+);
 
 // Route definition
 const createBatchHabitsRoute = createRoute({

@@ -7,6 +7,10 @@ import {
     type RecipeMetadataType,
     recipeSchema,
 } from "../../../contracts/food/recipe";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schemas";
 import { FlowcorePathways } from "../../../utils/flowcore";
@@ -22,17 +26,7 @@ const createRecipeRequestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: recipeSchema,
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
+const successResponseSchema = createSuccessResponseSchema(recipeSchema);
 
 // Route definition
 const createRecipeRoute = createRoute({

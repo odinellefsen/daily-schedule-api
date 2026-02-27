@@ -6,6 +6,10 @@ import {
     type HabitDeletedType,
     habitDeletedSchema,
 } from "../../../contracts/habit/habit.contract";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { db } from "../../../db";
 import { habits } from "../../../db/schemas";
 import { FlowcorePathways } from "../../../utils/flowcore";
@@ -14,17 +18,7 @@ const deleteHabitRequestSchema = z.object({
     habitId: z.string().uuid(),
 });
 
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: habitDeletedSchema,
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
+const successResponseSchema = createSuccessResponseSchema(habitDeletedSchema);
 
 const deleteHabitRoute = createRoute({
     method: "delete",

@@ -6,6 +6,10 @@ import {
     type RecipeDeletedType,
     recipeDeletedSchema,
 } from "../../../contracts/food/recipe";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { db } from "../../../db";
 import { recipes } from "../../../db/schemas";
 import { FlowcorePathways } from "../../../utils/flowcore";
@@ -16,17 +20,7 @@ const deleteRecipeRequestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: recipeDeletedSchema,
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
+const successResponseSchema = createSuccessResponseSchema(recipeDeletedSchema);
 
 // Route definition
 const deleteRecipeRoute = createRoute({

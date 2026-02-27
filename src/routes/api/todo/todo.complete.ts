@@ -5,6 +5,10 @@ import {
     type TodoCompletedType,
     todoCompletedSchema,
 } from "../../../contracts/todo/todo.completed";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
@@ -13,17 +17,7 @@ const completeTodoRequestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: todoCompletedSchema,
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
+const successResponseSchema = createSuccessResponseSchema(todoCompletedSchema);
 
 // OpenAPI route definition
 const completeTodoRoute = createRoute({

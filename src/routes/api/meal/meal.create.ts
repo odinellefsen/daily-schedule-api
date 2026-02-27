@@ -2,6 +2,10 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
 import { type MealCreateType, mealSchema } from "../../../contracts/food/meal";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
@@ -13,23 +17,15 @@ const createMealRequestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: z.object({
+const successResponseSchema = createSuccessResponseSchema(
+    z.object({
         meal: z.object({
             id: z.string().uuid(),
             mealName: z.string(),
         }),
         message: z.string(),
     }),
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
+);
 
 // Route definition
 const createMealRoute = createRoute({
