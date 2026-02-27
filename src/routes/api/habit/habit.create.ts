@@ -284,8 +284,6 @@ export function registerCreateHabit(app: OpenAPIHono) {
             ...safeBatchHabitData,
         };
 
-        console.log(safeUserId);
-
         const createHabitEvent = habitsCreatedSchema.safeParse(newHabit);
         if (!createHabitEvent.success) {
             return c.json(
