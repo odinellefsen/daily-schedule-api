@@ -5,6 +5,10 @@ import {
     type TodoCancelledType,
     todoCancelledSchema,
 } from "../../../contracts/todo";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
@@ -13,17 +17,7 @@ const cancelTodoRequestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: todoCancelledSchema,
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
+const successResponseSchema = createSuccessResponseSchema(todoCancelledSchema);
 
 // OpenAPI route definition
 const cancelTodoRoute = createRoute({
