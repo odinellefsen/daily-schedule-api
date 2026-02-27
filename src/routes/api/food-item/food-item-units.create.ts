@@ -6,6 +6,10 @@ import {
     type FoodItemUnitType,
     foodItemUnitSchema,
 } from "../../../contracts/food/food-item/food-item-units.contract";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
 import { FlowcorePathways } from "../../../utils/flowcore";
@@ -26,17 +30,7 @@ const createFoodItemUnitRequestSchema = foodItemUnitSchema
     });
 
 // Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: foodItemUnitSchema,
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
+const successResponseSchema = createSuccessResponseSchema(foodItemUnitSchema);
 
 // Route definition
 const createFoodItemUnitsRoute = createRoute({

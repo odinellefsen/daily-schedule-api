@@ -7,6 +7,10 @@ import {
     type FoodItemType,
     foodItemSchema,
 } from "../../../contracts/food/food-item";
+import {
+    createSuccessResponseSchema,
+    errorResponseSchema,
+} from "../_shared/responses";
 import { db } from "../../../db";
 import { foodItems } from "../../../db/schemas";
 import { FlowcorePathways } from "../../../utils/flowcore";
@@ -21,17 +25,7 @@ const createFoodItemRequestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = z.object({
-    success: z.literal(true),
-    message: z.string(),
-    data: foodItemSchema,
-});
-
-const errorResponseSchema = z.object({
-    success: z.literal(false),
-    message: z.string(),
-    errors: z.any().optional(),
-});
+const successResponseSchema = createSuccessResponseSchema(foodItemSchema);
 
 // Route definition
 type MediaTypeObject = { schema: ZodSchema };
