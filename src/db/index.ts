@@ -10,10 +10,7 @@ export type Db = NodePgDatabase<typeof schema>;
 
 function normalizeConnectionString(raw: string): string {
     const trimmed = raw.trim().replace(/^['"]|['"]$/g, "");
-    const withoutPrefix = trimmed.replace(
-        /^POSTGRES_CONNECTION_STRING=/i,
-        "",
-    );
+    const withoutPrefix = trimmed.replace(/^POSTGRES_CONNECTION_STRING=/i, "");
     return withoutPrefix.trim();
 }
 
@@ -35,9 +32,7 @@ function stripSslParams(connectionString: string): string {
     return url.toString();
 }
 
-function getPoolSslConfig(
-    connectionString: string,
-) {
+function getPoolSslConfig(connectionString: string) {
     const connectionUrl = new URL(normalizeConnectionString(connectionString));
     const hostname = connectionUrl.hostname.toLowerCase();
     const isLocalHost =

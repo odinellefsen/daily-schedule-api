@@ -40,7 +40,9 @@ const createRecipeInstructionsRequestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = createSuccessResponseSchema(recipeInstructionsSchema);
+const successResponseSchema = createSuccessResponseSchema(
+    recipeInstructionsSchema,
+);
 
 // Route definition
 const createRecipeInstructionsRoute = createRoute({

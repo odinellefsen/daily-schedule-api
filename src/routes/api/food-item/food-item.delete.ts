@@ -20,7 +20,9 @@ const deleteFoodItemRequestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = createSuccessResponseSchema(foodItemDeletedSchema);
+const successResponseSchema = createSuccessResponseSchema(
+    foodItemDeletedSchema,
+);
 
 // Route definition
 const deleteFoodItemRoute = createRoute({

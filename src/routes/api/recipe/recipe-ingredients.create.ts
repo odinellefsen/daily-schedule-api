@@ -28,7 +28,9 @@ const createRecipeIngredientsRequestSchema = z.object({
 });
 
 // Response schemas
-const successResponseSchema = createSuccessResponseSchema(recipeIngredientsSchema);
+const successResponseSchema = createSuccessResponseSchema(
+    recipeIngredientsSchema,
+);
 
 // Route definition
 const createRecipeIngredientsRoute = createRoute({

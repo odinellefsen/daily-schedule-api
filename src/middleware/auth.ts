@@ -100,10 +100,7 @@ export const clerkAuth = () => {
                     ? StatusCodes.SERVICE_UNAVAILABLE
                     : StatusCodes.UNAUTHORIZED;
 
-            return c.json(
-                ApiResponse.error(message, error),
-                statusCode,
-            );
+            return c.json(ApiResponse.error(message, error), statusCode);
         }
     };
 };

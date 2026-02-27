@@ -1,8 +1,6 @@
 import type { FlowcoreEvent } from "@flowcore/pathways";
 import type { z } from "zod";
-import type {
-    recipeIngredientsSchema,
-} from "../../contracts/food/recipe";
+import type { recipeIngredientsSchema } from "../../contracts/food/recipe";
 import { db } from "../../db";
 import { recipeIngredients } from "../../db/schemas";
 

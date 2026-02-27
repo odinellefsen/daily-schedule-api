@@ -140,7 +140,10 @@ export function registerListTodos(app: OpenAPIHono) {
 
         // LAZY GENERATION: Generate missing habit todos for today, don't wait for it to complete
         generateMissingHabitTodos(safeUserId, todayDate).catch((error) => {
-            console.error("Failed to generate habit todos in background:", error);
+            console.error(
+                "Failed to generate habit todos in background:",
+                error,
+            );
         });
 
         // Get today's date bounds in user's timezone, converted to UTC for database query
