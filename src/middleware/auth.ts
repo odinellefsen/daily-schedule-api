@@ -4,6 +4,7 @@ import { zodEnv } from "../../env";
 import { ApiResponse, StatusCodes } from "../utils/api-responses";
 
 const CLERK_VERIFY_TIMEOUT_MS = 8000;
+const BEARER_PREFIX = "Bearer ";
 
 async function verifyTokenWithTimeout(token: string, secretKey: string) {
     return Promise.race([
@@ -55,7 +56,7 @@ export const clerkAuth = () => {
 
             // Extract Bearer token from Authorization header
             const authHeader = c.req.header("Authorization");
-            if (!authHeader?.startsWith("Bearer ")) {
+            if (!authHeader?.startsWith(BEARER_PREFIX)) {
                 return c.json(
                     ApiResponse.error(
                         "Authorization header with Bearer token is required",
@@ -65,7 +66,7 @@ export const clerkAuth = () => {
             }
 
             // Removing "Bearer " prefix
-            const token = authHeader.substring(7);
+            const token = authHeader.substring(BEARER_PREFIX.length);
 
             // Verify the JWT token with Clerk
             const payload = await verifyTokenWithTimeout(
@@ -116,13 +117,13 @@ export const optionalAuth = () => {
         const authHeader = c.req.header("Authorization");
 
         // If no auth header, continue without user context
-        if (!authHeader?.startsWith("Bearer ")) {
+        if (!authHeader?.startsWith(BEARER_PREFIX)) {
             await next();
             return;
         }
 
         try {
-            const token = authHeader.substring(7);
+            const token = authHeader.substring(BEARER_PREFIX.length);
             const payload = await verifyToken(token, {
                 secretKey: zodEnv.CLERK_SECRET_KEY,
             });
