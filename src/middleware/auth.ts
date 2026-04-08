@@ -6,7 +6,7 @@ import { ApiResponse, StatusCodes } from "../utils/api-responses";
 const CLERK_VERIFY_TIMEOUT_MS = 8000;
 
 async function verifyTokenWithTimeout(token: string, secretKey: string) {
-    return await Promise.race([
+    return Promise.race([
         verifyToken(token, { secretKey }),
         new Promise<never>((_, reject) => {
             setTimeout(() => {
