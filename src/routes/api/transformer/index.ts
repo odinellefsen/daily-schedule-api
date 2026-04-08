@@ -32,7 +32,7 @@ transformer.post("/", async (c) => {
             {
                 message: "Event processed ✅",
             },
-            200,
+            StatusCodes.OK,
         );
     } catch (error) {
         console.error("Error processing event", { error });
@@ -41,7 +41,7 @@ transformer.post("/", async (c) => {
                 error: "Failed to process event",
                 message: (error as Error).message,
             },
-            500,
+            StatusCodes.SERVER_ERROR,
         );
     }
 });
