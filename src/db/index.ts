@@ -5,6 +5,14 @@ import * as schema from "./schemas";
 
 let pool: Pool | undefined;
 let drizzleDb: Db | undefined;
+const sslConnectionParams = [
+    "ssl",
+    "sslmode",
+    "sslcert",
+    "sslkey",
+    "sslrootcert",
+    "sslca",
+] as const;
 
 export type Db = NodePgDatabase<typeof schema>;
 
@@ -16,16 +24,8 @@ function normalizeConnectionString(raw: string): string {
 
 function stripSslParams(connectionString: string): string {
     const url = new URL(normalizeConnectionString(connectionString));
-    const sslParams = [
-        "ssl",
-        "sslmode",
-        "sslcert",
-        "sslkey",
-        "sslrootcert",
-        "sslca",
-    ] as const;
 
-    for (const param of sslParams) {
+    for (const param of sslConnectionParams) {
         url.searchParams.delete(param);
     }
 
