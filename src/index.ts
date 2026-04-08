@@ -131,12 +131,13 @@ const protectedApiBasePaths = [
     "/api/meal",
 ] as const;
 const authMiddleware = requireAuth();
+const isProtectedApiPath = (path: string) =>
+    protectedApiBasePaths.some(
+        (basePath) => path === basePath || path.startsWith(`${basePath}/`),
+    );
 
 openApiApp.use("/api/*", async (c, next) => {
-    const isProtectedPath = protectedApiBasePaths.some(
-        (basePath) =>
-            c.req.path === basePath || c.req.path.startsWith(`${basePath}/`),
-    );
+    const isProtectedPath = isProtectedApiPath(c.req.path);
 
     if (!isProtectedPath) {
         await next();
