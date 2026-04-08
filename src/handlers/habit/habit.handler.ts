@@ -155,15 +155,6 @@ function findTriggerSubEntityForWeekRecurrenceType(
         scheduledTime?: string;
     }>,
 ) {
-    const weekdays = [
-        "sunday",
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-    ];
     const targetDay = weekdays.indexOf(targetWeekday);
 
     let maxOffset = -1;
