@@ -148,27 +148,33 @@ openApiApp.use("/api/*", async (c, next) => {
 });
 
 // Register OpenAPI routes directly on main app
-registerCreateTodo(openApiApp);
-registerCancelTodo(openApiApp);
-registerCompleteTodo(openApiApp);
-registerListTodos(openApiApp);
-registerCreateFoodItem(openApiApp);
-registerListFoodItems(openApiApp);
-registerDeleteFoodItem(openApiApp);
-registerCreateFoodItemUnits(openApiApp);
-registerListFoodItemUnits(openApiApp);
-registerDeleteFoodItemUnits(openApiApp);
-registerCreateHabit(openApiApp);
-registerDeleteHabit(openApiApp);
-registerCreateRecipe(openApiApp);
-registerDeleteRecipe(openApiApp);
-registerListRecipes(openApiApp);
-registerCreateRecipeIngredients(openApiApp);
-registerCreateRecipeInstructions(openApiApp);
-registerCreateMeal(openApiApp);
-registerListMeals(openApiApp);
-registerGetMeal(openApiApp);
-registerAttachMealRecipes(openApiApp);
+const openApiRouteRegistrars = [
+    registerCreateTodo,
+    registerCancelTodo,
+    registerCompleteTodo,
+    registerListTodos,
+    registerCreateFoodItem,
+    registerListFoodItems,
+    registerDeleteFoodItem,
+    registerCreateFoodItemUnits,
+    registerListFoodItemUnits,
+    registerDeleteFoodItemUnits,
+    registerCreateHabit,
+    registerDeleteHabit,
+    registerCreateRecipe,
+    registerDeleteRecipe,
+    registerListRecipes,
+    registerCreateRecipeIngredients,
+    registerCreateRecipeInstructions,
+    registerCreateMeal,
+    registerListMeals,
+    registerGetMeal,
+    registerAttachMealRecipes,
+] as const;
+
+for (const registerRoute of openApiRouteRegistrars) {
+    registerRoute(openApiApp);
+}
 
 // Mount other regular API routes (non-OpenAPI for now)
 openApiApp.route("/api", api);
