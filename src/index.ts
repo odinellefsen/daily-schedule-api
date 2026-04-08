@@ -39,8 +39,8 @@ const defaultAllowedOrigins = ["https://flowday.io", "https://www.flowday.io"];
 const localFrontendPorts = ["3000", "3001"] as const;
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
-          const protocol = localApiUrl?.protocol ?? "http:";
-          const hostname = localApiUrl?.hostname ?? "localhost";
+          const protocol = localApiUrl.protocol;
+          const hostname = localApiUrl.hostname;
           return `${protocol}//${hostname}:${port}`;
       })
     : ["http://localhost:3000", "http://localhost:3001"];
