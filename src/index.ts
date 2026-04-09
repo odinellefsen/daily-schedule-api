@@ -146,6 +146,16 @@ const openApiInfo = {
     description:
         "API for managing todos, habits, meals, recipes, and food items",
 };
+const openApiServers = [
+    {
+        url: localApiUrl?.origin ?? defaultLocalApiBaseUrl,
+        description: "Local development server",
+    },
+    {
+        url: "https://api.flowday.io",
+        description: "Production server",
+    },
+];
 
 openApiApp.use("/api/*", async (c, next) => {
     const isProtectedPath = isProtectedApiPath(c.req.path);
@@ -194,16 +204,7 @@ openApiApp.route("/api", api);
 openApiApp.doc31("/api/openapi.json", {
     openapi: "3.1.0",
     info: openApiInfo,
-    servers: [
-        {
-            url: localApiUrl?.origin ?? defaultLocalApiBaseUrl,
-            description: "Local development server",
-        },
-        {
-            url: "https://api.flowday.io",
-            description: "Production server",
-        },
-    ],
+    servers: openApiServers,
 });
 
 type ScalarHandler = Handler;
