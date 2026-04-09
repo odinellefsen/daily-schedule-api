@@ -2,6 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { type Handler, Hono } from "hono";
 import { cors } from "hono/cors";
 import { zodEnv } from "../env";
+import { StatusCodes } from "./utils/api-responses";
 import api from "./routes/api";
 
 const openApiApp = new OpenAPIHono();
@@ -17,7 +18,7 @@ app.onError((err, c) => {
             error: "INTERNAL_SERVER_ERROR",
             message: err instanceof Error ? err.message : String(err),
         },
-        500,
+        StatusCodes.SERVER_ERROR,
     );
 });
 
