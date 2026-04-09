@@ -47,6 +47,13 @@ const localFrontendOrigins = localApiUrl
           return `${protocol}//${hostname}:${port}`;
       })
     : ["http://localhost:3000", "http://localhost:3001"];
+const isTrustedOrigin = (origin: string) => {
+    const { hostname, protocol } = new URL(origin);
+    return (
+        protocol === "https:" &&
+        trustedOriginHostnameSuffixes.some((suffix) => hostname.endsWith(suffix))
+    );
+};
 
 const allowedOrigins = Array.from(
     new Set([...defaultAllowedOrigins, ...localFrontendOrigins]),
@@ -61,13 +68,7 @@ app.use(
 
             // Allow trusted Flowday subdomains and Vercel previews.
             try {
-                const { hostname, protocol } = new URL(origin);
-                if (
-                    protocol === "https:" &&
-                    trustedOriginHostnameSuffixes.some((suffix) =>
-                        hostname.endsWith(suffix),
-                    )
-                ) {
+                if (isTrustedOrigin(origin)) {
                     return origin;
                 }
             } catch {
