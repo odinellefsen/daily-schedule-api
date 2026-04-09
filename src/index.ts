@@ -210,6 +210,10 @@ openApiApp.doc31("/api/openapi.json", {
 type ScalarHandler = Handler;
 let scalarHandler: ScalarHandler | undefined;
 let scalarHandlerInit: Promise<ScalarHandler> | undefined;
+const scalarReferenceConfig = {
+    url: "/api/openapi.json",
+    theme: "purple",
+} as const;
 
 async function getScalarHandler(): Promise<ScalarHandler> {
     if (scalarHandler) return scalarHandler;
@@ -218,10 +222,7 @@ async function getScalarHandler(): Promise<ScalarHandler> {
     // so we must use a dynamic `import()` to avoid `ERR_REQUIRE_ESM`.
     scalarHandlerInit ??= import("@scalar/hono-api-reference").then(
         ({ Scalar }) => {
-            scalarHandler = Scalar({
-                url: "/api/openapi.json",
-                theme: "purple",
-            }) as ScalarHandler;
+            scalarHandler = Scalar(scalarReferenceConfig) as ScalarHandler;
             return scalarHandler;
         },
     );
