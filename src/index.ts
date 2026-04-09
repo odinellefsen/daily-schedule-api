@@ -89,7 +89,7 @@ app.use(
 
 // Unauthenticated health check (for load balancers / k8s / uptime monitors)
 app.get("/health", (c) => {
-    return c.json({ ok: true }, 200);
+    return c.json({ ok: true }, StatusCodes.OK);
 });
 
 // Register security schemes
