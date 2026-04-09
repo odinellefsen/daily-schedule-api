@@ -7,7 +7,7 @@ const localApiBaseUrl = rawLocalApiBaseUrl.includes("://")
     ? rawLocalApiBaseUrl
     : `http://${rawLocalApiBaseUrl}`;
 
-let localApiUrl: URL | undefined;
+let localApiUrl: URL;
 try {
     localApiUrl = new URL(localApiBaseUrl);
 } catch {
