@@ -2,8 +2,8 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { type Handler, Hono } from "hono";
 import { cors } from "hono/cors";
 import { zodEnv } from "../env";
-import { StatusCodes } from "./utils/api-responses";
 import api from "./routes/api";
+import { StatusCodes } from "./utils/api-responses";
 
 const openApiApp = new OpenAPIHono();
 export const app = new Hono();
@@ -51,7 +51,9 @@ const isTrustedOrigin = (origin: string) => {
     const { hostname, protocol } = new URL(origin);
     return (
         protocol === "https:" &&
-        trustedOriginHostnameSuffixes.some((suffix) => hostname.endsWith(suffix))
+        trustedOriginHostnameSuffixes.some((suffix) =>
+            hostname.endsWith(suffix),
+        )
     );
 };
 
