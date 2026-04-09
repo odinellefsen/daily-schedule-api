@@ -140,6 +140,12 @@ const isProtectedApiPath = (path: string) =>
     protectedApiBasePaths.some(
         (basePath) => path === basePath || path.startsWith(`${basePath}/`),
     );
+const openApiInfo = {
+    title: "Daily Scheduler API",
+    version: "1.0.0",
+    description:
+        "API for managing todos, habits, meals, recipes, and food items",
+};
 
 openApiApp.use("/api/*", async (c, next) => {
     const isProtectedPath = isProtectedApiPath(c.req.path);
@@ -187,12 +193,7 @@ openApiApp.route("/api", api);
 // Generate OpenAPI spec (using doc31 for v3.1 with proper schema conversion)
 openApiApp.doc31("/api/openapi.json", {
     openapi: "3.1.0",
-    info: {
-        title: "Daily Scheduler API",
-        version: "1.0.0",
-        description:
-            "API for managing todos, habits, meals, recipes, and food items",
-    },
+    info: openApiInfo,
     servers: [
         {
             url: localApiUrl?.origin ?? defaultLocalApiBaseUrl,
