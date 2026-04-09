@@ -2,6 +2,7 @@ import { zodEnv } from "../env";
 import { app } from "./index";
 
 const defaultLocalApiBaseUrl = "http://localhost:3030";
+const defaultLocalApiPort = "3030";
 const rawLocalApiBaseUrl = zodEnv.LOCAL_IP ?? defaultLocalApiBaseUrl;
 const localApiBaseUrl = rawLocalApiBaseUrl.includes("://")
     ? rawLocalApiBaseUrl
@@ -19,7 +20,7 @@ const serverConfig: {
     fetch: typeof app.fetch;
     hostname?: string;
 } = {
-    port: Number(localApiUrl?.port || "3030"),
+    port: Number(localApiUrl.port || defaultLocalApiPort),
     fetch: app.fetch,
 };
 
