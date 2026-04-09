@@ -24,7 +24,7 @@ const serverConfig: {
     fetch: app.fetch,
 };
 
-if (localApiUrl?.hostname) {
+if (localApiUrl.hostname) {
     serverConfig.hostname = localApiUrl.hostname;
 }
 
