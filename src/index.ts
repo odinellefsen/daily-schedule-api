@@ -38,6 +38,7 @@ try {
 
 const defaultAllowedOrigins = ["https://flowday.io", "https://www.flowday.io"];
 const localFrontendPorts = ["3000", "3001"] as const;
+const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
           const protocol = localApiUrl.protocol;
@@ -54,7 +55,7 @@ app.use(
     "/*",
     cors({
         origin: (origin) => {
-            if (!origin) return "";
+            if (!origin) return emptyOrigin;
             if (allowedOrigins.includes(origin)) return origin;
 
             // Allow trusted Flowday subdomains and Vercel previews.
@@ -68,10 +69,10 @@ app.use(
                     return origin;
                 }
             } catch {
-                return "";
+                return emptyOrigin;
             }
 
-            return "";
+            return emptyOrigin;
         },
         allowHeaders: [
             "Content-Type",
