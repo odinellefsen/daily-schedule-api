@@ -38,6 +38,7 @@ try {
 
 const defaultAllowedOrigins = ["https://flowday.io", "https://www.flowday.io"];
 const localFrontendPorts = ["3000", "3001"] as const;
+const trustedOriginHostnameSuffixes = [".flowday.io", ".vercel.app"] as const;
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -63,8 +64,9 @@ app.use(
                 const { hostname, protocol } = new URL(origin);
                 if (
                     protocol === "https:" &&
-                    (hostname.endsWith(".flowday.io") ||
-                        hostname.endsWith(".vercel.app"))
+                    trustedOriginHostnameSuffixes.some((suffix) =>
+                        hostname.endsWith(suffix),
+                    )
                 ) {
                     return origin;
                 }
