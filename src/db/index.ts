@@ -15,6 +15,8 @@ const sslConnectionParams = [
 ] as const;
 
 export type Db = NodePgDatabase<typeof schema>;
+const isLocalHostname = (hostname: string) =>
+    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 
 function normalizeConnectionString(raw: string): string {
     const trimmed = raw.trim().replace(/^['"]|['"]$/g, "");
@@ -35,10 +37,7 @@ function stripSslParams(connectionString: string): string {
 function getPoolSslConfig(connectionString: string) {
     const connectionUrl = new URL(normalizeConnectionString(connectionString));
     const hostname = connectionUrl.hostname.toLowerCase();
-    const isLocalHost =
-        hostname === "localhost" ||
-        hostname === "127.0.0.1" ||
-        hostname === "::1";
+    const isLocalHost = isLocalHostname(hostname);
 
     if (isLocalHost) return undefined;
 
