@@ -14,6 +14,7 @@ try {
 } catch {
     localApiUrl = new URL(defaultLocalApiBaseUrl);
 }
+const localApiHostname = localApiUrl.hostname;
 
 const serverConfig: {
     port: number;
@@ -24,8 +25,8 @@ const serverConfig: {
     fetch: app.fetch,
 };
 
-if (localApiUrl.hostname) {
-    serverConfig.hostname = localApiUrl.hostname;
+if (localApiHostname) {
+    serverConfig.hostname = localApiHostname;
 }
 
 export default serverConfig;
