@@ -5,6 +5,7 @@ import { ApiResponse, StatusCodes } from "../../../utils/api-responses";
 import { getPathwaysRouter } from "../../../utils/flowcore";
 
 export const transformer = new Hono();
+const eventProcessedMessage = "Event processed ✅";
 
 transformer.post("/", async (c) => {
     try {
@@ -30,7 +31,7 @@ transformer.post("/", async (c) => {
 
         return c.json(
             {
-                message: "Event processed ✅",
+                message: eventProcessedMessage,
             },
             StatusCodes.OK,
         );
