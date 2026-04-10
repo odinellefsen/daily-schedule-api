@@ -14,6 +14,10 @@ const RESOLVERS: Record<string, DomainTitleResolver> = {
     // school: new SchoolTitleResolver(),
 };
 const availableDomains = Object.keys(RESOLVERS).join(", ");
+const createMissingResolverError = (domain: string) =>
+    new Error(
+        `No title resolver found for domain: ${domain}. Available domains: ${availableDomains}`,
+    );
 
 /**
  * Get the title resolver for a specific domain
@@ -23,9 +27,7 @@ const availableDomains = Object.keys(RESOLVERS).join(", ");
 export function getTitleResolver(domain: string): DomainTitleResolver {
     const resolver = RESOLVERS[domain];
     if (!resolver) {
-        throw new Error(
-            `No title resolver found for domain: ${domain}. Available domains: ${availableDomains}`,
-        );
+        throw createMissingResolverError(domain);
     }
     return resolver;
 }
