@@ -6,6 +6,8 @@ import { ApiResponse, StatusCodes } from "../utils/api-responses";
 const CLERK_VERIFY_TIMEOUT_MS = 8000;
 const AUTH_TIMEOUT_MESSAGE = "Authentication service timed out";
 const BEARER_PREFIX = "Bearer ";
+const getBearerToken = (authHeader: string) =>
+    authHeader.substring(BEARER_PREFIX.length);
 
 async function verifyTokenWithTimeout(token: string, secretKey: string) {
     return Promise.race([
@@ -67,7 +69,7 @@ export const clerkAuth = () => {
             }
 
             // Removing "Bearer " prefix
-            const token = authHeader.substring(BEARER_PREFIX.length);
+            const token = getBearerToken(authHeader);
 
             // Verify the JWT token with Clerk
             const payload = await verifyTokenWithTimeout(
@@ -124,7 +126,7 @@ export const optionalAuth = () => {
         }
 
         try {
-            const token = authHeader.substring(BEARER_PREFIX.length);
+            const token = getBearerToken(authHeader);
             const payload = await verifyToken(token, {
                 secretKey: zodEnv.CLERK_SECRET_KEY,
             });
