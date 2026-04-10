@@ -7,6 +7,7 @@
  * - Date range queries (like "today") are calculated in user timezone, then converted to UTC
  * - Time comparisons for urgency/overdue use UTC directly since all times are UTC
  */
+const ymdDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * Get the start and end of a day in a specific timezone, returned as UTC timestamps
@@ -132,7 +133,7 @@ export function getCurrentDateInTimezone(timezone: string): string {
         });
 
         // Validate the resulting date string format
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        if (!ymdDatePattern.test(dateString)) {
             throw new Error(
                 `Invalid date format returned: ${dateString}. Expected YYYY-MM-DD`,
             );
