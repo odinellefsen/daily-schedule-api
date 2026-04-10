@@ -4,6 +4,7 @@ import { zodEnv } from "../../env";
 import { ApiResponse, StatusCodes } from "../utils/api-responses";
 
 const CLERK_VERIFY_TIMEOUT_MS = 8000;
+const AUTH_TIMEOUT_MESSAGE = "Authentication service timed out";
 const BEARER_PREFIX = "Bearer ";
 
 async function verifyTokenWithTimeout(token: string, secretKey: string) {
@@ -93,11 +94,11 @@ export const clerkAuth = () => {
             const message =
                 error instanceof Error &&
                 error.message.includes("timed out after")
-                    ? "Authentication service timed out"
+                    ? AUTH_TIMEOUT_MESSAGE
                     : "Authentication failed";
 
             const statusCode =
-                message === "Authentication service timed out"
+                message === AUTH_TIMEOUT_MESSAGE
                     ? StatusCodes.SERVICE_UNAVAILABLE
                     : StatusCodes.UNAUTHORIZED;
 
