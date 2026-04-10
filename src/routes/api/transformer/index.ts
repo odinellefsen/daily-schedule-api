@@ -6,6 +6,8 @@ import { getPathwaysRouter } from "../../../utils/flowcore";
 
 export const transformer = new Hono();
 const eventProcessedMessage = "Event processed ✅";
+const getErrorMessage = (error: unknown) =>
+    error instanceof Error ? error.message : String(error);
 
 transformer.post("/", async (c) => {
     try {
@@ -40,7 +42,7 @@ transformer.post("/", async (c) => {
         return c.json(
             {
                 error: "Failed to process event",
-                message: (error as Error).message,
+                message: getErrorMessage(error),
             },
             StatusCodes.SERVER_ERROR,
         );
