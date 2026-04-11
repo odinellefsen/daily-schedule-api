@@ -49,6 +49,7 @@ const corsAllowHeaders = [
     "sentry-trace",
 ];
 const corsAllowMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
+const bearerSecuritySchemeName = "Bearer";
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -102,11 +103,15 @@ app.get(healthRoutePath, (c) => {
 });
 
 // Register security schemes
-openApiApp.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
-    type: "http",
-    scheme: "bearer",
-    bearerFormat: "JWT",
-});
+openApiApp.openAPIRegistry.registerComponent(
+    "securitySchemes",
+    bearerSecuritySchemeName,
+    {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+    },
+);
 
 // Import and register OpenAPI routes
 import { requireAuth } from "./middleware/auth";
