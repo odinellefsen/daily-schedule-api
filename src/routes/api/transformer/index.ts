@@ -6,13 +6,14 @@ import { getPathwaysRouter } from "../../../utils/flowcore";
 
 export const transformer = new Hono();
 const eventProcessedMessage = "Event processed ✅";
+const transformerSecretHeaderName = "X-Secret";
 const getErrorMessage = (error: unknown) =>
     error instanceof Error ? error.message : String(error);
 
 transformer.post("/", async (c) => {
     try {
         const event = (await c.req.json()) as FlowcoreEvent;
-        const secret = c.req.header("X-Secret");
+        const secret = c.req.header(transformerSecretHeaderName);
 
         console.log("Received event", {
             flowType: event.flowType,
