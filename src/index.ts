@@ -39,6 +39,14 @@ try {
 const defaultAllowedOrigins = ["https://flowday.io", "https://www.flowday.io"];
 const localFrontendPorts = ["3000", "3001"] as const;
 const trustedOriginHostnameSuffixes = [".flowday.io", ".vercel.app"] as const;
+const corsAllowHeaders = [
+    "Content-Type",
+    "Authorization",
+    "X-Timezone",
+    "X-Secret",
+    "baggage",
+    "sentry-trace",
+];
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -79,14 +87,7 @@ app.use(
 
             return emptyOrigin;
         },
-        allowHeaders: [
-            "Content-Type",
-            "Authorization",
-            "X-Timezone",
-            "X-Secret",
-            "baggage",
-            "sentry-trace",
-        ],
+        allowHeaders: corsAllowHeaders,
         allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         maxAge: 86400,
         credentials: true,
