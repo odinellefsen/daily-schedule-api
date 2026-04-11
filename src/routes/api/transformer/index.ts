@@ -7,6 +7,7 @@ import { getPathwaysRouter } from "../../../utils/flowcore";
 export const transformer = new Hono();
 const eventProcessedMessage = "Event processed ✅";
 const transformerSecretHeaderName = "X-Secret";
+const invalidSecretMessage = "Secret key is incorrect or missing";
 const getErrorMessage = (error: unknown) =>
     error instanceof Error ? error.message : String(error);
 
@@ -24,7 +25,7 @@ transformer.post("/", async (c) => {
 
         if (secret !== zodEnv.TRANSFORMER_SECRET) {
             return c.json(
-                ApiResponse.error("Secret key is incorrect or missing"),
+                ApiResponse.error(invalidSecretMessage),
                 StatusCodes.UNAUTHORIZED,
             );
         }
