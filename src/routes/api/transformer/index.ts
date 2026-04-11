@@ -8,6 +8,7 @@ export const transformer = new Hono();
 const eventProcessedMessage = "Event processed ✅";
 const transformerSecretHeaderName = "X-Secret";
 const invalidSecretMessage = "Secret key is incorrect or missing";
+const eventProcessingFailedMessage = "Failed to process event";
 const getErrorMessage = (error: unknown) =>
     error instanceof Error ? error.message : String(error);
 
@@ -43,7 +44,7 @@ transformer.post("/", async (c) => {
         console.error("Error processing event", { error });
         return c.json(
             {
-                error: "Failed to process event",
+                error: eventProcessingFailedMessage,
                 message: getErrorMessage(error),
             },
             StatusCodes.SERVER_ERROR,
