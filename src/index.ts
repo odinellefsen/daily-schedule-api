@@ -51,6 +51,7 @@ const corsAllowHeaders = [
 const corsAllowMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
 const bearerSecuritySchemeName = "Bearer";
 const openApiSpecPath = "/api/openapi.json";
+const swaggerRoutePath = "/api/swagger";
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -242,7 +243,7 @@ async function getScalarHandler(): Promise<ScalarHandler> {
 }
 
 // Scalar API Reference (modern, beautiful UI)
-openApiApp.get("/api/swagger", async (c, next) => {
+openApiApp.get(swaggerRoutePath, async (c, next) => {
     const handler = await getScalarHandler();
     return handler(c, next);
 });
