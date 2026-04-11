@@ -50,6 +50,7 @@ const corsAllowHeaders = [
 ];
 const corsAllowMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
 const bearerSecuritySchemeName = "Bearer";
+const openApiSpecPath = "/api/openapi.json";
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -211,7 +212,7 @@ for (const registerRoute of openApiRouteRegistrars) {
 openApiApp.route("/api", api);
 
 // Generate OpenAPI spec (using doc31 for v3.1 with proper schema conversion)
-openApiApp.doc31("/api/openapi.json", {
+openApiApp.doc31(openApiSpecPath, {
     openapi: "3.1.0",
     info: openApiInfo,
     servers: openApiServers,
@@ -221,7 +222,7 @@ type ScalarHandler = Handler;
 let scalarHandler: ScalarHandler | undefined;
 let scalarHandlerInit: Promise<ScalarHandler> | undefined;
 const scalarReferenceConfig = {
-    url: "/api/openapi.json",
+    url: openApiSpecPath,
     theme: "purple",
 } as const;
 
