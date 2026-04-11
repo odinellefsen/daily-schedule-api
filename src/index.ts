@@ -47,6 +47,7 @@ const corsAllowHeaders = [
     "baggage",
     "sentry-trace",
 ];
+const corsAllowMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -88,7 +89,7 @@ app.use(
             return emptyOrigin;
         },
         allowHeaders: corsAllowHeaders,
-        allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowMethods: corsAllowMethods,
         maxAge: 86400,
         credentials: true,
     }),
