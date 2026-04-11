@@ -51,6 +51,7 @@ import { handleTodoGenerated } from "../handlers/todo/todo.generated";
 import { handleTodoCreated } from "../handlers/todo/todo.handler";
 
 type FlowcoreModule = typeof import("@flowcore/pathways");
+const defaultFlowcoreRetryDelayMs = 10000;
 
 let flowcoreModulePromise: Promise<FlowcoreModule> | undefined;
 
@@ -85,98 +86,98 @@ async function buildFlowcorePathways(config: {
         .register({
             flowType: "food-item.v0",
             eventType: "food-item.created.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: foodItemSchema,
         })
         .register({
             flowType: "food-item.v0",
             eventType: "food-item.deleted.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: foodItemDeletedSchema,
         })
         .register({
             flowType: "food-item.v0",
             eventType: "food-item.units.created.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: foodItemUnitSchema,
         })
         .register({
             flowType: "food-item.v0",
             eventType: "food-item.units.deleted.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: foodItemUnitDeletedSchema,
         })
         .register({
             flowType: "recipe.v0",
             eventType: "recipe.created.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: recipeSchema,
         })
         .register({
             flowType: "recipe.v0",
             eventType: "recipe.deleted.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: recipeDeletedSchema,
         })
         .register({
             flowType: "recipe.v0",
             eventType: "recipe-instructions.created.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: recipeInstructionsSchema,
         })
         .register({
             flowType: "recipe.v0",
             eventType: "recipe-ingredients.created.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: recipeIngredientsSchema,
         })
         .register({
             flowType: "meal.v0",
             eventType: "meal.created.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: mealSchema,
         })
         .register({
             flowType: "meal.v0",
             eventType: "meal-recipe.attached.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: mealRecipeAttachSchema,
         })
         .register({
             flowType: "habit.v0",
             eventType: "complex-habit.created.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: habitsCreatedSchema,
         })
         .register({
             flowType: "habit.v0",
             eventType: "simple-habit.created.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             // Flowcore register typing currently expects ZodObject; this schema is a discriminated union.
             schema: simpleHabitCreatedSchema as never,
         })
         .register({
             flowType: "habit.v0",
             eventType: "habit.deleted.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: habitDeletedSchema,
         })
         .register({
             flowType: "todo.v0",
             eventType: "todo.created.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: todoSchema,
         })
         .register({
             flowType: "todo.v0",
             eventType: "todo.completed.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: todoCompletedSchema,
         })
         .register({
             flowType: "todo.v0",
             eventType: "todo.cancelled.v0",
-            retryDelayMs: 10000,
+            retryDelayMs: defaultFlowcoreRetryDelayMs,
             schema: todoCancelledSchema,
         })
         .register({
