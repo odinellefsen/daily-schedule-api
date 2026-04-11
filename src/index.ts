@@ -7,6 +7,7 @@ import { StatusCodes } from "./utils/api-responses";
 
 const openApiApp = new OpenAPIHono();
 export const app = new Hono();
+const healthRoutePath = "/health";
 // Exporting this type also ensures the module has a direct `from "hono"` import,
 // which some deployment/build detectors rely on.
 export type App = Hono;
@@ -96,7 +97,7 @@ app.use(
 );
 
 // Unauthenticated health check (for load balancers / k8s / uptime monitors)
-app.get("/health", (c) => {
+app.get(healthRoutePath, (c) => {
     return c.json({ ok: true }, StatusCodes.OK);
 });
 
