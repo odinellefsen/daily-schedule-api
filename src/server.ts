@@ -15,13 +15,14 @@ try {
     localApiUrl = new URL(defaultLocalApiBaseUrl);
 }
 const localApiHostname = localApiUrl.hostname;
+const resolvedLocalApiPort = localApiUrl.port || defaultLocalApiPort;
 
 const serverConfig: {
     port: number;
     fetch: typeof app.fetch;
     hostname?: string;
 } = {
-    port: Number(localApiUrl.port || defaultLocalApiPort),
+    port: Number(resolvedLocalApiPort),
     fetch: app.fetch,
 };
 
