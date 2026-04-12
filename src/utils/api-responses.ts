@@ -17,6 +17,7 @@ export const StatusCodes = {
     SERVER_ERROR: 500, // Unexpected server error
     SERVICE_UNAVAILABLE: 503, // External service down (e.g., Flowcore)
 } as const;
+const successResponseValue = true as const;
 
 type SuccessResponse<T> = {
     success: true;
@@ -43,13 +44,13 @@ function success<T>(
 ): SuccessResponse<T> | SuccessResponseWithoutData {
     if (data !== undefined) {
         return {
-            success: true,
+            success: successResponseValue,
             message,
             data,
         };
     }
     return {
-        success: true,
+        success: successResponseValue,
         message,
     };
 }
