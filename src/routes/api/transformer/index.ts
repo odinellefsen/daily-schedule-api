@@ -11,6 +11,7 @@ const receivedEventLogMessage = "Received event";
 const transformerSecretHeaderName = "X-Secret";
 const invalidSecretMessage = "Secret key is incorrect or missing";
 const eventProcessingFailedMessage = "Failed to process event";
+const processingEventErrorLogMessage = "Error processing event";
 const getErrorMessage = (error: unknown) =>
     error instanceof Error ? error.message : String(error);
 
@@ -43,7 +44,7 @@ transformer.post(transformerPostRoutePath, async (c) => {
             StatusCodes.OK,
         );
     } catch (error) {
-        console.error("Error processing event", { error });
+        console.error(processingEventErrorLogMessage, { error });
         return c.json(
             {
                 error: eventProcessingFailedMessage,
