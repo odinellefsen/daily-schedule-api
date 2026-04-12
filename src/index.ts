@@ -8,6 +8,7 @@ import { StatusCodes } from "./utils/api-responses";
 const openApiApp = new OpenAPIHono();
 export const app = new Hono();
 const healthRoutePath = "/health";
+const openApiAppMountPath = "/";
 // Exporting this type also ensures the module has a direct `from "hono"` import,
 // which some deployment/build detectors rely on.
 export type App = Hono;
@@ -248,5 +249,5 @@ openApiApp.get(swaggerRoutePath, async (c, next) => {
     return handler(c, next);
 });
 
-app.route("/", openApiApp);
+app.route(openApiAppMountPath, openApiApp);
 export default app;
