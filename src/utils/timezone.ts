@@ -8,6 +8,7 @@
  * - Time comparisons for urgency/overdue use UTC directly since all times are UTC
  */
 const ymdDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+const timezoneLookupLocale = "sv-SE";
 const timezoneDateLocale = "en-CA";
 
 /**
@@ -85,9 +86,12 @@ function convertLocalTimeToUTC(localDate: Date, timezone: string): Date {
 
         // Calculate the offset by comparing UTC time with timezone time
         const utcTime = timeInTargetTz.getTime();
-        const timezoneString = timeInTargetTz.toLocaleString("sv-SE", {
-            timeZone: timezone,
-        });
+        const timezoneString = timeInTargetTz.toLocaleString(
+            timezoneLookupLocale,
+            {
+                timeZone: timezone,
+            },
+        );
         const timezoneTime = new Date(timezoneString).getTime();
 
         // Validate timezone conversion
