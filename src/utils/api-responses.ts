@@ -18,6 +18,7 @@ export const StatusCodes = {
     SERVICE_UNAVAILABLE: 503, // External service down (e.g., Flowcore)
 } as const;
 const successResponseValue = true as const;
+const errorResponseValue = false as const;
 
 type SuccessResponse<T> = {
     success: true;
@@ -57,7 +58,7 @@ function success<T>(
 
 function error(message: string, errors?: unknown): ErrorResponse {
     return {
-        success: false,
+        success: errorResponseValue,
         message,
         errors,
     };
