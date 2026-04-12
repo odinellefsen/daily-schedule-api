@@ -8,6 +8,7 @@
  * - Time comparisons for urgency/overdue use UTC directly since all times are UTC
  */
 const ymdDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+const timezoneDateLocale = "en-CA";
 
 /**
  * Get the start and end of a day in a specific timezone, returned as UTC timestamps
@@ -128,7 +129,7 @@ export function getCurrentDateInTimezone(timezone: string): string {
     }
 
     try {
-        const dateString = now.toLocaleDateString("en-CA", {
+        const dateString = now.toLocaleDateString(timezoneDateLocale, {
             timeZone: timezone,
         });
 
