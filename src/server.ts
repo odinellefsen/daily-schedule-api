@@ -16,6 +16,7 @@ try {
 }
 const localApiHostname = localApiUrl.hostname;
 const resolvedLocalApiPort = localApiUrl.port || defaultLocalApiPort;
+const resolvedLocalApiPortNumber = Number(resolvedLocalApiPort);
 const appFetchHandler = app.fetch;
 
 const serverConfig: {
@@ -23,7 +24,7 @@ const serverConfig: {
     fetch: typeof app.fetch;
     hostname?: string;
 } = {
-    port: Number(resolvedLocalApiPort),
+    port: resolvedLocalApiPortNumber,
     fetch: appFetchHandler,
 };
 
