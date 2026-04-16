@@ -55,6 +55,7 @@ const bearerSecuritySchemeName = "Bearer";
 const openApiSpecPath = "/api/openapi.json";
 const swaggerRoutePath = "/api/swagger";
 const protectedApiRoutePattern = "/api/*";
+const apiMountPath = "/api";
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -213,7 +214,7 @@ for (const registerRoute of openApiRouteRegistrars) {
 }
 
 // Mount other regular API routes (non-OpenAPI for now)
-openApiApp.route("/api", api);
+openApiApp.route(apiMountPath, api);
 
 // Generate OpenAPI spec (using doc31 for v3.1 with proper schema conversion)
 openApiApp.doc31(openApiSpecPath, {
