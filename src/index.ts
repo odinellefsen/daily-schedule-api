@@ -39,6 +39,7 @@ try {
 }
 
 const defaultAllowedOrigins = ["https://flowday.io", "https://www.flowday.io"];
+const corsRoutePattern = "/*";
 const localFrontendPorts = ["3000", "3001"] as const;
 const trustedOriginHostnameSuffixes = [".flowday.io", ".vercel.app"] as const;
 const corsAllowHeaders = [
@@ -76,7 +77,7 @@ const allowedOrigins = Array.from(
 );
 
 app.use(
-    "/*",
+    corsRoutePattern,
     cors({
         origin: (origin) => {
             if (!origin) return emptyOrigin;
