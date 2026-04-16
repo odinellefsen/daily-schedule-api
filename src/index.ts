@@ -54,6 +54,7 @@ const corsAllowMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
 const bearerSecuritySchemeName = "Bearer";
 const openApiSpecPath = "/api/openapi.json";
 const swaggerRoutePath = "/api/swagger";
+const protectedApiRoutePattern = "/api/*";
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -171,7 +172,7 @@ const openApiServers = [
     },
 ];
 
-openApiApp.use("/api/*", async (c, next) => {
+openApiApp.use(protectedApiRoutePattern, async (c, next) => {
     const isProtectedPath = isProtectedApiPath(c.req.path);
 
     if (!isProtectedPath) {
