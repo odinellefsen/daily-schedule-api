@@ -12,6 +12,7 @@ const transformerSecretHeaderName = "X-Secret";
 const invalidSecretMessage = "Secret key is incorrect or missing";
 const eventProcessingFailedMessage = "Failed to process event";
 const processingEventErrorLogMessage = "Error processing event";
+const eventProcessedResponse = { message: eventProcessedMessage };
 const getErrorMessage = (error: unknown) =>
     error instanceof Error ? error.message : String(error);
 
@@ -37,12 +38,7 @@ transformer.post(transformerPostRoutePath, async (c) => {
         const router = await getPathwaysRouter();
         await router.processEvent(event, secret);
 
-        return c.json(
-            {
-                message: eventProcessedMessage,
-            },
-            StatusCodes.OK,
-        );
+        return c.json(eventProcessedResponse, StatusCodes.OK);
     } catch (error) {
         console.error(processingEventErrorLogMessage, { error });
         return c.json(
