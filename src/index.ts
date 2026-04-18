@@ -61,6 +61,7 @@ const protectedApiRoutePattern = "/api/*";
 const apiMountPath = "/api";
 const openApiVersion = "3.1.0";
 const securitySchemesComponentName = "securitySchemes";
+const productionApiBaseUrl = "https://api.flowday.io";
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -173,7 +174,7 @@ const openApiServers = [
         description: "Local development server",
     },
     {
-        url: "https://api.flowday.io",
+        url: productionApiBaseUrl,
         description: "Production server",
     },
 ];
