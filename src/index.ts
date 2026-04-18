@@ -7,6 +7,7 @@ import { StatusCodes } from "./utils/api-responses";
 
 const openApiApp = new OpenAPIHono();
 export const app = new Hono();
+const internalServerErrorCode = "INTERNAL_SERVER_ERROR";
 const unhandledErrorLogMessage = "Unhandled error";
 const healthRoutePath = "/health";
 const openApiAppMountPath = "/";
@@ -18,7 +19,7 @@ app.onError((err, c) => {
     console.error(unhandledErrorLogMessage, err);
     return c.json(
         {
-            error: "INTERNAL_SERVER_ERROR",
+            error: internalServerErrorCode,
             message: err instanceof Error ? err.message : String(err),
         },
         StatusCodes.SERVER_ERROR,
