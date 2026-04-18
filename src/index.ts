@@ -63,6 +63,7 @@ const openApiVersion = "3.1.0";
 const securitySchemesComponentName = "securitySchemes";
 const productionApiBaseUrl = "https://api.flowday.io";
 const localDevelopmentServerDescription = "Local development server";
+const productionServerDescription = "Production server";
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -176,7 +177,7 @@ const openApiServers = [
     },
     {
         url: productionApiBaseUrl,
-        description: "Production server",
+        description: productionServerDescription,
     },
 ];
 
