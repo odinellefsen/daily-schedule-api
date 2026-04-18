@@ -60,6 +60,7 @@ const swaggerRoutePath = "/api/swagger";
 const protectedApiRoutePattern = "/api/*";
 const apiMountPath = "/api";
 const openApiVersion = "3.1.0";
+const securitySchemesComponentName = "securitySchemes";
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -114,7 +115,7 @@ app.get(healthRoutePath, (c) => {
 
 // Register security schemes
 openApiApp.openAPIRegistry.registerComponent(
-    "securitySchemes",
+    securitySchemesComponentName,
     bearerSecuritySchemeName,
     {
         type: "http",
