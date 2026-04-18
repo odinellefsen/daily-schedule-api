@@ -44,6 +44,7 @@ const defaultAllowedOrigins = ["https://flowday.io", "https://www.flowday.io"];
 const corsRoutePattern = "/*";
 const localFrontendPorts = ["3000", "3001"] as const;
 const trustedOriginHostnameSuffixes = [".flowday.io", ".vercel.app"] as const;
+const corsMaxAgeSeconds = 86400;
 const corsAllowHeaders = [
     "Content-Type",
     "Authorization",
@@ -100,7 +101,7 @@ app.use(
         },
         allowHeaders: corsAllowHeaders,
         allowMethods: corsAllowMethods,
-        maxAge: 86400,
+        maxAge: corsMaxAgeSeconds,
         credentials: true,
     }),
 );
