@@ -7,6 +7,7 @@ import { StatusCodes } from "./utils/api-responses";
 
 const openApiApp = new OpenAPIHono();
 export const app = new Hono();
+const unhandledErrorLogMessage = "Unhandled error";
 const healthRoutePath = "/health";
 const openApiAppMountPath = "/";
 // Exporting this type also ensures the module has a direct `from "hono"` import,
@@ -14,7 +15,7 @@ const openApiAppMountPath = "/";
 export type App = Hono;
 
 app.onError((err, c) => {
-    console.error("Unhandled error", err);
+    console.error(unhandledErrorLogMessage, err);
     return c.json(
         {
             error: "INTERNAL_SERVER_ERROR",
