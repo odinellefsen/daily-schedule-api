@@ -59,6 +59,7 @@ const openApiSpecPath = "/api/openapi.json";
 const swaggerRoutePath = "/api/swagger";
 const protectedApiRoutePattern = "/api/*";
 const apiMountPath = "/api";
+const openApiVersion = "3.1.0";
 const emptyOrigin = "";
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
@@ -221,7 +222,7 @@ openApiApp.route(apiMountPath, api);
 
 // Generate OpenAPI spec (using doc31 for v3.1 with proper schema conversion)
 openApiApp.doc31(openApiSpecPath, {
-    openapi: "3.1.0",
+    openapi: openApiVersion,
     info: openApiInfo,
     servers: openApiServers,
 });
