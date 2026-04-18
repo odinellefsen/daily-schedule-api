@@ -5,6 +5,7 @@ import { ApiResponse, StatusCodes } from "../utils/api-responses";
 
 const CLERK_VERIFY_TIMEOUT_MS = 8000;
 const AUTH_TIMEOUT_MESSAGE = "Authentication service timed out";
+const AUTH_FAILED_MESSAGE = "Authentication failed";
 const BEARER_PREFIX = "Bearer ";
 const getBearerToken = (authHeader: string) =>
     authHeader.substring(BEARER_PREFIX.length);
@@ -97,7 +98,7 @@ export const clerkAuth = () => {
                 error instanceof Error &&
                 error.message.includes("timed out after")
                     ? AUTH_TIMEOUT_MESSAGE
-                    : "Authentication failed";
+                    : AUTH_FAILED_MESSAGE;
 
             const statusCode =
                 message === AUTH_TIMEOUT_MESSAGE
