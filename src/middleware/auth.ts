@@ -6,6 +6,7 @@ import { ApiResponse, StatusCodes } from "../utils/api-responses";
 const CLERK_VERIFY_TIMEOUT_MS = 8000;
 const AUTH_TIMEOUT_MESSAGE = "Authentication service timed out";
 const AUTH_FAILED_MESSAGE = "Authentication failed";
+const AUTHENTICATION_ERROR_LOG_MESSAGE = "Authentication error:";
 const BEARER_PREFIX = "Bearer ";
 const getBearerToken = (authHeader: string) =>
     authHeader.substring(BEARER_PREFIX.length);
@@ -92,7 +93,7 @@ export const clerkAuth = () => {
             // This can be done lazily in route handlers to avoid extra API calls
             await next();
         } catch (error) {
-            console.error("Authentication error:", error);
+            console.error(AUTHENTICATION_ERROR_LOG_MESSAGE, error);
 
             const message =
                 error instanceof Error &&
