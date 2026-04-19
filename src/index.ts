@@ -66,13 +66,17 @@ const productionApiBaseUrl = "https://api.flowday.io";
 const localDevelopmentServerDescription = "Local development server";
 const productionServerDescription = "Production server";
 const emptyOrigin = "";
+const localFallbackFrontendOrigins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+] as const;
 const localFrontendOrigins = localApiUrl
     ? localFrontendPorts.map((port) => {
           const protocol = localApiUrl.protocol;
           const hostname = localApiUrl.hostname;
           return `${protocol}//${hostname}:${port}`;
       })
-    : ["http://localhost:3000", "http://localhost:3001"];
+    : [...localFallbackFrontendOrigins];
 const isTrustedOrigin = (origin: string) => {
     const { hostname, protocol } = new URL(origin);
     return (
