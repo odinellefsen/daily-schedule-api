@@ -125,14 +125,15 @@ app.get(healthRoutePath, (c) => {
 });
 
 // Register security schemes
+const bearerHttpSecurityScheme = {
+    type: "http",
+    scheme: "bearer",
+    bearerFormat: "JWT",
+} as const;
 openApiApp.openAPIRegistry.registerComponent(
     securitySchemesComponentName,
     bearerSecuritySchemeName,
-    {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
-    },
+    bearerHttpSecurityScheme,
 );
 
 // Import and register OpenAPI routes
