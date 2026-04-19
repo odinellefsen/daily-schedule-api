@@ -10,6 +10,7 @@ export const app = new Hono();
 const internalServerErrorCode = "INTERNAL_SERVER_ERROR";
 const unhandledErrorLogMessage = "Unhandled error";
 const healthRoutePath = "/health";
+const healthCheckBody = { ok: true };
 const openApiAppMountPath = "/";
 // Exporting this type also ensures the module has a direct `from "hono"` import,
 // which some deployment/build detectors rely on.
@@ -113,7 +114,7 @@ app.use(
 
 // Unauthenticated health check (for load balancers / k8s / uptime monitors)
 app.get(healthRoutePath, (c) => {
-    return c.json({ ok: true }, StatusCodes.OK);
+    return c.json(healthCheckBody, StatusCodes.OK);
 });
 
 // Register security schemes
