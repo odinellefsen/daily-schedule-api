@@ -7,6 +7,8 @@ const CLERK_VERIFY_TIMEOUT_MS = 8000;
 const AUTH_TIMEOUT_MESSAGE = "Authentication service timed out";
 const AUTH_FAILED_MESSAGE = "Authentication failed";
 const AUTHENTICATION_ERROR_LOG_MESSAGE = "Authentication error:";
+const MISSING_BEARER_TOKEN_MESSAGE =
+    "Authorization header with Bearer token is required";
 const BEARER_PREFIX = "Bearer ";
 const getBearerToken = (authHeader: string) =>
     authHeader.substring(BEARER_PREFIX.length);
@@ -63,9 +65,7 @@ export const clerkAuth = () => {
             const authHeader = c.req.header("Authorization");
             if (!authHeader?.startsWith(BEARER_PREFIX)) {
                 return c.json(
-                    ApiResponse.error(
-                        "Authorization header with Bearer token is required",
-                    ),
+                    ApiResponse.error(MISSING_BEARER_TOKEN_MESSAGE),
                     StatusCodes.UNAUTHORIZED,
                 );
             }
