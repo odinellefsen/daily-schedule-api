@@ -9,6 +9,7 @@ const AUTH_FAILED_MESSAGE = "Authentication failed";
 const AUTHENTICATION_ERROR_LOG_MESSAGE = "Authentication error:";
 const MISSING_BEARER_TOKEN_MESSAGE =
     "Authorization header with Bearer token is required";
+const INVALID_OR_EXPIRED_TOKEN_MESSAGE = "Invalid or expired token";
 const BEARER_PREFIX = "Bearer ";
 const getBearerToken = (authHeader: string) =>
     authHeader.substring(BEARER_PREFIX.length);
@@ -81,7 +82,7 @@ export const clerkAuth = () => {
 
             if (!payload || !payload.sub) {
                 return c.json(
-                    ApiResponse.error("Invalid or expired token"),
+                    ApiResponse.error(INVALID_OR_EXPIRED_TOKEN_MESSAGE),
                     StatusCodes.UNAUTHORIZED,
                 );
             }
