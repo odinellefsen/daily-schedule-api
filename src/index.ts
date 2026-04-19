@@ -16,12 +16,15 @@ const openApiAppMountPath = "/";
 // which some deployment/build detectors rely on.
 export type App = Hono;
 
+const formatUnhandledErrorMessage = (err: unknown) =>
+    err instanceof Error ? err.message : String(err);
+
 app.onError((err, c) => {
     console.error(unhandledErrorLogMessage, err);
     return c.json(
         {
             error: internalServerErrorCode,
-            message: err instanceof Error ? err.message : String(err),
+            message: formatUnhandledErrorMessage(err),
         },
         StatusCodes.SERVER_ERROR,
     );
