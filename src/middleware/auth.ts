@@ -10,6 +10,7 @@ const AUTHENTICATION_ERROR_LOG_MESSAGE = "Authentication error:";
 const MISSING_BEARER_TOKEN_MESSAGE =
     "Authorization header with Bearer token is required";
 const INVALID_OR_EXPIRED_TOKEN_MESSAGE = "Invalid or expired token";
+const OPTIONAL_AUTH_FAILED_LOG_MESSAGE = "Optional auth failed:";
 const BEARER_PREFIX = "Bearer ";
 const getBearerToken = (authHeader: string) =>
     authHeader.substring(BEARER_PREFIX.length);
@@ -139,7 +140,7 @@ export const optionalAuth = () => {
             }
         } catch (error) {
             // Log error but don't fail the request
-            console.warn("Optional auth failed:", error);
+            console.warn(OPTIONAL_AUTH_FAILED_LOG_MESSAGE, error);
         }
 
         await next();
