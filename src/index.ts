@@ -235,9 +235,10 @@ openApiApp.doc31(openApiSpecPath, {
 type ScalarHandler = Handler;
 let scalarHandler: ScalarHandler | undefined;
 let scalarHandlerInit: Promise<ScalarHandler> | undefined;
+const scalarTheme = "purple";
 const scalarReferenceConfig = {
     url: openApiSpecPath,
-    theme: "purple",
+    theme: scalarTheme,
 } as const;
 
 async function getScalarHandler(): Promise<ScalarHandler> {
