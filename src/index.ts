@@ -172,11 +172,14 @@ const isProtectedApiPath = (path: string) =>
     protectedApiBasePaths.some(
         (basePath) => path === basePath || path.startsWith(`${basePath}/`),
     );
+const openApiInfoTitle = "Daily Scheduler API";
+const openApiInfoVersion = "1.0.0";
+const openApiInfoDescription =
+    "API for managing todos, habits, meals, recipes, and food items";
 const openApiInfo = {
-    title: "Daily Scheduler API",
-    version: "1.0.0",
-    description:
-        "API for managing todos, habits, meals, recipes, and food items",
+    title: openApiInfoTitle,
+    version: openApiInfoVersion,
+    description: openApiInfoDescription,
 };
 const openApiServers = [
     {
