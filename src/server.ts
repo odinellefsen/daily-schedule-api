@@ -3,10 +3,11 @@ import { app } from "./index";
 
 const defaultLocalApiBaseUrl = "http://localhost:3030";
 const defaultLocalApiPort = "3030";
+const httpUrlPrefix = "http://";
 const rawLocalApiBaseUrl = zodEnv.LOCAL_IP ?? defaultLocalApiBaseUrl;
 const localApiBaseUrl = rawLocalApiBaseUrl.includes("://")
     ? rawLocalApiBaseUrl
-    : `http://${rawLocalApiBaseUrl}`;
+    : `${httpUrlPrefix}${rawLocalApiBaseUrl}`;
 
 let localApiUrl: URL;
 try {
