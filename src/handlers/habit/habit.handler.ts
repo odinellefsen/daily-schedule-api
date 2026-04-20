@@ -148,10 +148,10 @@ export async function handleHabitDeleted(
  * Find the subEntity with the biggest offset (earliest in the week) to use as trigger
  */
 function findTriggerSubEntityForWeekRecurrenceType(
-    targetWeekday: string,
+    targetWeekday: (typeof weekdays)[number],
     subEntities: Array<{
         subEntityId?: string;
-        scheduledWeekday?: string;
+        scheduledWeekday?: (typeof weekdays)[number];
         scheduledTime?: string;
     }>,
 ) {
