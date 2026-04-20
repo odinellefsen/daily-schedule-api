@@ -2,11 +2,11 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { createRoute, z } from "@hono/zod-openapi";
 import { type MealCreateType, mealSchema } from "../../../contracts/food/meal";
+import { FlowcorePathways } from "../../../utils/flowcore";
 import {
     createSuccessResponseSchema,
     errorResponseSchema,
 } from "../_shared/responses";
-import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const createMealRequestSchema = z.object({
