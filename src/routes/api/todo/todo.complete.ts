@@ -5,11 +5,11 @@ import {
     type TodoCompletedType,
     todoCompletedSchema,
 } from "../../../contracts/todo/todo.completed";
+import { FlowcorePathways } from "../../../utils/flowcore";
 import {
     createSuccessResponseSchema,
     errorResponseSchema,
 } from "../_shared/responses";
-import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const completeTodoRequestSchema = z.object({
