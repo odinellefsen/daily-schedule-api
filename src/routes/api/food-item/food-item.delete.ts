@@ -6,13 +6,13 @@ import {
     type FoodItemDeletedType,
     foodItemDeletedSchema,
 } from "../../../contracts/food/food-item/food-item.contract";
+import { db } from "../../../db";
+import { foodItems } from "../../../db/schemas";
+import { FlowcorePathways } from "../../../utils/flowcore";
 import {
     createSuccessResponseSchema,
     errorResponseSchema,
 } from "../_shared/responses";
-import { db } from "../../../db";
-import { foodItems } from "../../../db/schemas";
-import { FlowcorePathways } from "../../../utils/flowcore";
 
 // Request schema
 const deleteFoodItemRequestSchema = z.object({
