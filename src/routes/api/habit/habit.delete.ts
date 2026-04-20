@@ -6,13 +6,13 @@ import {
     type HabitDeletedType,
     habitDeletedSchema,
 } from "../../../contracts/habit/habit.contract";
+import { db } from "../../../db";
+import { habits } from "../../../db/schemas";
+import { FlowcorePathways } from "../../../utils/flowcore";
 import {
     createSuccessResponseSchema,
     errorResponseSchema,
 } from "../_shared/responses";
-import { db } from "../../../db";
-import { habits } from "../../../db/schemas";
-import { FlowcorePathways } from "../../../utils/flowcore";
 
 const deleteHabitRequestSchema = z.object({
     habitId: z.string().uuid(),
