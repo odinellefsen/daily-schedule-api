@@ -81,10 +81,11 @@ const localFrontendOrigins = localApiUrl
           return `${protocol}//${hostname}:${port}`;
       })
     : [...localFallbackFrontendOrigins];
+const httpsProtocol = "https:";
 const isTrustedOrigin = (origin: string) => {
     const { hostname, protocol } = new URL(origin);
     return (
-        protocol === "https:" &&
+        protocol === httpsProtocol &&
         trustedOriginHostnameSuffixes.some((suffix) =>
             hostname.endsWith(suffix),
         )
