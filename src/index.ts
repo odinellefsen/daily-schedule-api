@@ -249,6 +249,7 @@ type ScalarHandler = Handler;
 let scalarHandler: ScalarHandler | undefined;
 let scalarHandlerInit: Promise<ScalarHandler> | undefined;
 const scalarTheme = "purple";
+const scalarHonoApiReferencePackage = "@scalar/hono-api-reference";
 const scalarReferenceConfig = {
     url: openApiSpecPath,
     theme: scalarTheme,
@@ -259,7 +260,7 @@ async function getScalarHandler(): Promise<ScalarHandler> {
 
     // Important: `@scalar/hono-api-reference` is ESM-only. Our Vercel build targets CJS,
     // so we must use a dynamic `import()` to avoid `ERR_REQUIRE_ESM`.
-    scalarHandlerInit ??= import("@scalar/hono-api-reference").then(
+    scalarHandlerInit ??= import(scalarHonoApiReferencePackage).then(
         ({ Scalar }) => {
             scalarHandler = Scalar(scalarReferenceConfig) as ScalarHandler;
             return scalarHandler;
