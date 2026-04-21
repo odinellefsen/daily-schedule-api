@@ -11,6 +11,7 @@ const MISSING_BEARER_TOKEN_MESSAGE =
     "Authorization header with Bearer token is required";
 const INVALID_OR_EXPIRED_TOKEN_MESSAGE = "Invalid or expired token";
 const OPTIONAL_AUTH_FAILED_LOG_MESSAGE = "Optional auth failed:";
+const CORS_PREFLIGHT_METHOD = "OPTIONS";
 const BEARER_PREFIX = "Bearer ";
 const getBearerToken = (authHeader: string) =>
     authHeader.substring(BEARER_PREFIX.length);
@@ -58,7 +59,7 @@ export const clerkAuth = () => {
     return async (c: Context, next: Next) => {
         try {
             // Never require auth on CORS preflight requests.
-            if (c.req.method === "OPTIONS") {
+            if (c.req.method === CORS_PREFLIGHT_METHOD) {
                 await next();
                 return;
             }
