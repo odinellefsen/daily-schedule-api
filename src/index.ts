@@ -185,9 +185,10 @@ const openApiInfo = {
     version: openApiInfoVersion,
     description: openApiInfoDescription,
 };
+const localOpenApiServerUrl = localApiUrl?.origin ?? defaultLocalApiBaseUrl;
 const openApiServers = [
     {
-        url: localApiUrl?.origin ?? defaultLocalApiBaseUrl,
+        url: localOpenApiServerUrl,
         description: localDevelopmentServerDescription,
     },
     {
