@@ -158,6 +158,7 @@ function findTriggerSubEntityForWeekRecurrenceType(
         scheduledTime?: string;
     }>,
 ) {
+    const daysPerWeek = 7;
     const targetDay = weekdays.indexOf(targetWeekday);
 
     let maxOffset = -1;
@@ -169,7 +170,7 @@ function findTriggerSubEntityForWeekRecurrenceType(
 
         // Calculate days before target (positive = earlier in week)
         let offset = targetDay - subEntityDay;
-        if (offset < 0) offset += 7; // Handle week wraparound
+        if (offset < 0) offset += daysPerWeek; // Handle week wraparound
 
         if (offset > maxOffset) {
             maxOffset = offset;
