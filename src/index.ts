@@ -94,6 +94,7 @@ const isTrustedOrigin = (origin: string) => {
 const allowedOrigins = Array.from(
     new Set([...defaultAllowedOrigins, ...localFrontendOrigins]),
 );
+const corsCredentialsEnabled = true;
 
 app.use(
     corsRoutePattern,
@@ -116,7 +117,7 @@ app.use(
         allowHeaders: corsAllowHeaders,
         allowMethods: corsAllowMethods,
         maxAge: corsMaxAgeSeconds,
-        credentials: true,
+        credentials: corsCredentialsEnabled,
     }),
 );
 
