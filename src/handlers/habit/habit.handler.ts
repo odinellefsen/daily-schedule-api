@@ -22,6 +22,8 @@ const weekdays = [
     "saturday",
 ] as const;
 
+const simpleHabitDomain = "simple";
+
 function getWeekdayFromYmd(dateStr: string): (typeof weekdays)[number] {
     if (!ymdDatePattern.test(dateStr)) {
         throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
@@ -103,7 +105,7 @@ export async function handleSimpleHabitCreated(
     const habitRecord = {
         id: habitId,
         userId: payload.userId,
-        domain: "simple",
+        domain: simpleHabitDomain,
         description: payload.description,
         entityId: habitId,
         recurrenceType: payload.recurrenceType,
