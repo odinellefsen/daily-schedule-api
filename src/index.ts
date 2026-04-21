@@ -32,10 +32,11 @@ app.onError((err, c) => {
 
 // Configure server binding and CORS for local frontend
 const defaultLocalApiBaseUrl = "http://localhost:3030";
+const httpUrlPrefix = "http://";
 const rawLocalApiBaseUrl = zodEnv.LOCAL_IP ?? defaultLocalApiBaseUrl;
 const localApiBaseUrl = rawLocalApiBaseUrl.includes("://")
     ? rawLocalApiBaseUrl
-    : `http://${rawLocalApiBaseUrl}`;
+    : `${httpUrlPrefix}${rawLocalApiBaseUrl}`;
 let localApiUrl: URL | undefined;
 
 try {
