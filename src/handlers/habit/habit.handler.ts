@@ -11,6 +11,7 @@ import { type Db, db } from "../../db";
 import { habitSubEntities, habits, habitTriggers } from "../../db/schemas";
 
 type TransactionClient = Parameters<Parameters<Db["transaction"]>[0]>[0];
+const ymdDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 const weekdays = [
     "sunday",
     "monday",
@@ -22,7 +23,7 @@ const weekdays = [
 ] as const;
 
 function getWeekdayFromYmd(dateStr: string): (typeof weekdays)[number] {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    if (!ymdDatePattern.test(dateStr)) {
         throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
     }
 
