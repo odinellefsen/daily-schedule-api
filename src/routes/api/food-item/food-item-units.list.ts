@@ -15,6 +15,7 @@ const allFoodItemUnitsRetrievedMessage =
     "All food item units retrieved successfully";
 const foodItemNotFoundMessage = "Food item not found or access denied";
 const httpStatusOk = 200;
+const httpStatusNotFound = 404;
 
 // Response schemas
 const foodItemUnitDetailSchema = z.object({
@@ -81,7 +82,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
                 },
             },
         },
-        404: {
+        [httpStatusNotFound]: {
             description: "Not Found",
             content: {
                 [jsonContentType]: {
@@ -146,7 +147,7 @@ export function registerListFoodItemUnits(app: OpenAPIHono) {
                     success: false as const,
                     message: foodItemNotFoundMessage,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
