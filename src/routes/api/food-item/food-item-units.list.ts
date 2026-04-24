@@ -11,6 +11,8 @@ const listFoodItemUnitsByFoodItemIdPath = "/api/food-item/:foodItemId/units";
 const listAllFoodItemUnitsPath = "/api/food-item/units";
 const jsonContentType = "application/json";
 const foodItemUnitsRetrievedMessage = "Food item units retrieved successfully";
+const allFoodItemUnitsRetrievedMessage =
+    "All food item units retrieved successfully";
 
 // Response schemas
 const foodItemUnitDetailSchema = z.object({
@@ -98,7 +100,7 @@ const listAllFoodItemUnitsRoute = createRoute({
     security: [{ Bearer: [] }],
     responses: {
         200: {
-            description: "All food item units retrieved successfully",
+            description: allFoodItemUnitsRetrievedMessage,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -203,7 +205,7 @@ export function registerListFoodItemUnits(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "All food item units retrieved successfully",
+                message: allFoodItemUnitsRetrievedMessage,
                 data: unitsWithFoodItems,
             },
             200,
