@@ -7,6 +7,7 @@ import { foodItems, foodItemUnits } from "../../../db/schemas";
 
 const foodItemUnitsTag = "Food Item Units";
 const listFoodItemUnitsByFoodItemIdPath = "/api/food-item/:foodItemId/units";
+const listAllFoodItemUnitsPath = "/api/food-item/units";
 
 // Response schemas
 const foodItemUnitDetailSchema = z.object({
@@ -89,7 +90,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
 
 const listAllFoodItemUnitsRoute = createRoute({
     method: "get",
-    path: "/api/food-item/units",
+    path: listAllFoodItemUnitsPath,
     tags: [foodItemUnitsTag],
     security: [{ Bearer: [] }],
     responses: {
