@@ -13,6 +13,7 @@ const jsonContentType = "application/json";
 const foodItemUnitsRetrievedMessage = "Food item units retrieved successfully";
 const allFoodItemUnitsRetrievedMessage =
     "All food item units retrieved successfully";
+const foodItemNotFoundMessage = "Food item not found or access denied";
 
 // Response schemas
 const foodItemUnitDetailSchema = z.object({
@@ -142,7 +143,7 @@ export function registerListFoodItemUnits(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Food item not found or access denied",
+                    message: foodItemNotFoundMessage,
                 },
                 404,
             );
