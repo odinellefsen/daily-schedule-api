@@ -9,6 +9,7 @@ const foodItemUnitsTag = "Food Item Units";
 const httpGetMethod = "get";
 const listFoodItemUnitsByFoodItemIdPath = "/api/food-item/:foodItemId/units";
 const listAllFoodItemUnitsPath = "/api/food-item/units";
+const jsonContentType = "application/json";
 
 // Response schemas
 const foodItemUnitDetailSchema = z.object({
@@ -55,7 +56,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
         200: {
             description: "Food item units retrieved successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(true),
                         message: z.string(),
@@ -67,7 +68,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -78,7 +79,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
         404: {
             description: "Not Found",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -98,7 +99,7 @@ const listAllFoodItemUnitsRoute = createRoute({
         200: {
             description: "All food item units retrieved successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(true),
                         message: z.string(),
@@ -110,7 +111,7 @@ const listAllFoodItemUnitsRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
