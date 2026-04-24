@@ -14,6 +14,7 @@ const foodItemUnitsRetrievedMessage = "Food item units retrieved successfully";
 const allFoodItemUnitsRetrievedMessage =
     "All food item units retrieved successfully";
 const foodItemNotFoundMessage = "Food item not found or access denied";
+const httpStatusOk = 200;
 
 // Response schemas
 const foodItemUnitDetailSchema = z.object({
@@ -57,7 +58,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
         }),
     },
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: foodItemUnitsRetrievedMessage,
             content: {
                 [jsonContentType]: {
@@ -100,7 +101,7 @@ const listAllFoodItemUnitsRoute = createRoute({
     tags: [foodItemUnitsTag],
     security: [{ Bearer: [] }],
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: allFoodItemUnitsRetrievedMessage,
             content: {
                 [jsonContentType]: {
@@ -175,7 +176,7 @@ export function registerListFoodItemUnits(app: OpenAPIHono) {
                 message: foodItemUnitsRetrievedMessage,
                 data: unitsWithFoodItem,
             },
-            200,
+            httpStatusOk,
         );
     });
 
@@ -209,7 +210,7 @@ export function registerListFoodItemUnits(app: OpenAPIHono) {
                 message: allFoodItemUnitsRetrievedMessage,
                 data: unitsWithFoodItems,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
