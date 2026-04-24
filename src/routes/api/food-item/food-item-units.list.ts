@@ -5,6 +5,8 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../../../db";
 import { foodItems, foodItemUnits } from "../../../db/schemas";
 
+const foodItemUnitsTag = "Food Item Units";
+
 // Response schemas
 const foodItemUnitDetailSchema = z.object({
     id: z.string().uuid(),
@@ -39,7 +41,7 @@ const allFoodItemUnitsSchema = z.object({
 const listFoodItemUnitsByFoodItemIdRoute = createRoute({
     method: "get",
     path: "/api/food-item/:foodItemId/units",
-    tags: ["Food Item Units"],
+    tags: [foodItemUnitsTag],
     security: [{ Bearer: [] }],
     request: {
         params: z.object({
@@ -87,7 +89,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
 const listAllFoodItemUnitsRoute = createRoute({
     method: "get",
     path: "/api/food-item/units",
-    tags: ["Food Item Units"],
+    tags: [foodItemUnitsTag],
     security: [{ Bearer: [] }],
     responses: {
         200: {
