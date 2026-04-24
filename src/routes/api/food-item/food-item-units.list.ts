@@ -6,6 +6,7 @@ import { db } from "../../../db";
 import { foodItems, foodItemUnits } from "../../../db/schemas";
 
 const foodItemUnitsTag = "Food Item Units";
+const httpGetMethod = "get";
 const listFoodItemUnitsByFoodItemIdPath = "/api/food-item/:foodItemId/units";
 const listAllFoodItemUnitsPath = "/api/food-item/units";
 
@@ -41,7 +42,7 @@ const allFoodItemUnitsSchema = z.object({
 
 // Route definitions
 const listFoodItemUnitsByFoodItemIdRoute = createRoute({
-    method: "get",
+    method: httpGetMethod,
     path: listFoodItemUnitsByFoodItemIdPath,
     tags: [foodItemUnitsTag],
     security: [{ Bearer: [] }],
@@ -89,7 +90,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
 });
 
 const listAllFoodItemUnitsRoute = createRoute({
-    method: "get",
+    method: httpGetMethod,
     path: listAllFoodItemUnitsPath,
     tags: [foodItemUnitsTag],
     security: [{ Bearer: [] }],
