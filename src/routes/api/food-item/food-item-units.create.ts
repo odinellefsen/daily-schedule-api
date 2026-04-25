@@ -14,6 +14,8 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const foodItemUnitsTag = "Food Item Units";
+
 // Request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
     .omit({
@@ -36,7 +38,7 @@ const successResponseSchema = createSuccessResponseSchema(foodItemUnitSchema);
 const createFoodItemUnitsRoute = createRoute({
     method: "post",
     path: "/api/food-item/:foodItemId/units",
-    tags: ["Food Item Units"],
+    tags: [foodItemUnitsTag],
     security: [{ Bearer: [] }],
     request: {
         params: z.object({
