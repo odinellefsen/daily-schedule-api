@@ -23,6 +23,7 @@ const foodItemDoesNotExistMessage = "Food item does not exist";
 const invalidFoodItemUnitDataMessage = "Invalid food item unit data";
 const foodItemUnitsCreatedEventType = "food-item.v0/food-item.units.created.v0";
 const userMeasuredSource = "user_measured";
+const failedToCreateFoodItemUnitsMessage = "Failed to create food item units";
 
 // Request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
@@ -149,7 +150,7 @@ export function registerCreateFoodItemUnits(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to create food item units",
+                    message: failedToCreateFoodItemUnitsMessage,
                     errors: error,
                 },
                 500,
