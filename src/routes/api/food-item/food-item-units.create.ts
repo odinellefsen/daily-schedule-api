@@ -20,6 +20,7 @@ const httpPostMethod = "post";
 const jsonContentType = "application/json";
 const foodItemUnitsCreatedMessage = "Food item units created successfully";
 const foodItemDoesNotExistMessage = "Food item does not exist";
+const invalidFoodItemUnitDataMessage = "Invalid food item unit data";
 
 // Request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
@@ -130,7 +131,7 @@ export function registerCreateFoodItemUnits(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid food item unit data",
+                    message: invalidFoodItemUnitDataMessage,
                     errors: createdFoodItemUnitEvent.error.errors,
                 },
                 400,
