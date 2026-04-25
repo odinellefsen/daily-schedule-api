@@ -18,6 +18,7 @@ const foodItemUnitsTag = "Food Item Units";
 const createFoodItemUnitsPath = "/api/food-item/:foodItemId/units";
 const httpPostMethod = "post";
 const jsonContentType = "application/json";
+const foodItemUnitsCreatedMessage = "Food item units created successfully";
 
 // Request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
@@ -57,7 +58,7 @@ const createFoodItemUnitsRoute = createRoute({
     },
     responses: {
         200: {
-            description: "Food item units created successfully",
+            description: foodItemUnitsCreatedMessage,
             content: {
                 [jsonContentType]: {
                     schema: successResponseSchema,
@@ -157,7 +158,7 @@ export function registerCreateFoodItemUnits(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Food item units created successfully",
+                message: foodItemUnitsCreatedMessage,
                 data: safeCreateFoodItemUnitEvent,
             },
             200,
