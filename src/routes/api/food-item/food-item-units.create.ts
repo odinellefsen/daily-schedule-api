@@ -16,6 +16,7 @@ import {
 
 const foodItemUnitsTag = "Food Item Units";
 const createFoodItemUnitsPath = "/api/food-item/:foodItemId/units";
+const httpPostMethod = "post";
 
 // Request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
@@ -37,7 +38,7 @@ const successResponseSchema = createSuccessResponseSchema(foodItemUnitSchema);
 
 // Route definition
 const createFoodItemUnitsRoute = createRoute({
-    method: "post",
+    method: httpPostMethod,
     path: createFoodItemUnitsPath,
     tags: [foodItemUnitsTag],
     security: [{ Bearer: [] }],
