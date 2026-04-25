@@ -17,6 +17,7 @@ import {
 const foodItemUnitsTag = "Food Item Units";
 const createFoodItemUnitsPath = "/api/food-item/:foodItemId/units";
 const httpPostMethod = "post";
+const jsonContentType = "application/json";
 
 // Request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
@@ -48,7 +49,7 @@ const createFoodItemUnitsRoute = createRoute({
         }),
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: createFoodItemUnitRequestSchema,
                 },
             },
@@ -58,7 +59,7 @@ const createFoodItemUnitsRoute = createRoute({
         200: {
             description: "Food item units created successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
@@ -66,7 +67,7 @@ const createFoodItemUnitsRoute = createRoute({
         400: {
             description: "Bad Request",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -74,7 +75,7 @@ const createFoodItemUnitsRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -82,7 +83,7 @@ const createFoodItemUnitsRoute = createRoute({
         500: {
             description: "Internal Server Error",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
