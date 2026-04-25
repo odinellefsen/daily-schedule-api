@@ -21,6 +21,7 @@ const jsonContentType = "application/json";
 const foodItemUnitsCreatedMessage = "Food item units created successfully";
 const foodItemDoesNotExistMessage = "Food item does not exist";
 const invalidFoodItemUnitDataMessage = "Invalid food item unit data";
+const foodItemUnitsCreatedEventType = "food-item.v0/food-item.units.created.v0";
 
 // Request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
@@ -140,12 +141,9 @@ export function registerCreateFoodItemUnits(app: OpenAPIHono) {
         const safeCreateFoodItemUnitEvent = createdFoodItemUnitEvent.data;
 
         try {
-            await FlowcorePathways.write(
-                "food-item.v0/food-item.units.created.v0",
-                {
-                    data: safeCreateFoodItemUnitEvent,
-                },
-            );
+            await FlowcorePathways.write(foodItemUnitsCreatedEventType, {
+                data: safeCreateFoodItemUnitEvent,
+            });
         } catch (error) {
             return c.json(
                 {
