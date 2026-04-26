@@ -119,7 +119,7 @@ export function registerCreateFoodItemUnits(app: OpenAPIHono) {
                     success: false as const,
                     message: foodItemDoesNotExistMessage,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
 
@@ -141,7 +141,7 @@ export function registerCreateFoodItemUnits(app: OpenAPIHono) {
                     message: invalidFoodItemUnitDataMessage,
                     errors: createdFoodItemUnitEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCreateFoodItemUnitEvent = createdFoodItemUnitEvent.data;
@@ -157,7 +157,7 @@ export function registerCreateFoodItemUnits(app: OpenAPIHono) {
                     message: failedToCreateFoodItemUnitsMessage,
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
@@ -167,7 +167,7 @@ export function registerCreateFoodItemUnits(app: OpenAPIHono) {
                 message: foodItemUnitsCreatedMessage,
                 data: safeCreateFoodItemUnitEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
