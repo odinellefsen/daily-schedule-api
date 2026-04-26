@@ -8,6 +8,11 @@ import { db } from "../../../db";
 import { foodItemUnits } from "../../../db/schemas";
 import { FlowcorePathways } from "../../../utils/flowcore";
 
+const foodItemUnitsTag = "Food Item Units";
+const httpDeleteMethod = "delete";
+const deleteFoodItemUnitsPath = "/api/food-item/:foodItemId/units";
+const jsonContentType = "application/json";
+
 // Request schema
 const deleteFoodItemUnitRequestSchema = z.object({
     unitIds: z.array(z.string().uuid()),
@@ -15,9 +20,9 @@ const deleteFoodItemUnitRequestSchema = z.object({
 
 // Route definition
 const deleteFoodItemUnitsRoute = createRoute({
-    method: "delete",
-    path: "/api/food-item/:foodItemId/units",
-    tags: ["Food Item Units"],
+    method: httpDeleteMethod,
+    path: deleteFoodItemUnitsPath,
+    tags: [foodItemUnitsTag],
     security: [{ Bearer: [] }],
     request: {
         params: z.object({
@@ -25,7 +30,7 @@ const deleteFoodItemUnitsRoute = createRoute({
         }),
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: deleteFoodItemUnitRequestSchema,
                 },
             },
@@ -35,7 +40,7 @@ const deleteFoodItemUnitsRoute = createRoute({
         200: {
             description: "Food item units deleted successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(true),
                         message: z.string(),
@@ -47,7 +52,7 @@ const deleteFoodItemUnitsRoute = createRoute({
         400: {
             description: "Bad Request",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -59,7 +64,7 @@ const deleteFoodItemUnitsRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -70,7 +75,7 @@ const deleteFoodItemUnitsRoute = createRoute({
         404: {
             description: "Not Found",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -81,7 +86,7 @@ const deleteFoodItemUnitsRoute = createRoute({
         500: {
             description: "Internal Server Error",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
