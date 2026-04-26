@@ -15,6 +15,7 @@ const allFoodItemUnitsRetrievedMessage =
     "All food item units retrieved successfully";
 const foodItemNotFoundMessage = "Food item not found or access denied";
 const httpStatusOk = 200;
+const httpStatusUnauthorized = 401;
 const httpStatusNotFound = 404;
 
 // Response schemas
@@ -71,7 +72,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
                 },
             },
         },
-        401: {
+        [httpStatusUnauthorized]: {
             description: "Unauthorized",
             content: {
                 [jsonContentType]: {
@@ -114,7 +115,7 @@ const listAllFoodItemUnitsRoute = createRoute({
                 },
             },
         },
-        401: {
+        [httpStatusUnauthorized]: {
             description: "Unauthorized",
             content: {
                 [jsonContentType]: {
