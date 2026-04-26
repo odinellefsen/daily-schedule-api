@@ -12,6 +12,11 @@ const foodItemUnitsTag = "Food Item Units";
 const httpDeleteMethod = "delete";
 const deleteFoodItemUnitsPath = "/api/food-item/:foodItemId/units";
 const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const httpStatusInternalServerError = 500;
 
 // Request schema
 const deleteFoodItemUnitRequestSchema = z.object({
@@ -37,7 +42,7 @@ const deleteFoodItemUnitsRoute = createRoute({
         },
     },
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: "Food item units deleted successfully",
             content: {
                 [jsonContentType]: {
@@ -49,7 +54,7 @@ const deleteFoodItemUnitsRoute = createRoute({
                 },
             },
         },
-        400: {
+        [httpStatusBadRequest]: {
             description: "Bad Request",
             content: {
                 [jsonContentType]: {
@@ -61,7 +66,7 @@ const deleteFoodItemUnitsRoute = createRoute({
                 },
             },
         },
-        401: {
+        [httpStatusUnauthorized]: {
             description: "Unauthorized",
             content: {
                 [jsonContentType]: {
@@ -72,7 +77,7 @@ const deleteFoodItemUnitsRoute = createRoute({
                 },
             },
         },
-        404: {
+        [httpStatusNotFound]: {
             description: "Not Found",
             content: {
                 [jsonContentType]: {
@@ -83,7 +88,7 @@ const deleteFoodItemUnitsRoute = createRoute({
                 },
             },
         },
-        500: {
+        [httpStatusInternalServerError]: {
             description: "Internal Server Error",
             content: {
                 [jsonContentType]: {
