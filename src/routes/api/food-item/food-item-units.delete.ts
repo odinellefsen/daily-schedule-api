@@ -123,7 +123,7 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
                     success: false as const,
                     message: "One or more food item units not found",
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -136,7 +136,7 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
                     success: false as const,
                     message: "All units must belong to the same food item",
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
 
@@ -173,7 +173,7 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
                     message: "Invalid food item unit data",
                     errors: newDeleteFoodItemUnitEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeDeleteFoodItemUnitEvent = newDeleteFoodItemUnitEvent.data;
@@ -193,7 +193,7 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
                     message: "Failed to delete food item units",
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
@@ -203,7 +203,7 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
                 message: "Food item units deleted",
                 data: "Food item units deleted successfully",
             },
-            200,
+            httpStatusOk,
         );
     });
 }
