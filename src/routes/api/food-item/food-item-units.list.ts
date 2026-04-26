@@ -14,6 +14,8 @@ const foodItemUnitsRetrievedMessage = "Food item units retrieved successfully";
 const allFoodItemUnitsRetrievedMessage =
     "All food item units retrieved successfully";
 const foodItemNotFoundMessage = "Food item not found or access denied";
+const unauthorizedResponseDescription = "Unauthorized";
+const notFoundResponseDescription = "Not Found";
 const httpStatusOk = 200;
 const httpStatusUnauthorized = 401;
 const httpStatusNotFound = 404;
@@ -73,7 +75,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
             },
         },
         [httpStatusUnauthorized]: {
-            description: "Unauthorized",
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -84,7 +86,7 @@ const listFoodItemUnitsByFoodItemIdRoute = createRoute({
             },
         },
         [httpStatusNotFound]: {
-            description: "Not Found",
+            description: notFoundResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -116,7 +118,7 @@ const listAllFoodItemUnitsRoute = createRoute({
             },
         },
         [httpStatusUnauthorized]: {
-            description: "Unauthorized",
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
