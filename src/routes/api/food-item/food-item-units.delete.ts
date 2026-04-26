@@ -17,6 +17,15 @@ const httpStatusBadRequest = 400;
 const httpStatusUnauthorized = 401;
 const httpStatusNotFound = 404;
 const httpStatusInternalServerError = 500;
+const foodItemUnitsDeletedSuccessDescription =
+    "Food item units deleted successfully";
+const foodItemUnitsNotFoundMessage = "One or more food item units not found";
+const foodItemUnitsSameItemMessage =
+    "All units must belong to the same food item";
+const invalidFoodItemUnitDataMessage = "Invalid food item unit data";
+const failedToDeleteFoodItemUnitsMessage = "Failed to delete food item units";
+const foodItemUnitsDeletedMessage = "Food item units deleted";
+const foodItemUnitsDeletedEventType = "food-item.v0/food-item.units.deleted.v0";
 
 // Request schema
 const deleteFoodItemUnitRequestSchema = z.object({
@@ -43,7 +52,7 @@ const deleteFoodItemUnitsRoute = createRoute({
     },
     responses: {
         [httpStatusOk]: {
-            description: "Food item units deleted successfully",
+            description: foodItemUnitsDeletedSuccessDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -121,7 +130,7 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "One or more food item units not found",
+                    message: foodItemUnitsNotFoundMessage,
                 },
                 httpStatusNotFound,
             );
@@ -134,7 +143,7 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "All units must belong to the same food item",
+                    message: foodItemUnitsSameItemMessage,
                 },
                 httpStatusBadRequest,
             );
@@ -170,7 +179,7 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid food item unit data",
+                    message: invalidFoodItemUnitDataMessage,
                     errors: newDeleteFoodItemUnitEvent.error.errors,
                 },
                 httpStatusBadRequest,
@@ -179,18 +188,15 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
         const safeDeleteFoodItemUnitEvent = newDeleteFoodItemUnitEvent.data;
 
         try {
-            await FlowcorePathways.write(
-                "food-item.v0/food-item.units.deleted.v0",
-                {
-                    data: safeDeleteFoodItemUnitEvent,
-                },
-            );
+            await FlowcorePathways.write(foodItemUnitsDeletedEventType, {
+                data: safeDeleteFoodItemUnitEvent,
+            });
         } catch (error) {
             console.error(error);
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to delete food item units",
+                    message: failedToDeleteFoodItemUnitsMessage,
                     errors: error,
                 },
                 httpStatusInternalServerError,
@@ -200,8 +206,8 @@ export function registerDeleteFoodItemUnits(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Food item units deleted",
-                data: "Food item units deleted successfully",
+                message: foodItemUnitsDeletedMessage,
+                data: foodItemUnitsDeletedSuccessDescription,
             },
             httpStatusOk,
         );
