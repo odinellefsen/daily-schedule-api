@@ -24,6 +24,10 @@ const invalidFoodItemUnitDataMessage = "Invalid food item unit data";
 const foodItemUnitsCreatedEventType = "food-item.v0/food-item.units.created.v0";
 const userMeasuredSource = "user_measured";
 const failedToCreateFoodItemUnitsMessage = "Failed to create food item units";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusInternalServerError = 500;
 
 // Request schema
 const createFoodItemUnitRequestSchema = foodItemUnitSchema
@@ -62,7 +66,7 @@ const createFoodItemUnitsRoute = createRoute({
         },
     },
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: foodItemUnitsCreatedMessage,
             content: {
                 [jsonContentType]: {
@@ -70,7 +74,7 @@ const createFoodItemUnitsRoute = createRoute({
                 },
             },
         },
-        400: {
+        [httpStatusBadRequest]: {
             description: "Bad Request",
             content: {
                 [jsonContentType]: {
@@ -78,7 +82,7 @@ const createFoodItemUnitsRoute = createRoute({
                 },
             },
         },
-        401: {
+        [httpStatusUnauthorized]: {
             description: "Unauthorized",
             content: {
                 [jsonContentType]: {
@@ -86,7 +90,7 @@ const createFoodItemUnitsRoute = createRoute({
                 },
             },
         },
-        500: {
+        [httpStatusInternalServerError]: {
             description: "Internal Server Error",
             content: {
                 [jsonContentType]: {
