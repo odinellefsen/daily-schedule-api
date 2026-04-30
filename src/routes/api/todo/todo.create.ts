@@ -16,6 +16,10 @@ const httpStatusOk = 200;
 const httpStatusBadRequest = 400;
 const httpStatusUnauthorized = 401;
 const httpStatusInternalServerError = 500;
+const todoCreatedSuccessMessage = "Todo created successfully";
+const invalidTodoDataMessage = "Invalid todo data";
+const failedToCreateTodoMessage = "Failed to create todo";
+const todoCreatedEventType = "todo.v0/todo.created.v0";
 
 // Request schema
 const createTodoRequestSchema = z.object({
@@ -61,7 +65,7 @@ const createTodoRoute = createRoute({
     },
     responses: {
         [httpStatusOk]: {
-            description: "Todo created successfully",
+            description: todoCreatedSuccessMessage,
             content: {
                 [jsonContentType]: {
                     schema: successResponseSchema,
@@ -115,7 +119,7 @@ export function registerCreateTodo(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid todo data",
+                    message: invalidTodoDataMessage,
                     errors: createTodoEvent.error.errors,
                 },
                 httpStatusBadRequest,
@@ -124,14 +128,14 @@ export function registerCreateTodo(app: OpenAPIHono) {
         const safeCreateTodoEvent = createTodoEvent.data;
 
         try {
-            await FlowcorePathways.write("todo.v0/todo.created.v0", {
+            await FlowcorePathways.write(todoCreatedEventType, {
                 data: safeCreateTodoEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to create todo",
+                    message: failedToCreateTodoMessage,
                     errors: error,
                 },
                 httpStatusInternalServerError,
@@ -141,7 +145,7 @@ export function registerCreateTodo(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Todo created successfully",
+                message: todoCreatedSuccessMessage,
                 data: safeCreateTodoEvent,
             },
             httpStatusOk,
