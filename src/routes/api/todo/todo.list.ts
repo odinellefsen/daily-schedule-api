@@ -10,6 +10,18 @@ import {
     getDayBoundsInTimezone,
 } from "../../../utils/timezone";
 
+const todosTag = "Todos";
+const httpGetMethod = "get";
+const jsonContentType = "application/json";
+const getTodayTodosPath = "/api/todo/today";
+const getAllTodosPath = "/api/todo";
+const httpStatusOk = 200;
+const httpStatusUnauthorized = 401;
+const unauthorizedResponseDescription = "Unauthorized";
+const todayTodosRetrievedMessage = "Today's todos retrieved successfully";
+const allTodosOpenApiDescription = "All todos retrieved successfully";
+const allTodosListMessage = "Todos retrieved successfully";
+
 // Response schemas
 const todayTodoItemSchema = z.object({
     id: z.string().uuid(),
@@ -63,9 +75,9 @@ const allTodosResponseSchema = z.object({
 
 // Route definitions
 const getTodayTodosRoute = createRoute({
-    method: "get",
-    path: "/api/todo/today",
-    tags: ["Todos"],
+    method: httpGetMethod,
+    path: getTodayTodosPath,
+    tags: [todosTag],
     security: [{ Bearer: [] }],
     request: {
         headers: z.object({
@@ -73,18 +85,18 @@ const getTodayTodosRoute = createRoute({
         }),
     },
     responses: {
-        200: {
-            description: "Today's todos retrieved successfully",
+        [httpStatusOk]: {
+            description: todayTodosRetrievedMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: todayTodosResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -96,9 +108,9 @@ const getTodayTodosRoute = createRoute({
 });
 
 const getAllTodosRoute = createRoute({
-    method: "get",
-    path: "/api/todo",
-    tags: ["Todos"],
+    method: httpGetMethod,
+    path: getAllTodosPath,
+    tags: [todosTag],
     security: [{ Bearer: [] }],
     request: {
         headers: z.object({
@@ -106,18 +118,18 @@ const getAllTodosRoute = createRoute({
         }),
     },
     responses: {
-        200: {
-            description: "All todos retrieved successfully",
+        [httpStatusOk]: {
+            description: allTodosOpenApiDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: allTodosResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -235,13 +247,13 @@ export function registerListTodos(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Today's todos retrieved successfully",
+                message: todayTodosRetrievedMessage,
                 data: {
                     todos: transformedTodos,
                     counts,
                 },
             },
-            200,
+            httpStatusOk,
         );
     });
 
@@ -288,10 +300,10 @@ export function registerListTodos(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Todos retrieved successfully",
+                message: allTodosListMessage,
                 data: transformedTodos,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
