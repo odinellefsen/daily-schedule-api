@@ -15,6 +15,10 @@ const todosTag = "Todos";
 const httpPostMethod = "post";
 const completeTodoPath = "/api/todo/complete";
 const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusInternalServerError = 500;
 
 // Request schema
 const completeTodoRequestSchema = z.object({
@@ -44,7 +48,7 @@ const completeTodoRoute = createRoute({
         },
     },
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: "Todo completed successfully",
             content: {
                 [jsonContentType]: {
@@ -52,7 +56,7 @@ const completeTodoRoute = createRoute({
                 },
             },
         },
-        400: {
+        [httpStatusBadRequest]: {
             description: "Bad Request",
             content: {
                 [jsonContentType]: {
@@ -60,7 +64,7 @@ const completeTodoRoute = createRoute({
                 },
             },
         },
-        401: {
+        [httpStatusUnauthorized]: {
             description: "Unauthorized",
             content: {
                 [jsonContentType]: {
@@ -68,7 +72,7 @@ const completeTodoRoute = createRoute({
                 },
             },
         },
-        500: {
+        [httpStatusInternalServerError]: {
             description: "Internal Server Error",
             content: {
                 [jsonContentType]: {
@@ -97,7 +101,7 @@ export function registerCompleteTodo(app: OpenAPIHono) {
                     message: "Invalid completed todo data",
                     errors: completeTodoEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCompleteTodoEvent = completeTodoEvent.data;
@@ -113,7 +117,7 @@ export function registerCompleteTodo(app: OpenAPIHono) {
                     message: "Failed to complete todo",
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
@@ -123,7 +127,7 @@ export function registerCompleteTodo(app: OpenAPIHono) {
                 message: "Todo completed successfully",
                 data: safeCompleteTodoEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
