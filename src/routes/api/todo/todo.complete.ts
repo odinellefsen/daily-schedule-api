@@ -11,6 +11,11 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const todosTag = "Todos";
+const httpPostMethod = "post";
+const completeTodoPath = "/api/todo/complete";
+const jsonContentType = "application/json";
+
 // Request schema
 const completeTodoRequestSchema = z.object({
     id: z.string().uuid(),
@@ -21,9 +26,9 @@ const successResponseSchema = createSuccessResponseSchema(todoCompletedSchema);
 
 // OpenAPI route definition
 const completeTodoRoute = createRoute({
-    method: "post",
-    path: "/api/todo/complete",
-    tags: ["Todos"],
+    method: httpPostMethod,
+    path: completeTodoPath,
+    tags: [todosTag],
     security: [
         {
             Bearer: [],
@@ -32,7 +37,7 @@ const completeTodoRoute = createRoute({
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: completeTodoRequestSchema,
                 },
             },
@@ -42,7 +47,7 @@ const completeTodoRoute = createRoute({
         200: {
             description: "Todo completed successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
@@ -50,7 +55,7 @@ const completeTodoRoute = createRoute({
         400: {
             description: "Bad Request",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -58,7 +63,7 @@ const completeTodoRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -66,7 +71,7 @@ const completeTodoRoute = createRoute({
         500: {
             description: "Internal Server Error",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
