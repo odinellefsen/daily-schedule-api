@@ -15,6 +15,10 @@ const todosTag = "Todos";
 const httpPostMethod = "post";
 const cancelTodoPath = "/api/todo/cancel";
 const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusInternalServerError = 500;
 
 // Request schema
 const cancelTodoRequestSchema = z.object({
@@ -44,7 +48,7 @@ const cancelTodoRoute = createRoute({
         },
     },
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: "Todo cancelled successfully",
             content: {
                 [jsonContentType]: {
@@ -52,7 +56,7 @@ const cancelTodoRoute = createRoute({
                 },
             },
         },
-        400: {
+        [httpStatusBadRequest]: {
             description: "Bad Request",
             content: {
                 [jsonContentType]: {
@@ -60,7 +64,7 @@ const cancelTodoRoute = createRoute({
                 },
             },
         },
-        401: {
+        [httpStatusUnauthorized]: {
             description: "Unauthorized",
             content: {
                 [jsonContentType]: {
@@ -68,7 +72,7 @@ const cancelTodoRoute = createRoute({
                 },
             },
         },
-        500: {
+        [httpStatusInternalServerError]: {
             description: "Internal Server Error",
             content: {
                 [jsonContentType]: {
@@ -97,7 +101,7 @@ export function registerCancelTodo(app: OpenAPIHono) {
                     message: "Invalid cancelled todo data",
                     errors: cancelTodoEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCancelTodoEvent = cancelTodoEvent.data;
@@ -113,7 +117,7 @@ export function registerCancelTodo(app: OpenAPIHono) {
                     message: "Failed to cancel todo",
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
@@ -123,7 +127,7 @@ export function registerCancelTodo(app: OpenAPIHono) {
                 message: "Todo cancelled successfully",
                 data: safeCancelTodoEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
