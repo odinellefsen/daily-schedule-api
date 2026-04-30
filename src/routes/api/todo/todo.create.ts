@@ -8,6 +8,11 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const todosTag = "Todos";
+const httpPostMethod = "post";
+const createTodoPath = "/api/todo";
+const jsonContentType = "application/json";
+
 // Request schema
 const createTodoRequestSchema = z.object({
     description: z
@@ -37,14 +42,14 @@ const createTodoRequestSchema = z.object({
 const successResponseSchema = createSuccessResponseSchema(todoSchema);
 
 const createTodoRoute = createRoute({
-    method: "post",
-    path: "/api/todo",
-    tags: ["Todos"],
+    method: httpPostMethod,
+    path: createTodoPath,
+    tags: [todosTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: createTodoRequestSchema,
                 },
             },
@@ -54,7 +59,7 @@ const createTodoRoute = createRoute({
         200: {
             description: "Todo created successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
@@ -62,7 +67,7 @@ const createTodoRoute = createRoute({
         400: {
             description: "Bad Request",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -70,7 +75,7 @@ const createTodoRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -78,7 +83,7 @@ const createTodoRoute = createRoute({
         500: {
             description: "Internal Server Error",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
