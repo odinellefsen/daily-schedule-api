@@ -12,6 +12,10 @@ const todosTag = "Todos";
 const httpPostMethod = "post";
 const createTodoPath = "/api/todo";
 const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusInternalServerError = 500;
 
 // Request schema
 const createTodoRequestSchema = z.object({
@@ -56,7 +60,7 @@ const createTodoRoute = createRoute({
         },
     },
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: "Todo created successfully",
             content: {
                 [jsonContentType]: {
@@ -64,7 +68,7 @@ const createTodoRoute = createRoute({
                 },
             },
         },
-        400: {
+        [httpStatusBadRequest]: {
             description: "Bad Request",
             content: {
                 [jsonContentType]: {
@@ -72,7 +76,7 @@ const createTodoRoute = createRoute({
                 },
             },
         },
-        401: {
+        [httpStatusUnauthorized]: {
             description: "Unauthorized",
             content: {
                 [jsonContentType]: {
@@ -80,7 +84,7 @@ const createTodoRoute = createRoute({
                 },
             },
         },
-        500: {
+        [httpStatusInternalServerError]: {
             description: "Internal Server Error",
             content: {
                 [jsonContentType]: {
@@ -114,7 +118,7 @@ export function registerCreateTodo(app: OpenAPIHono) {
                     message: "Invalid todo data",
                     errors: createTodoEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCreateTodoEvent = createTodoEvent.data;
@@ -130,7 +134,7 @@ export function registerCreateTodo(app: OpenAPIHono) {
                     message: "Failed to create todo",
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
@@ -140,7 +144,7 @@ export function registerCreateTodo(app: OpenAPIHono) {
                 message: "Todo created successfully",
                 data: safeCreateTodoEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
