@@ -19,6 +19,10 @@ const httpStatusOk = 200;
 const httpStatusBadRequest = 400;
 const httpStatusUnauthorized = 401;
 const httpStatusInternalServerError = 500;
+const todoCancelledSuccessMessage = "Todo cancelled successfully";
+const invalidCancelledTodoDataMessage = "Invalid cancelled todo data";
+const failedToCancelTodoMessage = "Failed to cancel todo";
+const todoCancelledEventType = "todo.v0/todo.cancelled.v0";
 
 // Request schema
 const cancelTodoRequestSchema = z.object({
@@ -49,7 +53,7 @@ const cancelTodoRoute = createRoute({
     },
     responses: {
         [httpStatusOk]: {
-            description: "Todo cancelled successfully",
+            description: todoCancelledSuccessMessage,
             content: {
                 [jsonContentType]: {
                     schema: successResponseSchema,
@@ -98,7 +102,7 @@ export function registerCancelTodo(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid cancelled todo data",
+                    message: invalidCancelledTodoDataMessage,
                     errors: cancelTodoEvent.error.errors,
                 },
                 httpStatusBadRequest,
@@ -107,14 +111,14 @@ export function registerCancelTodo(app: OpenAPIHono) {
         const safeCancelTodoEvent = cancelTodoEvent.data;
 
         try {
-            await FlowcorePathways.write("todo.v0/todo.cancelled.v0", {
+            await FlowcorePathways.write(todoCancelledEventType, {
                 data: safeCancelTodoEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to cancel todo",
+                    message: failedToCancelTodoMessage,
                     errors: error,
                 },
                 httpStatusInternalServerError,
@@ -124,7 +128,7 @@ export function registerCancelTodo(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Todo cancelled successfully",
+                message: todoCancelledSuccessMessage,
                 data: safeCancelTodoEvent,
             },
             httpStatusOk,
