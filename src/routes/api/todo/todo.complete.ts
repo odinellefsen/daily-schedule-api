@@ -19,6 +19,10 @@ const httpStatusOk = 200;
 const httpStatusBadRequest = 400;
 const httpStatusUnauthorized = 401;
 const httpStatusInternalServerError = 500;
+const todoCompletedSuccessMessage = "Todo completed successfully";
+const invalidCompletedTodoDataMessage = "Invalid completed todo data";
+const failedToCompleteTodoMessage = "Failed to complete todo";
+const todoCompletedEventType = "todo.v0/todo.completed.v0";
 
 // Request schema
 const completeTodoRequestSchema = z.object({
@@ -49,7 +53,7 @@ const completeTodoRoute = createRoute({
     },
     responses: {
         [httpStatusOk]: {
-            description: "Todo completed successfully",
+            description: todoCompletedSuccessMessage,
             content: {
                 [jsonContentType]: {
                     schema: successResponseSchema,
@@ -98,7 +102,7 @@ export function registerCompleteTodo(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid completed todo data",
+                    message: invalidCompletedTodoDataMessage,
                     errors: completeTodoEvent.error.errors,
                 },
                 httpStatusBadRequest,
@@ -107,14 +111,14 @@ export function registerCompleteTodo(app: OpenAPIHono) {
         const safeCompleteTodoEvent = completeTodoEvent.data;
 
         try {
-            await FlowcorePathways.write("todo.v0/todo.completed.v0", {
+            await FlowcorePathways.write(todoCompletedEventType, {
                 data: safeCompleteTodoEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to complete todo",
+                    message: failedToCompleteTodoMessage,
                     errors: error,
                 },
                 httpStatusInternalServerError,
@@ -124,7 +128,7 @@ export function registerCompleteTodo(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Todo completed successfully",
+                message: todoCompletedSuccessMessage,
                 data: safeCompleteTodoEvent,
             },
             httpStatusOk,
