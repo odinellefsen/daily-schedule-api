@@ -40,11 +40,7 @@ const completeTodoRoute = createRoute({
     method: httpPostMethod,
     path: completeTodoPath,
     tags: [todosTag],
-    security: [
-        {
-            Bearer: [],
-        },
-    ],
+    security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
