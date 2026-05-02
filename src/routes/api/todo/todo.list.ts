@@ -24,6 +24,11 @@ const allTodosListMessage = "Todos retrieved successfully";
 const defaultUserTimezone = "UTC";
 const timezoneHeaderName = "x-timezone";
 
+const unauthorizedErrorResponseSchema = z.object({
+    success: z.literal(false),
+    message: z.string(),
+});
+
 // Response schemas
 const todayTodoItemSchema = z.object({
     id: z.string().uuid(),
@@ -99,10 +104,7 @@ const getTodayTodosRoute = createRoute({
             description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
-                    schema: z.object({
-                        success: z.literal(false),
-                        message: z.string(),
-                    }),
+                    schema: unauthorizedErrorResponseSchema,
                 },
             },
         },
@@ -132,10 +134,7 @@ const getAllTodosRoute = createRoute({
             description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
-                    schema: z.object({
-                        success: z.literal(false),
-                        message: z.string(),
-                    }),
+                    schema: unauthorizedErrorResponseSchema,
                 },
             },
         },
