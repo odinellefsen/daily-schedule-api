@@ -246,10 +246,10 @@ export function registerListRecipes(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Recipes retrieved successfully",
+                message: recipesRetrievedDescription,
                 data: recipesWithMetadata,
             },
-            200,
+            httpStatusOk,
         );
     });
 
@@ -265,9 +265,9 @@ export function registerListRecipes(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Recipe not found or access denied",
+                    message: recipeNotFoundDescription,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -374,10 +374,10 @@ export function registerListRecipes(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Recipe retrieved successfully",
+                message: recipeRetrievedDescription,
                 data: fullRecipe,
             },
-            200,
+            httpStatusOk,
         );
     });
 
@@ -419,10 +419,10 @@ export function registerListRecipes(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Recipe search results",
+                message: recipeSearchResultsDescription,
                 data: userRecipes,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
