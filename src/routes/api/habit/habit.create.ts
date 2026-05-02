@@ -22,6 +22,17 @@ const jsonContentType = "application/json";
 const httpPostMethod = "post";
 const createBatchHabitsPath = "/api/habit/batch";
 const createSimpleHabitPath = "/api/habit/simple";
+const httpStatusCreated = 201;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const httpStatusInternalServerError = 500;
+const batchHabitsCreatedDescription = "Batch habits created successfully";
+const simpleHabitCreatedDescription = "Simple habit created successfully";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const notFoundResponseDescription = "Not Found";
+const internalServerErrorResponseDescription = "Internal Server Error";
 
 // Request schema
 const createComplexHabitRequestSchema = z.object({
@@ -96,40 +107,40 @@ const createBatchHabitsRoute = createRoute({
         },
     },
     responses: {
-        201: {
-            description: "Batch habits created successfully",
+        [httpStatusCreated]: {
+            description: batchHabitsCreatedDescription,
             content: {
                 [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
         },
-        400: {
-            description: "Bad Request",
+        [httpStatusBadRequest]: {
+            description: badRequestResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        404: {
-            description: "Not Found",
+        [httpStatusNotFound]: {
+            description: notFoundResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        500: {
-            description: "Internal Server Error",
+        [httpStatusInternalServerError]: {
+            description: internalServerErrorResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
@@ -154,32 +165,32 @@ const createSimpleHabitRoute = createRoute({
         },
     },
     responses: {
-        201: {
-            description: "Simple habit created successfully",
+        [httpStatusCreated]: {
+            description: simpleHabitCreatedDescription,
             content: {
                 [jsonContentType]: {
                     schema: simpleHabitSuccessResponseSchema,
                 },
             },
         },
-        400: {
-            description: "Bad Request",
+        [httpStatusBadRequest]: {
+            description: badRequestResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        500: {
-            description: "Internal Server Error",
+        [httpStatusInternalServerError]: {
+            description: internalServerErrorResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
