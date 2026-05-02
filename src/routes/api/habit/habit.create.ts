@@ -34,6 +34,7 @@ const unauthorizedResponseDescription = "Unauthorized";
 const notFoundResponseDescription = "Not Found";
 const internalServerErrorResponseDescription = "Internal Server Error";
 const complexHabitCreatedEventType = "habit.v0/complex-habit.created.v0";
+const simpleHabitCreatedEventType = "habit.v0/simple-habit.created.v0";
 
 // Request schema
 const createComplexHabitRequestSchema = z.object({
@@ -367,13 +368,13 @@ export function registerCreateHabit(app: OpenAPIHono) {
                     message: "Invalid simple habit data",
                     errors: createSimpleHabitEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCreateSimpleHabitEvent = createSimpleHabitEvent.data;
 
         try {
-            await FlowcorePathways.write("habit.v0/simple-habit.created.v0", {
+            await FlowcorePathways.write(simpleHabitCreatedEventType, {
                 data: safeCreateSimpleHabitEvent,
             });
         } catch (error) {
@@ -383,20 +384,20 @@ export function registerCreateHabit(app: OpenAPIHono) {
                     message: "Failed to create simple habit",
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
         return c.json(
             {
                 success: true as const,
-                message: "Simple habit created successfully",
+                message: simpleHabitCreatedDescription,
                 data: {
                     domain: "simple" as const,
                     description: safeSimpleHabitData.description,
                 },
             },
-            201,
+            httpStatusCreated,
         );
     });
 }
