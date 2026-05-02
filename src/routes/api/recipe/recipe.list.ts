@@ -18,6 +18,14 @@ const jsonContentType = "application/json";
 const listRecipesPath = "/api/recipe";
 const getRecipeByIdPath = "/api/recipe/{recipeId}";
 const searchRecipesPath = "/api/recipe/search";
+const httpStatusOk = 200;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const unauthorizedResponseDescription = "Unauthorized";
+const recipesRetrievedDescription = "Recipes retrieved successfully";
+const recipeRetrievedDescription = "Recipe retrieved successfully";
+const recipeNotFoundDescription = "Recipe not found or access denied";
+const recipeSearchResultsDescription = "Recipe search results";
 
 // Response schemas
 const recipeMetadataSchema = z.object({
@@ -81,8 +89,8 @@ const listRecipesRoute = createRoute({
     tags: [recipesTag],
     security: [{ Bearer: [] }],
     responses: {
-        200: {
-            description: "Recipes retrieved successfully",
+        [httpStatusOk]: {
+            description: recipesRetrievedDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -93,8 +101,8 @@ const listRecipesRoute = createRoute({
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -118,8 +126,8 @@ const getRecipeByIdRoute = createRoute({
         }),
     },
     responses: {
-        200: {
-            description: "Recipe retrieved successfully",
+        [httpStatusOk]: {
+            description: recipeRetrievedDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -130,8 +138,8 @@ const getRecipeByIdRoute = createRoute({
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -141,8 +149,8 @@ const getRecipeByIdRoute = createRoute({
                 },
             },
         },
-        404: {
-            description: "Recipe not found or access denied",
+        [httpStatusNotFound]: {
+            description: recipeNotFoundDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -167,8 +175,8 @@ const searchRecipesRoute = createRoute({
         }),
     },
     responses: {
-        200: {
-            description: "Recipe search results",
+        [httpStatusOk]: {
+            description: recipeSearchResultsDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -179,8 +187,8 @@ const searchRecipesRoute = createRoute({
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
