@@ -33,6 +33,7 @@ const badRequestResponseDescription = "Bad Request";
 const unauthorizedResponseDescription = "Unauthorized";
 const notFoundResponseDescription = "Not Found";
 const internalServerErrorResponseDescription = "Internal Server Error";
+const complexHabitCreatedEventType = "habit.v0/complex-habit.created.v0";
 
 // Request schema
 const createComplexHabitRequestSchema = z.object({
@@ -214,7 +215,7 @@ export function registerCreateHabit(app: OpenAPIHono) {
                     message: "Unsupported domain for batch habits",
                     errors: `Expected domain 'meal', got '${safeBatchHabitData.domain}'. Only meal domain is currently supported.`,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
 
@@ -230,7 +231,7 @@ export function registerCreateHabit(app: OpenAPIHono) {
                     message: "Invalid meal entity",
                     errors: `Meal ${safeBatchHabitData.entityId} not found or access denied`,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -248,7 +249,7 @@ export function registerCreateHabit(app: OpenAPIHono) {
                     message: "No recipes attached to meal",
                     errors: `Meal ${safeBatchHabitData.entityId} has no recipes. Attach recipes using POST /api/meal/:id/recipes before creating a habit.`,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
 
@@ -271,7 +272,7 @@ export function registerCreateHabit(app: OpenAPIHono) {
                     message: "No instructions found",
                     errors: `None of the recipes attached to meal ${safeBatchHabitData.entityId} have instructions`,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
 
@@ -291,7 +292,7 @@ export function registerCreateHabit(app: OpenAPIHono) {
                         message: "Invalid subEntityId",
                         errors: `Instruction ${subEntityId} not found in meal's recipes`,
                     },
-                    400,
+                    httpStatusBadRequest,
                 );
             }
         }
@@ -309,7 +310,7 @@ export function registerCreateHabit(app: OpenAPIHono) {
                     message: "Invalid habit data",
                     errors: createHabitEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCreateHabitEvent = createHabitEvent.data;
@@ -319,7 +320,7 @@ export function registerCreateHabit(app: OpenAPIHono) {
         // This ensures habits always reflect the current meal state
 
         try {
-            await FlowcorePathways.write("habit.v0/complex-habit.created.v0", {
+            await FlowcorePathways.write(complexHabitCreatedEventType, {
                 data: safeCreateHabitEvent,
             });
         } catch (error) {
@@ -329,21 +330,21 @@ export function registerCreateHabit(app: OpenAPIHono) {
                     message: "Failed to create batch habits",
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
         return c.json(
             {
                 success: true as const,
-                message: "Batch habits created successfully",
+                message: batchHabitsCreatedDescription,
                 data: {
                     domain: safeBatchHabitData.domain,
                     configuredSubEntitiesCount:
                         safeBatchHabitData.subEntities.length,
                 },
             },
-            201,
+            httpStatusCreated,
         );
     });
 
