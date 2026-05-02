@@ -17,6 +17,12 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const habitsTag = "Habits";
+const jsonContentType = "application/json";
+const httpPostMethod = "post";
+const createBatchHabitsPath = "/api/habit/batch";
+const createSimpleHabitPath = "/api/habit/simple";
+
 // Request schema
 const createComplexHabitRequestSchema = z.object({
     domain: z.literal("meal"), // e.g., "meal"
@@ -76,14 +82,14 @@ const simpleHabitSuccessResponseSchema = createSuccessResponseSchema(
 
 // Route definition
 const createBatchHabitsRoute = createRoute({
-    method: "post",
-    path: "/api/habit/batch",
-    tags: ["Habits"],
+    method: httpPostMethod,
+    path: createBatchHabitsPath,
+    tags: [habitsTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: createComplexHabitRequestSchema,
                 },
             },
@@ -93,7 +99,7 @@ const createBatchHabitsRoute = createRoute({
         201: {
             description: "Batch habits created successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
@@ -101,7 +107,7 @@ const createBatchHabitsRoute = createRoute({
         400: {
             description: "Bad Request",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -109,7 +115,7 @@ const createBatchHabitsRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -117,7 +123,7 @@ const createBatchHabitsRoute = createRoute({
         404: {
             description: "Not Found",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -125,7 +131,7 @@ const createBatchHabitsRoute = createRoute({
         500: {
             description: "Internal Server Error",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -134,14 +140,14 @@ const createBatchHabitsRoute = createRoute({
 });
 
 const createSimpleHabitRoute = createRoute({
-    method: "post",
-    path: "/api/habit/simple",
-    tags: ["Habits"],
+    method: httpPostMethod,
+    path: createSimpleHabitPath,
+    tags: [habitsTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: createSimpleHabitRequestSchema,
                 },
             },
@@ -151,7 +157,7 @@ const createSimpleHabitRoute = createRoute({
         201: {
             description: "Simple habit created successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: simpleHabitSuccessResponseSchema,
                 },
             },
@@ -159,7 +165,7 @@ const createSimpleHabitRoute = createRoute({
         400: {
             description: "Bad Request",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -167,7 +173,7 @@ const createSimpleHabitRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -175,7 +181,7 @@ const createSimpleHabitRoute = createRoute({
         500: {
             description: "Internal Server Error",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
