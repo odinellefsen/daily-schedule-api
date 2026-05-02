@@ -12,6 +12,13 @@ import {
     recipes,
 } from "../../../db/schemas";
 
+const recipesTag = "Recipes";
+const httpGetMethod = "get";
+const jsonContentType = "application/json";
+const listRecipesPath = "/api/recipe";
+const getRecipeByIdPath = "/api/recipe/{recipeId}";
+const searchRecipesPath = "/api/recipe/search";
+
 // Response schemas
 const recipeMetadataSchema = z.object({
     id: z.string().uuid(),
@@ -69,15 +76,15 @@ const recipeBasicSchema = z.object({
 
 // Route definitions
 const listRecipesRoute = createRoute({
-    method: "get",
-    path: "/api/recipe",
-    tags: ["Recipes"],
+    method: httpGetMethod,
+    path: listRecipesPath,
+    tags: [recipesTag],
     security: [{ Bearer: [] }],
     responses: {
         200: {
             description: "Recipes retrieved successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(true),
                         message: z.string(),
@@ -89,7 +96,7 @@ const listRecipesRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -101,9 +108,9 @@ const listRecipesRoute = createRoute({
 });
 
 const getRecipeByIdRoute = createRoute({
-    method: "get",
-    path: "/api/recipe/{recipeId}",
-    tags: ["Recipes"],
+    method: httpGetMethod,
+    path: getRecipeByIdPath,
+    tags: [recipesTag],
     security: [{ Bearer: [] }],
     request: {
         params: z.object({
@@ -114,7 +121,7 @@ const getRecipeByIdRoute = createRoute({
         200: {
             description: "Recipe retrieved successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(true),
                         message: z.string(),
@@ -126,7 +133,7 @@ const getRecipeByIdRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -137,7 +144,7 @@ const getRecipeByIdRoute = createRoute({
         404: {
             description: "Recipe not found or access denied",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -149,9 +156,9 @@ const getRecipeByIdRoute = createRoute({
 });
 
 const searchRecipesRoute = createRoute({
-    method: "get",
-    path: "/api/recipe/search",
-    tags: ["Recipes"],
+    method: httpGetMethod,
+    path: searchRecipesPath,
+    tags: [recipesTag],
     security: [{ Bearer: [] }],
     request: {
         query: z.object({
@@ -163,7 +170,7 @@ const searchRecipesRoute = createRoute({
         200: {
             description: "Recipe search results",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(true),
                         message: z.string(),
@@ -175,7 +182,7 @@ const searchRecipesRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
