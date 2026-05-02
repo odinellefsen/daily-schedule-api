@@ -40,11 +40,7 @@ const cancelTodoRoute = createRoute({
     method: httpPostMethod,
     path: cancelTodoPath,
     tags: [todosTag],
-    security: [
-        {
-            Bearer: [],
-        },
-    ],
+    security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
