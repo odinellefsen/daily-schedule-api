@@ -14,6 +14,25 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const recipesTag = "Recipes";
+const httpDeleteMethod = "delete";
+const deleteRecipePath = "/api/recipe";
+const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const httpStatusInternalServerError = 500;
+const recipeDeletedSuccessMessage = "Recipe deleted successfully";
+const recipeNotFoundMessage = "Recipe not found";
+const invalidRecipeDeletedDataMessage = "Invalid recipe deleted data";
+const failedToDeleteRecipeMessage = "Failed to delete recipe";
+const recipeDeletedEventType = "recipe.v0/recipe.deleted.v0";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const recipeNotFoundResponseDescription = "Recipe not found";
+const internalServerErrorResponseDescription = "Internal Server Error";
+
 // Request schema
 const deleteRecipeRequestSchema = z.object({
     recipeId: z.string().uuid(),
@@ -24,56 +43,56 @@ const successResponseSchema = createSuccessResponseSchema(recipeDeletedSchema);
 
 // Route definition
 const deleteRecipeRoute = createRoute({
-    method: "delete",
-    path: "/api/recipe",
-    tags: ["Recipes"],
+    method: httpDeleteMethod,
+    path: deleteRecipePath,
+    tags: [recipesTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: deleteRecipeRequestSchema,
                 },
             },
         },
     },
     responses: {
-        200: {
-            description: "Recipe deleted successfully",
+        [httpStatusOk]: {
+            description: recipeDeletedSuccessMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
         },
-        400: {
-            description: "Bad Request",
+        [httpStatusBadRequest]: {
+            description: badRequestResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        404: {
-            description: "Recipe not found",
+        [httpStatusNotFound]: {
+            description: recipeNotFoundResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        500: {
-            description: "Internal Server Error",
+        [httpStatusInternalServerError]: {
+            description: internalServerErrorResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -97,9 +116,9 @@ export function registerDeleteRecipe(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Recipe not found",
+                    message: recipeNotFoundMessage,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -112,36 +131,36 @@ export function registerDeleteRecipe(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid recipe deleted data",
+                    message: invalidRecipeDeletedDataMessage,
                     errors: recipeDeletedEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeRecipeDeletedEvent = recipeDeletedEvent.data;
 
         try {
-            await FlowcorePathways.write("recipe.v0/recipe.deleted.v0", {
+            await FlowcorePathways.write(recipeDeletedEventType, {
                 data: safeRecipeDeletedEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to delete recipe",
+                    message: failedToDeleteRecipeMessage,
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
         return c.json(
             {
                 success: true as const,
-                message: "Recipe deleted successfully",
+                message: recipeDeletedSuccessMessage,
                 data: safeRecipeDeletedEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
