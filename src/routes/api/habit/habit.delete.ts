@@ -14,6 +14,25 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const habitsTag = "Habits";
+const httpDeleteMethod = "delete";
+const deleteHabitPath = "/api/habit";
+const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const httpStatusInternalServerError = 500;
+const habitDeletedSuccessMessage = "Habit deleted successfully";
+const habitNotFoundMessage = "Habit not found";
+const invalidHabitDeletedDataMessage = "Invalid habit deleted data";
+const failedToDeleteHabitMessage = "Failed to delete habit";
+const habitDeletedEventType = "habit.v0/habit.deleted.v0";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const notFoundResponseDescription = "Not Found";
+const internalServerErrorResponseDescription = "Internal Server Error";
+
 const deleteHabitRequestSchema = z.object({
     habitId: z.string().uuid(),
 });
@@ -21,56 +40,56 @@ const deleteHabitRequestSchema = z.object({
 const successResponseSchema = createSuccessResponseSchema(habitDeletedSchema);
 
 const deleteHabitRoute = createRoute({
-    method: "delete",
-    path: "/api/habit",
-    tags: ["Habits"],
+    method: httpDeleteMethod,
+    path: deleteHabitPath,
+    tags: [habitsTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: deleteHabitRequestSchema,
                 },
             },
         },
     },
     responses: {
-        200: {
-            description: "Habit deleted successfully",
+        [httpStatusOk]: {
+            description: habitDeletedSuccessMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
         },
-        400: {
-            description: "Bad Request",
+        [httpStatusBadRequest]: {
+            description: badRequestResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        404: {
-            description: "Not Found",
+        [httpStatusNotFound]: {
+            description: notFoundResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        500: {
-            description: "Internal Server Error",
+        [httpStatusInternalServerError]: {
+            description: internalServerErrorResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -94,9 +113,9 @@ export function registerDeleteHabit(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Habit not found",
+                    message: habitNotFoundMessage,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -109,35 +128,35 @@ export function registerDeleteHabit(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid habit deleted data",
+                    message: invalidHabitDeletedDataMessage,
                     errors: habitDeletedEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
 
         try {
-            await FlowcorePathways.write("habit.v0/habit.deleted.v0", {
+            await FlowcorePathways.write(habitDeletedEventType, {
                 data: habitDeletedEvent.data,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to delete habit",
+                    message: failedToDeleteHabitMessage,
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
         return c.json(
             {
                 success: true as const,
-                message: "Habit deleted successfully",
+                message: habitDeletedSuccessMessage,
                 data: habitDeletedEvent.data,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
