@@ -13,6 +13,8 @@ const jsonContentType = "application/json";
 const httpStatusOk = 200;
 const httpStatusUnauthorized = 401;
 const unauthorizedResponseDescription = "Unauthorized";
+const foodItemsRetrievedMessage = "Food items retrieved successfully";
+const foodItemsSearchResultsMessage = "Food items search results";
 
 // Response schemas
 const foodItemWithUnitsSchema = z.object({
@@ -49,7 +51,7 @@ const listFoodItemsRoute = createRoute({
     security: [{ Bearer: [] }],
     responses: {
         [httpStatusOk]: {
-            description: "Food items retrieved successfully",
+            description: foodItemsRetrievedMessage,
             content: {
                 [jsonContentType]: {
                     schema: listFoodItemsResponseSchema,
@@ -82,7 +84,7 @@ const searchFoodItemsRoute = createRoute({
     },
     responses: {
         [httpStatusOk]: {
-            description: "Food items search results",
+            description: foodItemsSearchResultsMessage,
             content: {
                 [jsonContentType]: {
                     schema: searchFoodItemsResponseSchema,
@@ -134,10 +136,10 @@ export function registerListFoodItems(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Food items retrieved successfully",
+                message: foodItemsRetrievedMessage,
                 data: foodItemsWithUnitCounts,
             },
-            200,
+            httpStatusOk,
         );
     });
 
@@ -161,10 +163,10 @@ export function registerListFoodItems(app: OpenAPIHono) {
             return c.json(
                 {
                     success: true as const,
-                    message: "Food items search results",
+                    message: foodItemsSearchResultsMessage,
                     data: filtered,
                 },
-                200,
+                httpStatusOk,
             );
         }
 
@@ -173,10 +175,10 @@ export function registerListFoodItems(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Food items retrieved successfully",
+                message: foodItemsRetrievedMessage,
                 data: results,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
