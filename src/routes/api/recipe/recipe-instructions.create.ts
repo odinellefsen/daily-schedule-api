@@ -14,6 +14,28 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const recipesTag = "Recipes";
+const httpPostMethod = "post";
+const createRecipeInstructionsPath = "/api/recipe/instructions";
+const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const httpStatusInternalServerError = 500;
+const recipeInstructionsCreatedSuccessMessage =
+    "Recipe instructions created successfully";
+const recipeNotFoundMessage = "Recipe not found";
+const invalidRecipeInstructionsDataMessage = "Invalid recipe instructions data";
+const failedToCreateRecipeInstructionsMessage =
+    "Failed to create recipe instructions";
+const recipeInstructionsCreatedEventType =
+    "recipe.v0/recipe-instructions.created.v0";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const recipeNotFoundOpenApiDescription = "Recipe not found";
+const internalServerErrorResponseDescription = "Internal Server Error";
+
 // Request schema
 const createRecipeInstructionsRequestSchema = z.object({
     recipeId: z.string().uuid(),
@@ -46,56 +68,56 @@ const successResponseSchema = createSuccessResponseSchema(
 
 // Route definition
 const createRecipeInstructionsRoute = createRoute({
-    method: "post",
-    path: "/api/recipe/instructions",
-    tags: ["Recipes"],
+    method: httpPostMethod,
+    path: createRecipeInstructionsPath,
+    tags: [recipesTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: createRecipeInstructionsRequestSchema,
                 },
             },
         },
     },
     responses: {
-        200: {
-            description: "Recipe instructions created successfully",
+        [httpStatusOk]: {
+            description: recipeInstructionsCreatedSuccessMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
         },
-        400: {
-            description: "Bad Request",
+        [httpStatusBadRequest]: {
+            description: badRequestResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        404: {
-            description: "Recipe not found",
+        [httpStatusNotFound]: {
+            description: recipeNotFoundOpenApiDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        500: {
-            description: "Internal Server Error",
+        [httpStatusInternalServerError]: {
+            description: internalServerErrorResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -120,9 +142,9 @@ export function registerCreateRecipeInstructions(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Recipe not found",
+                    message: recipeNotFoundMessage,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -158,40 +180,37 @@ export function registerCreateRecipeInstructions(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid recipe instructions data",
+                    message: invalidRecipeInstructionsDataMessage,
                     errors: createRecipeInstructionsEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCreateRecipeInstructionsEvent =
             createRecipeInstructionsEvent.data;
 
         try {
-            await FlowcorePathways.write(
-                "recipe.v0/recipe-instructions.created.v0",
-                {
-                    data: safeCreateRecipeInstructionsEvent,
-                },
-            );
+            await FlowcorePathways.write(recipeInstructionsCreatedEventType, {
+                data: safeCreateRecipeInstructionsEvent,
+            });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to create recipe instructions",
+                    message: failedToCreateRecipeInstructionsMessage,
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
         return c.json(
             {
                 success: true as const,
-                message: "Recipe instructions created successfully",
+                message: recipeInstructionsCreatedSuccessMessage,
                 data: safeCreateRecipeInstructionsEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
