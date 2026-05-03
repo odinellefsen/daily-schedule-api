@@ -14,6 +14,28 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const recipesTag = "Recipes";
+const httpPostMethod = "post";
+const createRecipeIngredientsPath = "/api/recipe/ingredients";
+const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const httpStatusInternalServerError = 500;
+const recipeIngredientsCreatedSuccessMessage =
+    "Recipe ingredients created successfully";
+const recipeNotFoundOrDeniedMessage = "Recipe not found or access denied";
+const invalidRecipeIngredientsDataMessage = "Invalid recipe ingredients data";
+const failedToCreateRecipeIngredientsMessage =
+    "Failed to create recipe ingredients";
+const recipeIngredientsCreatedEventType =
+    "recipe.v0/recipe-ingredients.created.v0";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const recipeNotFoundOpenApiDescription = "Recipe not found or access denied";
+const internalServerErrorResponseDescription = "Internal Server Error";
+
 // Request schema
 const createRecipeIngredientsRequestSchema = z.object({
     recipeId: z.string().uuid(),
@@ -34,56 +56,56 @@ const successResponseSchema = createSuccessResponseSchema(
 
 // Route definition
 const createRecipeIngredientsRoute = createRoute({
-    method: "post",
-    path: "/api/recipe/ingredients",
-    tags: ["Recipes"],
+    method: httpPostMethod,
+    path: createRecipeIngredientsPath,
+    tags: [recipesTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: createRecipeIngredientsRequestSchema,
                 },
             },
         },
     },
     responses: {
-        200: {
-            description: "Recipe ingredients created successfully",
+        [httpStatusOk]: {
+            description: recipeIngredientsCreatedSuccessMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
         },
-        400: {
-            description: "Bad Request",
+        [httpStatusBadRequest]: {
+            description: badRequestResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        404: {
-            description: "Recipe not found or access denied",
+        [httpStatusNotFound]: {
+            description: recipeNotFoundOpenApiDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        500: {
-            description: "Internal Server Error",
+        [httpStatusInternalServerError]: {
+            description: internalServerErrorResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -105,9 +127,9 @@ export function registerCreateRecipeIngredients(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Recipe not found or access denied",
+                    message: recipeNotFoundOrDeniedMessage,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -127,40 +149,37 @@ export function registerCreateRecipeIngredients(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid recipe ingredients data",
+                    message: invalidRecipeIngredientsDataMessage,
                     errors: createRecipeIngredientsEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCreateRecipeIngredientsEvent =
             createRecipeIngredientsEvent.data;
 
         try {
-            await FlowcorePathways.write(
-                "recipe.v0/recipe-ingredients.created.v0",
-                {
-                    data: safeCreateRecipeIngredientsEvent,
-                },
-            );
+            await FlowcorePathways.write(recipeIngredientsCreatedEventType, {
+                data: safeCreateRecipeIngredientsEvent,
+            });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to create recipe ingredients",
+                    message: failedToCreateRecipeIngredientsMessage,
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
         return c.json(
             {
                 success: true as const,
-                message: "Recipe ingredients created successfully",
+                message: recipeIngredientsCreatedSuccessMessage,
                 data: safeCreateRecipeIngredientsEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
