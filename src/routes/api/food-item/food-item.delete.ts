@@ -18,6 +18,11 @@ const foodItemsTag = "Food Items";
 const httpDeleteMethod = "delete";
 const deleteFoodItemPath = "/api/food-item";
 const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const httpStatusInternalServerError = 500;
 
 // Request schema
 const deleteFoodItemRequestSchema = z.object({
@@ -45,7 +50,7 @@ const deleteFoodItemRoute = createRoute({
         },
     },
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: "Food item deleted successfully",
             content: {
                 [jsonContentType]: {
@@ -53,7 +58,7 @@ const deleteFoodItemRoute = createRoute({
                 },
             },
         },
-        400: {
+        [httpStatusBadRequest]: {
             description: "Bad Request",
             content: {
                 [jsonContentType]: {
@@ -61,7 +66,7 @@ const deleteFoodItemRoute = createRoute({
                 },
             },
         },
-        401: {
+        [httpStatusUnauthorized]: {
             description: "Unauthorized",
             content: {
                 [jsonContentType]: {
@@ -69,7 +74,7 @@ const deleteFoodItemRoute = createRoute({
                 },
             },
         },
-        404: {
+        [httpStatusNotFound]: {
             description: "Not Found - Food item does not exist",
             content: {
                 [jsonContentType]: {
@@ -77,7 +82,7 @@ const deleteFoodItemRoute = createRoute({
                 },
             },
         },
-        500: {
+        [httpStatusInternalServerError]: {
             description: "Internal Server Error",
             content: {
                 [jsonContentType]: {
@@ -106,7 +111,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
                     success: false as const,
                     message: "Food item not found",
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -123,7 +128,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
                     message: "Invalid food item deleted data",
                     errors: foodItemDeletedEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeFoodItemDeletedEvent = foodItemDeletedEvent.data;
@@ -139,7 +144,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
                     message: "Failed to delete food item",
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
@@ -149,7 +154,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
                 message: "Food item deleted successfully",
                 data: safeFoodItemDeletedEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
