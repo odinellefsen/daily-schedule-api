@@ -14,6 +14,11 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const foodItemsTag = "Food Items";
+const httpDeleteMethod = "delete";
+const deleteFoodItemPath = "/api/food-item";
+const jsonContentType = "application/json";
+
 // Request schema
 const deleteFoodItemRequestSchema = z.object({
     foodItemId: z.string().uuid(),
@@ -26,14 +31,14 @@ const successResponseSchema = createSuccessResponseSchema(
 
 // Route definition
 const deleteFoodItemRoute = createRoute({
-    method: "delete",
-    path: "/api/food-item",
-    tags: ["Food Items"],
+    method: httpDeleteMethod,
+    path: deleteFoodItemPath,
+    tags: [foodItemsTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: deleteFoodItemRequestSchema,
                 },
             },
@@ -43,7 +48,7 @@ const deleteFoodItemRoute = createRoute({
         200: {
             description: "Food item deleted successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
@@ -51,7 +56,7 @@ const deleteFoodItemRoute = createRoute({
         400: {
             description: "Bad Request",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -59,7 +64,7 @@ const deleteFoodItemRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -67,7 +72,7 @@ const deleteFoodItemRoute = createRoute({
         404: {
             description: "Not Found - Food item does not exist",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -75,7 +80,7 @@ const deleteFoodItemRoute = createRoute({
         500: {
             description: "Internal Server Error",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
