@@ -10,6 +10,17 @@ import {
     recipeInstructions,
 } from "../../../db/schemas";
 
+const mealsTag = "Meals";
+const httpGetMethod = "get";
+const getMealPath = "/api/meal/{mealId}";
+const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const mealRetrievedSuccessMessage = "Meal retrieved successfully";
+const mealNotFoundOrDeniedMessage = "Meal not found or access denied";
+const unauthorizedResponseDescription = "Unauthorized";
+
 // Response schemas
 const fullMealSchema = z.object({
     id: z.string().uuid(),
@@ -37,9 +48,9 @@ const fullMealSchema = z.object({
 
 // Route definition
 const getMealRoute = createRoute({
-    method: "get",
-    path: "/api/meal/{mealId}",
-    tags: ["Meals"],
+    method: httpGetMethod,
+    path: getMealPath,
+    tags: [mealsTag],
     security: [{ Bearer: [] }],
     request: {
         params: z.object({
@@ -47,10 +58,10 @@ const getMealRoute = createRoute({
         }),
     },
     responses: {
-        200: {
-            description: "Meal retrieved successfully",
+        [httpStatusOk]: {
+            description: mealRetrievedSuccessMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(true),
                         message: z.string(),
@@ -59,10 +70,10 @@ const getMealRoute = createRoute({
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -70,10 +81,10 @@ const getMealRoute = createRoute({
                 },
             },
         },
-        404: {
-            description: "Meal not found or access denied",
+        [httpStatusNotFound]: {
+            description: mealNotFoundOrDeniedMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -97,9 +108,9 @@ export function registerGetMeal(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Meal not found or access denied",
+                    message: mealNotFoundOrDeniedMessage,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -156,10 +167,10 @@ export function registerGetMeal(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Meal retrieved successfully",
+                message: mealRetrievedSuccessMessage,
                 data: fullMeal,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
