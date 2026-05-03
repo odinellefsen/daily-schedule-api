@@ -8,6 +8,24 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const mealsTag = "Meals";
+const httpPostMethod = "post";
+const createMealPath = "/api/meal";
+const jsonContentType = "application/json";
+const httpStatusCreated = 201;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusInternalServerError = 500;
+const mealCreatedSuccessMessage = "Meal created successfully";
+const invalidMealDataMessage = "Invalid meal data";
+const failedToCreateMealMessage = "Failed to create meal";
+const mealCreatedFollowUpMessage =
+    "Meal created. Use POST /api/meal/:id/recipes to attach recipes.";
+const mealCreatedEventType = "meal.v0/meal.created.v0";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const internalServerErrorResponseDescription = "Internal Server Error";
+
 // Request schema
 const createMealRequestSchema = z.object({
     mealName: z
@@ -29,48 +47,48 @@ const successResponseSchema = createSuccessResponseSchema(
 
 // Route definition
 const createMealRoute = createRoute({
-    method: "post",
-    path: "/api/meal",
-    tags: ["Meals"],
+    method: httpPostMethod,
+    path: createMealPath,
+    tags: [mealsTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: createMealRequestSchema,
                 },
             },
         },
     },
     responses: {
-        201: {
-            description: "Meal created successfully",
+        [httpStatusCreated]: {
+            description: mealCreatedSuccessMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
         },
-        400: {
-            description: "Bad Request",
+        [httpStatusBadRequest]: {
+            description: badRequestResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        500: {
-            description: "Internal Server Error",
+        [httpStatusInternalServerError]: {
+            description: internalServerErrorResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -94,26 +112,26 @@ export function registerCreateMeal(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid meal data",
+                    message: invalidMealDataMessage,
                     errors: createMealEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCreateMealEvent = createMealEvent.data;
 
         try {
-            await FlowcorePathways.write("meal.v0/meal.created.v0", {
+            await FlowcorePathways.write(mealCreatedEventType, {
                 data: safeCreateMealEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to create meal",
+                    message: failedToCreateMealMessage,
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
@@ -122,14 +140,13 @@ export function registerCreateMeal(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Meal created successfully",
+                message: mealCreatedSuccessMessage,
                 data: {
                     meal: createMeal,
-                    message:
-                        "Meal created. Use POST /api/meal/:id/recipes to attach recipes.",
+                    message: mealCreatedFollowUpMessage,
                 },
             },
-            201,
+            httpStatusCreated,
         );
     });
 }
