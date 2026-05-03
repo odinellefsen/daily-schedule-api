@@ -23,6 +23,16 @@ const httpStatusBadRequest = 400;
 const httpStatusUnauthorized = 401;
 const httpStatusNotFound = 404;
 const httpStatusInternalServerError = 500;
+const foodItemDeletedSuccessMessage = "Food item deleted successfully";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const foodItemNotFoundOpenApiDescription =
+    "Not Found - Food item does not exist";
+const internalServerErrorResponseDescription = "Internal Server Error";
+const foodItemNotFoundMessage = "Food item not found";
+const invalidFoodItemDeletedDataMessage = "Invalid food item deleted data";
+const failedToDeleteFoodItemMessage = "Failed to delete food item";
+const foodItemDeletedEventType = "food-item.v0/food-item.deleted.v0";
 
 // Request schema
 const deleteFoodItemRequestSchema = z.object({
@@ -51,7 +61,7 @@ const deleteFoodItemRoute = createRoute({
     },
     responses: {
         [httpStatusOk]: {
-            description: "Food item deleted successfully",
+            description: foodItemDeletedSuccessMessage,
             content: {
                 [jsonContentType]: {
                     schema: successResponseSchema,
@@ -59,7 +69,7 @@ const deleteFoodItemRoute = createRoute({
             },
         },
         [httpStatusBadRequest]: {
-            description: "Bad Request",
+            description: badRequestResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
@@ -67,7 +77,7 @@ const deleteFoodItemRoute = createRoute({
             },
         },
         [httpStatusUnauthorized]: {
-            description: "Unauthorized",
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
@@ -75,7 +85,7 @@ const deleteFoodItemRoute = createRoute({
             },
         },
         [httpStatusNotFound]: {
-            description: "Not Found - Food item does not exist",
+            description: foodItemNotFoundOpenApiDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
@@ -83,7 +93,7 @@ const deleteFoodItemRoute = createRoute({
             },
         },
         [httpStatusInternalServerError]: {
-            description: "Internal Server Error",
+            description: internalServerErrorResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
@@ -109,7 +119,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Food item not found",
+                    message: foodItemNotFoundMessage,
                 },
                 httpStatusNotFound,
             );
@@ -125,7 +135,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid food item deleted data",
+                    message: invalidFoodItemDeletedDataMessage,
                     errors: foodItemDeletedEvent.error.errors,
                 },
                 httpStatusBadRequest,
@@ -134,14 +144,14 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
         const safeFoodItemDeletedEvent = foodItemDeletedEvent.data;
 
         try {
-            await FlowcorePathways.write("food-item.v0/food-item.deleted.v0", {
+            await FlowcorePathways.write(foodItemDeletedEventType, {
                 data: safeFoodItemDeletedEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to delete food item",
+                    message: failedToDeleteFoodItemMessage,
                     errors: error,
                 },
                 httpStatusInternalServerError,
@@ -151,7 +161,7 @@ export function registerDeleteFoodItem(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Food item deleted successfully",
+                message: foodItemDeletedSuccessMessage,
                 data: safeFoodItemDeletedEvent,
             },
             httpStatusOk,
