@@ -15,6 +15,26 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const foodItemsTag = "Food Items";
+const httpPostMethod = "post";
+const createFoodItemPath = "/api/food-item";
+const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusConflict = 409;
+const httpStatusInternalServerError = 500;
+const foodItemCreatedSuccessMessage = "Food item created successfully";
+const foodItemNameExistsMessage = "Food item with name already exists";
+const invalidFoodItemDataMessage = "Invalid food item data";
+const failedToCreateFoodItemMessage = "Failed to create food item";
+const foodItemCreatedEventType = "food-item.v0/food-item.created.v0";
+const conflictResponseDescription =
+    "Conflict - Food item with name already exists";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const internalServerErrorResponseDescription = "Internal Server Error";
+
 // Request schema
 const createFoodItemRequestSchema = z.object({
     foodItemName: z
@@ -38,42 +58,42 @@ type OpenApiResponseDef = {
 // which prevents `@hono/zod-openapi` from collapsing the inferred handler return type to `never`
 // in some TypeScript configurations (notably Vercel’s build).
 const createFoodItemResponses: Record<string, OpenApiResponseDef> = {
-    200: {
-        description: "Food item created successfully",
+    [httpStatusOk]: {
+        description: foodItemCreatedSuccessMessage,
         content: {
-            "application/json": {
+            [jsonContentType]: {
                 schema: successResponseSchema,
             },
         },
     },
-    400: {
-        description: "Bad Request",
+    [httpStatusBadRequest]: {
+        description: badRequestResponseDescription,
         content: {
-            "application/json": {
+            [jsonContentType]: {
                 schema: errorResponseSchema,
             },
         },
     },
-    401: {
-        description: "Unauthorized",
+    [httpStatusUnauthorized]: {
+        description: unauthorizedResponseDescription,
         content: {
-            "application/json": {
+            [jsonContentType]: {
                 schema: errorResponseSchema,
             },
         },
     },
-    409: {
-        description: "Conflict - Food item with name already exists",
+    [httpStatusConflict]: {
+        description: conflictResponseDescription,
         content: {
-            "application/json": {
+            [jsonContentType]: {
                 schema: errorResponseSchema,
             },
         },
     },
-    500: {
-        description: "Internal Server Error",
+    [httpStatusInternalServerError]: {
+        description: internalServerErrorResponseDescription,
         content: {
-            "application/json": {
+            [jsonContentType]: {
                 schema: errorResponseSchema,
             },
         },
@@ -81,14 +101,14 @@ const createFoodItemResponses: Record<string, OpenApiResponseDef> = {
 };
 
 const createFoodItemRoute = createRoute({
-    method: "post",
-    path: "/api/food-item",
-    tags: ["Food Items"],
+    method: httpPostMethod,
+    path: createFoodItemPath,
+    tags: [foodItemsTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: createFoodItemRequestSchema,
                 },
             },
@@ -115,9 +135,9 @@ export function registerCreateFoodItem(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Food item with name already exists",
+                    message: foodItemNameExistsMessage,
                 },
-                409,
+                httpStatusConflict,
             );
         }
 
@@ -133,36 +153,36 @@ export function registerCreateFoodItem(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid food item data",
+                    message: invalidFoodItemDataMessage,
                     errors: createFoodItemEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCreateFoodItemEvent = createFoodItemEvent.data;
 
         try {
-            await FlowcorePathways.write("food-item.v0/food-item.created.v0", {
+            await FlowcorePathways.write(foodItemCreatedEventType, {
                 data: safeCreateFoodItemEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to create food item",
+                    message: failedToCreateFoodItemMessage,
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
         return c.json(
             {
                 success: true as const,
-                message: "Food item created successfully",
+                message: foodItemCreatedSuccessMessage,
                 data: safeCreateFoodItemEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
