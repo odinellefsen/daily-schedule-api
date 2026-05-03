@@ -20,6 +20,9 @@ const todoCreatedSuccessMessage = "Todo created successfully";
 const invalidTodoDataMessage = "Invalid todo data";
 const failedToCreateTodoMessage = "Failed to create todo";
 const todoCreatedEventType = "todo.v0/todo.created.v0";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const internalServerErrorResponseDescription = "Internal Server Error";
 
 // Request schema
 const createTodoRequestSchema = z.object({
@@ -73,7 +76,7 @@ const createTodoRoute = createRoute({
             },
         },
         [httpStatusBadRequest]: {
-            description: "Bad Request",
+            description: badRequestResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
@@ -81,7 +84,7 @@ const createTodoRoute = createRoute({
             },
         },
         [httpStatusUnauthorized]: {
-            description: "Unauthorized",
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
@@ -89,7 +92,7 @@ const createTodoRoute = createRoute({
             },
         },
         [httpStatusInternalServerError]: {
-            description: "Internal Server Error",
+            description: internalServerErrorResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
