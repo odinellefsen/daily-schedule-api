@@ -21,6 +21,8 @@ const unauthorizedResponseDescription = "Unauthorized";
 const todayTodosRetrievedMessage = "Today's todos retrieved successfully";
 const allTodosOpenApiDescription = "All todos retrieved successfully";
 const allTodosListMessage = "Todos retrieved successfully";
+const defaultUserTimezone = "UTC";
+const timezoneHeaderName = "x-timezone";
 
 // Response schemas
 const todayTodoItemSchema = z.object({
@@ -81,7 +83,7 @@ const getTodayTodosRoute = createRoute({
     security: [{ Bearer: [] }],
     request: {
         headers: z.object({
-            "x-timezone": z.string().optional(),
+            [timezoneHeaderName]: z.string().optional(),
         }),
     },
     responses: {
@@ -114,7 +116,7 @@ const getAllTodosRoute = createRoute({
     security: [{ Bearer: [] }],
     request: {
         headers: z.object({
-            "x-timezone": z.string().optional(),
+            [timezoneHeaderName]: z.string().optional(),
         }),
     },
     responses: {
@@ -145,7 +147,8 @@ export function registerListTodos(app: OpenAPIHono) {
         const safeUserId = c.userId!;
 
         // Get user's timezone from header, default to UTC
-        const userTimezone = c.req.header("X-Timezone") || "UTC";
+        const userTimezone =
+            c.req.header(timezoneHeaderName) || defaultUserTimezone;
 
         // Get today's date in user's timezone (YYYY-MM-DD format)
         const todayDate = getCurrentDateInTimezone(userTimezone);
@@ -261,7 +264,8 @@ export function registerListTodos(app: OpenAPIHono) {
         const safeUserId = c.userId!;
 
         // LAZY GENERATION: Generate missing habit todos for today when listing all todos
-        const userTimezone = c.req.header("X-Timezone") || "UTC";
+        const userTimezone =
+            c.req.header(timezoneHeaderName) || defaultUserTimezone;
         const todayDate = getCurrentDateInTimezone(userTimezone);
 
         try {
