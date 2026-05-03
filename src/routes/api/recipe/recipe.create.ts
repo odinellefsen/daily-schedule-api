@@ -15,6 +15,26 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const recipesTag = "Recipes";
+const httpPostMethod = "post";
+const createRecipePath = "/api/recipe";
+const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusConflict = 409;
+const httpStatusInternalServerError = 500;
+const recipeCreatedSuccessMessage = "Recipe created successfully";
+const recipeNameExistsMessage = "Recipe with name already exists";
+const invalidRecipeDataMessage = "Invalid recipe data";
+const failedToCreateRecipeMessage = "Failed to create recipe";
+const recipeCreatedEventType = "recipe.v0/recipe.created.v0";
+const conflictResponseDescription =
+    "Conflict - Recipe with name already exists";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const internalServerErrorResponseDescription = "Internal Server Error";
+
 // Request schema
 const createRecipeRequestSchema = z.object({
     nameOfTheRecipe: z
@@ -30,56 +50,56 @@ const successResponseSchema = createSuccessResponseSchema(recipeSchema);
 
 // Route definition
 const createRecipeRoute = createRoute({
-    method: "post",
-    path: "/api/recipe",
-    tags: ["Recipes"],
+    method: httpPostMethod,
+    path: createRecipePath,
+    tags: [recipesTag],
     security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: createRecipeRequestSchema,
                 },
             },
         },
     },
     responses: {
-        200: {
-            description: "Recipe created successfully",
+        [httpStatusOk]: {
+            description: recipeCreatedSuccessMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
         },
-        400: {
-            description: "Bad Request",
+        [httpStatusBadRequest]: {
+            description: badRequestResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        409: {
-            description: "Conflict - Recipe with name already exists",
+        [httpStatusConflict]: {
+            description: conflictResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        500: {
-            description: "Internal Server Error",
+        [httpStatusInternalServerError]: {
+            description: internalServerErrorResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -108,9 +128,9 @@ export function registerCreateRecipe(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Recipe with name already exists",
+                    message: recipeNameExistsMessage,
                 },
-                409,
+                httpStatusConflict,
             );
         }
 
@@ -128,36 +148,36 @@ export function registerCreateRecipe(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid recipe data",
+                    message: invalidRecipeDataMessage,
                     errors: createRecipeEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
         const safeCreateRecipeEvent = createRecipeEvent.data;
 
         try {
-            await FlowcorePathways.write("recipe.v0/recipe.created.v0", {
+            await FlowcorePathways.write(recipeCreatedEventType, {
                 data: safeCreateRecipeEvent,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to create recipe",
+                    message: failedToCreateRecipeMessage,
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
         return c.json(
             {
                 success: true as const,
-                message: "Recipe created successfully",
+                message: recipeCreatedSuccessMessage,
                 data: safeCreateRecipeEvent,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
