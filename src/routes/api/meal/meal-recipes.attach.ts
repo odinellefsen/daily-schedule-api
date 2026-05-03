@@ -14,6 +14,28 @@ import {
     errorResponseSchema,
 } from "../_shared/responses";
 
+const mealsTag = "Meals";
+const httpPostMethod = "post";
+const attachMealRecipesPath = "/api/meal/{mealId}/recipes";
+const jsonContentType = "application/json";
+const httpStatusCreated = 201;
+const httpStatusBadRequest = 400;
+const httpStatusUnauthorized = 401;
+const httpStatusNotFound = 404;
+const httpStatusInternalServerError = 500;
+const recipesAttachedSuccessDescription =
+    "Recipes attached to meal successfully";
+const mealNotFoundOrDeniedMessage = "Meal not found or access denied";
+const recipesNotFoundOrDeniedMessage =
+    "One or more recipes not found or access denied";
+const invalidMealRecipeDataMessage = "Invalid meal recipe data";
+const failedToAttachRecipesMessage = "Failed to attach recipes to meal";
+const mealRecipeAttachedEventType = "meal.v0/meal-recipe.attached.v0";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const mealOrRecipesNotFoundDescription = "Meal or recipes not found";
+const internalServerErrorResponseDescription = "Internal Server Error";
+
 // Request schema
 const requestSchema = z.object({
     recipeIds: z
@@ -30,9 +52,9 @@ const successResponseSchema = createSuccessResponseSchema(
 
 // Route definition
 const attachRecipesToMealRoute = createRoute({
-    method: "post",
-    path: "/api/meal/{mealId}/recipes",
-    tags: ["Meals"],
+    method: httpPostMethod,
+    path: attachMealRecipesPath,
+    tags: [mealsTag],
     security: [{ Bearer: [] }],
     request: {
         params: z.object({
@@ -40,49 +62,49 @@ const attachRecipesToMealRoute = createRoute({
         }),
         body: {
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: requestSchema,
                 },
             },
         },
     },
     responses: {
-        201: {
-            description: "Recipes attached to meal successfully",
+        [httpStatusCreated]: {
+            description: recipesAttachedSuccessDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: successResponseSchema,
                 },
             },
         },
-        400: {
-            description: "Bad Request",
+        [httpStatusBadRequest]: {
+            description: badRequestResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        404: {
-            description: "Meal or recipes not found",
+        [httpStatusNotFound]: {
+            description: mealOrRecipesNotFoundDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
         },
-        500: {
-            description: "Internal Server Error",
+        [httpStatusInternalServerError]: {
+            description: internalServerErrorResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: errorResponseSchema,
                 },
             },
@@ -105,9 +127,9 @@ export function registerAttachMealRecipes(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Meal not found or access denied",
+                    message: mealNotFoundOrDeniedMessage,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -125,10 +147,10 @@ export function registerAttachMealRecipes(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "One or more recipes not found or access denied",
+                    message: recipesNotFoundOrDeniedMessage,
                     errors: `Recipes ${missingRecipeIds.join(", ")} not found or access denied`,
                 },
-                404,
+                httpStatusNotFound,
             );
         }
 
@@ -159,25 +181,25 @@ export function registerAttachMealRecipes(app: OpenAPIHono) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Invalid meal recipe data",
+                    message: invalidMealRecipeDataMessage,
                     errors: attachEvent.error.errors,
                 },
-                400,
+                httpStatusBadRequest,
             );
         }
 
         try {
-            await FlowcorePathways.write("meal.v0/meal-recipe.attached.v0", {
+            await FlowcorePathways.write(mealRecipeAttachedEventType, {
                 data: attachEvent.data,
             });
         } catch (error) {
             return c.json(
                 {
                     success: false as const,
-                    message: "Failed to attach recipes to meal",
+                    message: failedToAttachRecipesMessage,
                     errors: error,
                 },
-                500,
+                httpStatusInternalServerError,
             );
         }
 
@@ -189,7 +211,7 @@ export function registerAttachMealRecipes(app: OpenAPIHono) {
                     mealRecipe: attachEvent.data,
                 },
             },
-            201,
+            httpStatusCreated,
         );
     });
 }
