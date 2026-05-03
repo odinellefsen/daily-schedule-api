@@ -5,6 +5,15 @@ import { eq } from "drizzle-orm";
 import { db } from "../../../db";
 import { mealRecipes, meals } from "../../../db/schemas";
 
+const mealsTag = "Meals";
+const httpGetMethod = "get";
+const listMealsPath = "/api/meal";
+const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusUnauthorized = 401;
+const mealsRetrievedMessage = "Meals retrieved successfully";
+const unauthorizedResponseDescription = "Unauthorized";
+
 // Response schemas
 const mealSummarySchema = z.object({
     id: z.string().uuid(),
@@ -14,15 +23,15 @@ const mealSummarySchema = z.object({
 
 // Route definition
 const listMealsRoute = createRoute({
-    method: "get",
-    path: "/api/meal",
-    tags: ["Meals"],
+    method: httpGetMethod,
+    path: listMealsPath,
+    tags: [mealsTag],
     security: [{ Bearer: [] }],
     responses: {
-        200: {
-            description: "Meals retrieved successfully",
+        [httpStatusOk]: {
+            description: mealsRetrievedMessage,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(true),
                         message: z.string(),
@@ -31,10 +40,10 @@ const listMealsRoute = createRoute({
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -74,10 +83,10 @@ export function registerListMeals(app: OpenAPIHono) {
         return c.json(
             {
                 success: true as const,
-                message: "Meals retrieved successfully",
+                message: mealsRetrievedMessage,
                 data: mealsData,
             },
-            200,
+            httpStatusOk,
         );
     });
 }
