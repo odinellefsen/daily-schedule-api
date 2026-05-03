@@ -23,6 +23,9 @@ const todoCancelledSuccessMessage = "Todo cancelled successfully";
 const invalidCancelledTodoDataMessage = "Invalid cancelled todo data";
 const failedToCancelTodoMessage = "Failed to cancel todo";
 const todoCancelledEventType = "todo.v0/todo.cancelled.v0";
+const badRequestResponseDescription = "Bad Request";
+const unauthorizedResponseDescription = "Unauthorized";
+const internalServerErrorResponseDescription = "Internal Server Error";
 
 // Request schema
 const cancelTodoRequestSchema = z.object({
@@ -61,7 +64,7 @@ const cancelTodoRoute = createRoute({
             },
         },
         [httpStatusBadRequest]: {
-            description: "Bad Request",
+            description: badRequestResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
@@ -69,7 +72,7 @@ const cancelTodoRoute = createRoute({
             },
         },
         [httpStatusUnauthorized]: {
-            description: "Unauthorized",
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
@@ -77,7 +80,7 @@ const cancelTodoRoute = createRoute({
             },
         },
         [httpStatusInternalServerError]: {
-            description: "Internal Server Error",
+            description: internalServerErrorResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: errorResponseSchema,
