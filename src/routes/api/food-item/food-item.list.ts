@@ -10,6 +10,9 @@ const httpGetMethod = "get";
 const listFoodItemsPath = "/api/food-item";
 const searchFoodItemsPath = "/api/food-item/search";
 const jsonContentType = "application/json";
+const httpStatusOk = 200;
+const httpStatusUnauthorized = 401;
+const unauthorizedResponseDescription = "Unauthorized";
 
 // Response schemas
 const foodItemWithUnitsSchema = z.object({
@@ -45,7 +48,7 @@ const listFoodItemsRoute = createRoute({
     tags: [foodItemsTag],
     security: [{ Bearer: [] }],
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: "Food items retrieved successfully",
             content: {
                 [jsonContentType]: {
@@ -53,8 +56,8 @@ const listFoodItemsRoute = createRoute({
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
@@ -78,7 +81,7 @@ const searchFoodItemsRoute = createRoute({
         }),
     },
     responses: {
-        200: {
+        [httpStatusOk]: {
             description: "Food items search results",
             content: {
                 [jsonContentType]: {
@@ -86,8 +89,8 @@ const searchFoodItemsRoute = createRoute({
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [httpStatusUnauthorized]: {
+            description: unauthorizedResponseDescription,
             content: {
                 [jsonContentType]: {
                     schema: z.object({
