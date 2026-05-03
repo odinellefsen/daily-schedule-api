@@ -5,6 +5,12 @@ import { eq } from "drizzle-orm";
 import { db } from "../../../db";
 import { foodItems, foodItemUnits } from "../../../db/schemas";
 
+const foodItemsTag = "Food Items";
+const httpGetMethod = "get";
+const listFoodItemsPath = "/api/food-item";
+const searchFoodItemsPath = "/api/food-item/search";
+const jsonContentType = "application/json";
+
 // Response schemas
 const foodItemWithUnitsSchema = z.object({
     id: z.string().uuid(),
@@ -34,15 +40,15 @@ const searchFoodItemsResponseSchema = z.object({
 
 // Route definitions
 const listFoodItemsRoute = createRoute({
-    method: "get",
-    path: "/api/food-item",
-    tags: ["Food Items"],
+    method: httpGetMethod,
+    path: listFoodItemsPath,
+    tags: [foodItemsTag],
     security: [{ Bearer: [] }],
     responses: {
         200: {
             description: "Food items retrieved successfully",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: listFoodItemsResponseSchema,
                 },
             },
@@ -50,7 +56,7 @@ const listFoodItemsRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
@@ -62,9 +68,9 @@ const listFoodItemsRoute = createRoute({
 });
 
 const searchFoodItemsRoute = createRoute({
-    method: "get",
-    path: "/api/food-item/search",
-    tags: ["Food Items"],
+    method: httpGetMethod,
+    path: searchFoodItemsPath,
+    tags: [foodItemsTag],
     security: [{ Bearer: [] }],
     request: {
         query: z.object({
@@ -75,7 +81,7 @@ const searchFoodItemsRoute = createRoute({
         200: {
             description: "Food items search results",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: searchFoodItemsResponseSchema,
                 },
             },
@@ -83,7 +89,7 @@ const searchFoodItemsRoute = createRoute({
         401: {
             description: "Unauthorized",
             content: {
-                "application/json": {
+                [jsonContentType]: {
                     schema: z.object({
                         success: z.literal(false),
                         message: z.string(),
